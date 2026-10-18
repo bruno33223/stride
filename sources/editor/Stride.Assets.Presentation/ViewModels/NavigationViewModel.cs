@@ -27,7 +27,6 @@ namespace Stride.Assets.Presentation.ViewModel
     /// <summary>
     /// Legacy compatibility view model for <see cref="NavigationMeshAsset"/>.
     /// </summary>
-    [AssetViewModel<NavigationMeshAsset>]
     public class NavigationViewModel : ViewModels.NavigationViewModel
     {
         public NavigationViewModel(ConstructorParameters parameters)

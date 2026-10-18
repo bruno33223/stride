@@ -60,7 +60,7 @@ public abstract class AssetsPlugin
             if (typeof(AssetViewModel).IsAssignableFrom(type) &&
                 type.GetCustomAttribute<AssetViewModelAttribute>() is { } attribute)
             {
-                assetViewModelTypes.Add(attribute.AssetType, type);
+                assetViewModelTypes[attribute.AssetType] = type;
             }
         }
     }

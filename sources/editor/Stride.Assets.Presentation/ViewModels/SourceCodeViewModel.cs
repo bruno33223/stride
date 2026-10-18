@@ -19,7 +19,6 @@ public abstract class SourceCodeViewModel<TSourceCodeAsset> : AssetViewModel<TSo
 /// <summary>
 /// View model for <see cref="SourceCodeAsset"/>.
 /// </summary>
-[AssetViewModel<SourceCodeAsset>]
 public class SourceCodeAssetViewModel : SourceCodeViewModel<SourceCodeAsset>
 {
     public SourceCodeAssetViewModel(ConstructorParameters parameters)

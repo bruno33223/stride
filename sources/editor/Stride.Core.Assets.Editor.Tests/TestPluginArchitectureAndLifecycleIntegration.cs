@@ -191,4 +191,20 @@ public class TestPluginArchitectureAndLifecycleIntegration
         var regPreviewVmMethod = strideAssetsPluginType.GetMethod("RegisterAssetPreviewViewModelTypes", [typeof(IDictionary<Type, Type>)]);
         Assert.NotNull(regPreviewVmMethod);
     }
+
+    [Fact]
+    public void TestStrideDefaultAssetsPlugin_RegisterAssetViewModelTypes_NoDuplicates()
+    {
+        var plugin = new Stride.Assets.Presentation.StrideDefaultAssetsPlugin();
+        var assetViewModelTypes = new Dictionary<Type, Type>();
+
+        // This must not throw System.ArgumentException: An item with the same key has already been added.
+        plugin.RegisterAssetViewModelTypes(assetViewModelTypes);
+
+        // Verify key registrations exist and map correctly
+        Assert.True(assetViewModelTypes.ContainsKey(typeof(Stride.Assets.Navigation.NavigationMeshAsset)),
+            "NavigationMeshAsset must be registered in assetViewModelTypes.");
+        Assert.True(assetViewModelTypes.ContainsKey(typeof(Stride.Core.Assets.SourceCodeAsset)),
+            "SourceCodeAsset must be registered in assetViewModelTypes.");
+    }
 }

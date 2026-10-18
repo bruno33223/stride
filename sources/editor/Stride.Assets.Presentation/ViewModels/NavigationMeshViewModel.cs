@@ -10,7 +10,6 @@ namespace Stride.Assets.Presentation.ViewModels;
 /// <summary>
 /// View model for <see cref="NavigationMeshAsset"/>.
 /// </summary>
-[AssetViewModel<NavigationMeshAsset>]
 public sealed class NavigationMeshViewModel : AssetViewModel<NavigationMeshAsset>
 {
     public NavigationMeshViewModel(ConstructorParameters parameters)
