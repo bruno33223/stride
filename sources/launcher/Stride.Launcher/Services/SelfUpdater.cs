@@ -49,8 +49,20 @@ public static class SelfUpdater
         Environment.Exit(0);
     }
 
+    /// <summary>
+    /// Gets whether self-update is supported on the current operating system.
+    /// On non-Windows platforms (Linux/macOS), Stride is built and run natively,
+    /// so downloading Windows NuGet launcher packages or installers is disabled.
+    /// </summary>
+    public static bool IsSupportedPlatform => OperatingSystem.IsWindows();
+
     internal static Task SelfUpdate(IViewModelServiceProvider services, NugetStore store)
     {
+        if (!IsSupportedPlatform)
+        {
+            return Task.CompletedTask;
+        }
+
         return Task.Run(async () =>
         {
             var dispatcher = services.Get<IDispatcherService>();
@@ -114,6 +126,10 @@ public static class SelfUpdater
 
     private static async Task UpdateLauncherFiles(IDispatcherService dispatcher, IDialogService dialogService, NugetStore store, CancellationToken cancellationToken)
     {
+        if (!IsSupportedPlatform)
+        {
+            return;
+        }
 
         var version = new PackageVersion(Version);
         var productAttribute = (typeof(SelfUpdater).Assembly).GetCustomAttribute<AssemblyProductAttribute>();
