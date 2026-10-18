@@ -5,7 +5,7 @@ using Stride.Core.Presentation.Quantum.ViewModels;
 
 namespace Stride.Core.Assets.Editor.Avalonia.Views;
 
-public sealed class ContentReferenceTemplateProvider : NodeViewModelTemplateProvider
+public class ContentReferenceTemplateProvider : NodeViewModelTemplateProvider
 {
     public bool DynamicThumbnail { get; set; }
 

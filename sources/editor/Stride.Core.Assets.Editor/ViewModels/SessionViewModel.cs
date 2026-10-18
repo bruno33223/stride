@@ -9,6 +9,7 @@ using Stride.Core.Assets.Editor.Components.Transactions;
 using Stride.Core.Assets.Editor.Services;
 using Stride.Core.Assets.Presentation.ViewModels;
 using Stride.Core.Assets.Quantum;
+using Stride.Core.Assets.Templates;
 using Stride.Core.Diagnostics;
 using Stride.Core.Extensions;
 using Stride.Core.IO;
@@ -17,6 +18,7 @@ using Stride.Core.Presentation.Commands;
 using Stride.Core.Presentation.Quantum.ViewModels;
 using Stride.Core.Presentation.Services;
 using Stride.Core.Presentation.ViewModels;
+using Stride.Core.Packages;
 using Stride.Core.Translation;
 
 namespace Stride.Core.Assets.Editor.ViewModels;
@@ -75,8 +77,7 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
             }
             return null;
         }, AssetCollection.SelectedContent);
-        // FIXME xplat-editor
-        //AssetCollection.SelectedAssets.CollectionChanged += SelectedAssetsCollectionChanged;
+        AssetCollection.SelectedAssets.CollectionChanged += SelectedAssetsCollectionChanged;
         AssetCollection.SelectedContent.CollectionChanged += (s, e) => UpdateSessionState();
         AssetCollection.SelectedLocations.CollectionChanged += (s, e) => UpdateSessionState();
 
@@ -121,13 +122,12 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
     // FIXME xplat-editor do we need both ActiveProperties and AssetCollection.AssetViewProperties?
     public SessionObjectPropertiesViewModel ActiveProperties
     {
-        get { return activeProperties; }
+        get => activeProperties;
         set
         {
             if (SetValue(ref activeProperties, value))
             {
-                // FIXME xplat-editor
-                //ActiveAssetsChanged?.Invoke(this, new ActiveAssetsChangedArgs(value?.GetRelatedAssets().ToList()));
+                ActiveAssetsChanged?.Invoke(this, new ActiveAssetsChangedArgs(value?.GetRelatedAssets().ToList() ?? (IReadOnlyCollection<AssetViewModel>)[]));
             }
         }
     }
@@ -140,7 +140,37 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
 
     public IEnumerable<PackageViewModel> AllPackages => PackageCategories.Values.SelectMany(x => x.Content);
 
+    public void CheckConsistency()
+    {
+        AllPackages.ForEach(x => x.CheckConsistency());
+    }
+
+    public PackageSession Session => session;
+    public IUndoRedoService? UndoRedoService => ActionService;
+
+    public Core.Reflection.AssemblyContainer AssemblyContainer => session.AssemblyContainer;
+
+    public bool IsInFixupAssetContext
+    {
+        get => isInFixupAssetContext;
+        internal set => SetValue(ref isInFixupAssetContext, value);
+    }
+    private bool isInFixupAssetContext;
+
+    /// <summary>
+    /// Creates a <see cref="IDisposable"/> object that represents a context where most of the standard mechanisms relying on property changes are disabled, such as
+    /// property changes notifications, creation of <see cref="ActionItem"/>, and propagation of properties between a base and a derived asset.
+    /// </summary>
+    /// <returns>A disposable object disabling normal mechanisms relying on property change.</returns>
+    /// <remarks>This method should be used only for advanced modifications of assets such as global fixups, that still need to rely on undo/redo.</remarks>
+    public IDisposable CreateAssetFixupContext()
+    {
+        return new FixupAssetContext(this);
+    }
+
     public AssetCollectionViewModel AssetCollection { get; }
+
+    public AssetCollectionViewModel ActiveAssetView => AssetCollection;
 
     public AssetLogViewModel AssetLog { get; }
 
@@ -178,7 +208,7 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
 
     public ReferencesViewModel References { get; }
 
-    public UFile SolutionPath => session.SolutionPath;
+    public UFile? SolutionPath => session.SolutionPath;
 
     public IAssetSourceTrackerViewModel SourceTracker { get; private set; }
 
@@ -192,11 +222,46 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
 
     public ICommandBase PreviousSelectionCommand { get; }
 
+    private int importEffectLogPendingCount;
+    private ICommandBase? importEffectLogCommand;
+
+    public int ImportEffectLogPendingCount
+    {
+        get => importEffectLogPendingCount;
+        set => SetValue(ref importEffectLogPendingCount, value);
+    }
+
+    public ICommandBase? ImportEffectLogCommand
+    {
+        get => importEffectLogCommand;
+        set => SetValue(ref importEffectLogCommand, value);
+    }
+
     internal PackageSession PackageSession => session;
 
     internal IAssetsPluginService PluginService => ServiceProvider.Get<IAssetsPluginService>();
 
     internal SelectionService? SelectionService => ServiceProvider.TryGet<SelectionService>();
+
+    private bool selectionIsRoot;
+
+    /// <summary>
+    /// Gets whether all currently selected assets are root assets in the project.
+    /// </summary>
+    public bool SelectionIsRoot
+    {
+        get => selectionIsRoot;
+        internal set
+        {
+            SetValue(ref selectionIsRoot, value);
+            UpdateSessionState();
+        }
+    }
+
+    /// <summary>
+    /// Raised when the active assets change.
+    /// </summary>
+    public event EventHandler<ActiveAssetsChangedArgs>? ActiveAssetsChanged;
 
     /// <summary>
     /// Raised when some assets are modified.
@@ -211,7 +276,28 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
     /// <summary>
     /// Raised when the session state changed (e.g. current package).
     /// </summary>
-    public event EventHandler<SessionStateChangedEventArgs>? SessionStateChanged;
+    public new event EventHandler<SessionStateChangedEventArgs>? SessionStateChanged;
+
+    private readonly Dictionary<EventHandler<Stride.Core.Assets.Presentation.ViewModels.SessionStateChangedEventArgs>, EventHandler<SessionStateChangedEventArgs>> sessionStateChangedHandlers = new();
+
+    event EventHandler<Stride.Core.Assets.Presentation.ViewModels.SessionStateChangedEventArgs>? ISessionViewModel.SessionStateChanged
+    {
+        add
+        {
+            if (value is null) return;
+            EventHandler<SessionStateChangedEventArgs> handler = (s, e) => value(s, e);
+            sessionStateChangedHandlers[value] = handler;
+            SessionStateChanged += handler;
+        }
+        remove
+        {
+            if (value is null) return;
+            if (sessionStateChangedHandlers.Remove(value, out var handler))
+            {
+                SessionStateChanged -= handler;
+            }
+        }
+    }
 
     /// <inheritdoc />
     public AssetViewModel? GetAssetById(AssetId id)
@@ -228,6 +314,10 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
         ActionHistory?.Destroy();
         AssetLog.Destroy();
         Thumbnails.Destroy();
+        EditorCollection.Destroy();
+        AssetCollection.Destroy();
+
+        AssetCollection.SelectedAssets.CollectionChanged -= SelectedAssetsCollectionChanged;
 
         var debugService = ServiceProvider.Get<IEditorDebugService>();
         debugService.UnregisterDebugPage(undoRedoStackPage);
@@ -275,7 +365,12 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
 
     private void AutoSelectCurrentProject()
     {
-        var currentProject = LocalPackages.OfType<ProjectViewModel>().FirstOrDefault(/* FIXME sxplat-editor x => x.Type == ProjectType.Executable && x.Platform == PlatformType.Windows*/) ?? LocalPackages.FirstOrDefault();
+        var currentProject = LocalPackages.OfType<ProjectViewModel>()
+            .FirstOrDefault(x => x.Project.Type == ProjectType.Executable && (x.Project.Platform == PlatformType.Shared || x.Project.Platform == Core.Platform.Type))
+            ?? LocalPackages.OfType<ProjectViewModel>().FirstOrDefault(x => x.Project.Type == ProjectType.Executable)
+            ?? LocalPackages.OfType<ProjectViewModel>().FirstOrDefault()
+            ?? LocalPackages.FirstOrDefault();
+
         if (currentProject != null)
         {
             SetCurrentProject(currentProject);
@@ -377,28 +472,30 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
     {
         if (selectedItem is not ProjectViewModel project)
         {
-            // Editor.MessageBox(Resources.Strings.SessionViewModel.SelectExecutableAsCurrentProject, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
         CurrentProject = project;
         AllAssets.ForEach(x => x.Dependencies.NotifyRootAssetChange(false));
-        // FIXME xplat-editor
-        //SelectionIsRoot = AssetCollection.SelectedAssets.All(x => x.Dependencies.IsRoot);
+        SelectionIsRoot = AssetCollection.SelectedAssets.Count > 0 && AssetCollection.SelectedAssets.All(x => x.Dependencies.IsRoot);
     }
 
     private void UpdateCurrentProject(ProjectViewModel? oldValue, ProjectViewModel? newValue)
     {
-        //if (oldValue != null)
-        //{
-        //    oldValue.IsCurrentProject = false;
-        //}
-        //if (newValue != null)
-        //{
-        //    newValue.IsCurrentProject = true;
-        //}
-        //ToggleIsRootOnSelectedAssetCommand.IsEnabled = CurrentProject != null;
+        if (oldValue != null)
+        {
+            oldValue.IsCurrentProject = false;
+        }
+        if (newValue != null)
+        {
+            newValue.IsCurrentProject = true;
+        }
         UpdateSessionState();
+    }
+
+    private void SelectedAssetsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        SelectionIsRoot = AssetCollection.SelectedAssets.Count > 0 && AssetCollection.SelectedAssets.All(x => x.Dependencies.IsRoot);
     }
 
     private void UpdateSelectionCommands()
@@ -445,4 +542,35 @@ public sealed partial class SessionViewModel : DispatcherViewModel, ISessionView
         }
     }
     #endregion // Commands
+
+
+    public IEnumerable<TemplateDescription> FindTemplates(TemplateScope scope)
+    {
+        return TemplateManager.FindTemplates(scope, session);
+    }
+
+    public List<PackageName> SuggestedPackages { get; } = new List<PackageName>();
+
+    public async Task<IEnumerable<PickablePackageViewModel>> SuggestPackagesToAdd()
+    {
+        var packages = new List<PickablePackageViewModel>();
+        packages.AddRange(LocalPackages.Select(x => new LoadedPickablePackageViewModel(x)));
+        packages.AddRange(StorePackages.Select(x => new LoadedPickablePackageViewModel(x)));
+
+        foreach (var packageInfo in SuggestedPackages)
+        {
+            if (packages.Any(x => x.Name == packageInfo.Id))
+                continue;
+
+            packages.Add(new UnloadedPickablePackageViewModel(this, packageInfo));
+        }
+
+        return packages;
+    }
+
+    public Task UpdatePackageTemplate(TemplateDescription templateDescription)
+    {
+        return Task.CompletedTask;
+    }
 }
+

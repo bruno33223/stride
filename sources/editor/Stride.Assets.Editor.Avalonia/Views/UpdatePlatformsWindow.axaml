@@ -1,0 +1,79 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="using:Stride.Assets.Editor.Avalonia.Views"
+        xmlns:templates="using:Stride.Assets.Editor.Templates"
+        mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="400"
+        x:Class="Stride.Assets.Editor.Avalonia.Views.UpdatePlatformsWindow"
+        x:DataType="views:UpdatePlatformsWindow"
+        Title="Select platforms"
+        Width="480" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        CanResize="False">
+
+  <StackPanel Spacing="10" Margin="20">
+    <Border Background="{DynamicResource ThemeEmphasisBrush}" CornerRadius="4" Padding="16,10">
+      <TextBlock Text="Platforms" FontSize="16" FontWeight="SemiBold"/>
+    </Border>
+
+    <Border Background="{DynamicResource ThemeBackgroundBrush}" BorderBrush="{DynamicResource ThemeBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="12">
+      <ItemsControl ItemsSource="{Binding AvailablePlatforms}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="templates:SolutionPlatformViewModel">
+            <StackPanel Margin="0,4" Spacing="4">
+              <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                <CheckBox Content="{Binding Name}"
+                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                          IsEnabled="{Binding CanBeUnselected}"
+                          VerticalAlignment="Center"/>
+                <TextBlock Text="(This will remove the project from the package and disk.)"
+                           IsVisible="{Binding MarkedToRemove}"
+                           Foreground="#E05252"
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           TextWrapping="Wrap"/>
+              </StackPanel>
+              <StackPanel Orientation="Horizontal"
+                          Margin="28,0,0,4"
+                          Spacing="6"
+                          IsVisible="{Binding !IsAvailableOnMachine}"
+                          VerticalAlignment="Center">
+                <TextBlock Text="⚠️" FontSize="13" VerticalAlignment="Center"/>
+                <TextBlock Text="This machine doesn't meet the requirements to build for this platform."
+                           FontSize="11"
+                           Foreground="#EAA040"
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center"/>
+              </StackPanel>
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Border>
+
+    <CheckBox x:Name="ForceRegenerationCheckBox"
+              Content="Force regeneration of all platform projects"
+              IsChecked="{Binding ForcePlatformRegeneration, Mode=TwoWay}"
+              IsVisible="{Binding ForcePlatformRegenerationVisible}"
+              Margin="4,6"/>
+
+    <Grid ColumnDefinitions="*,*" Margin="0,10,0,0">
+      <Button Grid.Column="0"
+              Content="OK"
+              Margin="0,0,10,0"
+              Padding="12,8"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center"
+              Click="ButtonOk"/>
+      <Button Grid.Column="1"
+              Content="Cancel"
+              Margin="10,0,0,0"
+              Padding="12,8"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center"
+              Click="ButtonCancel"/>
+    </Grid>
+  </StackPanel>
+</Window>

@@ -2,7 +2,9 @@
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
 
 using System.Reflection;
+using Avalonia.Controls;
 using Stride.Assets.Editor.Avalonia.Views;
+using Stride.Assets.Editor.ViewModels;
 using Stride.Core.Assets.Editor;
 using Stride.Core.Assets.Editor.Services;
 using Stride.Core.Assets.Presentation.ViewModels;
@@ -45,6 +47,22 @@ public sealed class StrideEditorViewPlugin : AssetsEditorPlugin
         session.ServiceProvider.RegisterService(previewService);
     }
 
+    public override void RegisterAssetEditorViewTypes(IDictionary<Type, Type> assetEditorViewTypes)
+    {
+        base.RegisterAssetEditorViewTypes(assetEditorViewTypes);
+        assetEditorViewTypes.TryAdd(typeof(SpriteSheetEditorViewModel), typeof(SpriteSheetEditorView));
+        assetEditorViewTypes.TryAdd(typeof(UIPageEditorViewModel), typeof(UIPageEditorView));
+        assetEditorViewTypes.TryAdd(typeof(UILibraryEditorViewModel), typeof(UILibraryEditorView));
+        assetEditorViewTypes.TryAdd(typeof(GraphicsCompositorEditorViewModel), typeof(GraphicsCompositorEditorView));
+        assetEditorViewTypes.TryAdd(typeof(VisualScriptEditorViewModel), typeof(VisualScriptEditorView));
+        assetEditorViewTypes.TryAdd(typeof(ScriptSourceFileEditorViewModel), typeof(ScriptSourceFileEditorView));
+        assetEditorViewTypes.TryAdd(typeof(EntityHierarchyEditorViewModel), typeof(EntityHierarchyEditorView));
+        assetEditorViewTypes.TryAdd(typeof(ModelEditorViewModel), typeof(ModelEditorView));
+        assetEditorViewTypes.TryAdd(typeof(MaterialEditorViewModel), typeof(MaterialEditorView));
+        assetEditorViewTypes.TryAdd(typeof(SoundEditorViewModel), typeof(SoundEditorView));
+        assetEditorViewTypes.TryAdd(typeof(VideoEditorViewModel), typeof(VideoEditorView));
+    }
+
     public override void RegisterAssetPreviewViewModelTypes(IDictionary<Type, Type> assetPreviewViewModelTypes)
     {
         // nothing for now
@@ -72,11 +90,24 @@ public sealed class StrideEditorViewPlugin : AssetsEditorPlugin
 
     public override void RegisterTemplateProviders(ICollection<ITemplateProvider> templateProviders)
     {
-        foreach (var (_, value) in new EntityPropertyTemplateProviders())
+        var dictionaries = new ResourceDictionary[]
         {
-            if (value is TemplateProviderBase provider)
+            new EntityPropertyTemplateProviders(),
+            new AnimationPropertyTemplates(),
+            new SkeletonPropertyTemplates(),
+            new MaterialPropertyTemplates(),
+            new SpriteFontPropertyTemplates(),
+            new UIPropertyTemplates(),
+        };
+
+        foreach (var dictionary in dictionaries)
+        {
+            foreach (var (_, value) in dictionary)
             {
-                templateProviders.Add(provider);
+                if (value is TemplateProviderBase provider)
+                {
+                    templateProviders.Add(provider);
+                }
             }
         }
     }

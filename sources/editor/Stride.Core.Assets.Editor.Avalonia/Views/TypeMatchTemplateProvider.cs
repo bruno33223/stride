@@ -38,6 +38,18 @@ public class TypeMatchTemplateProvider : NodeViewModelTemplateProvider
         if (Type is null)
             return true;
 
+        var underlyingNodeType = Nullable.GetUnderlyingType(node.Type);
+        if (underlyingNodeType != null)
+        {
+            if (Type == node.Type)
+                return true;
+
+            if (!AcceptNullable)
+                return false;
+
+            return Type.IsAssignableFrom(underlyingNodeType);
+        }
+
         if (MatchType(node, Type))
             return true;
 

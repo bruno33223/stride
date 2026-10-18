@@ -12,6 +12,7 @@ using System.Runtime.InteropServices;
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
+[assembly: Xunit.CollectionBehavior(DisableTestParallelization = true)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("25f98e38-0249-45bc-b2ed-7899297b9cf6")]

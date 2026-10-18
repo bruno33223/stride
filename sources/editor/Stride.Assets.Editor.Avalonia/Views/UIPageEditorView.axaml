@@ -2,14 +2,451 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
              xmlns:vm="using:Stride.Assets.Editor.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm2="using:Stride.Assets.Presentation.ViewModels"
+             xmlns:uivm="using:Stride.Assets.Editor.AssetEditors.UIEditor.ViewModels"
+             xmlns:eac="using:Stride.Editor.Avalonia.Controls"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="768"
              x:Class="Stride.Assets.Editor.Avalonia.Views.UIPageEditorView"
+             x:Name="PageEditorRoot"
              x:DataType="vm:UIPageEditorViewModel">
-  <DockPanel>
-    <Grid DockPanel.Dock="Top">
-      <TextBlock Text="UIPage Editor" />
+
+  <UserControl.Styles>
+    <!-- Estilo para botões de ferramentas -->
+    <Style Selector="Button.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.toolbtn:pointerover">
+      <Setter Property="Background" Value="#35353A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="ToggleButton.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ToggleButton.toolbtn:checked">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Botões compactos de ações da árvore e da toolbox -->
+    <Style Selector="Button.treeaction">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="5,3"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#AAAAAA"/>
+    </Style>
+    <Style Selector="Button.treeaction:pointerover">
+      <Setter Property="Background" Value="#333338"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Cabeçalhos das seções -->
+    <Style Selector="TextBlock.sectionheader">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="#E0E0E0"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="320, 4, *">
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 0: PAINEL LATERAL ESQUERDO (TOOLBOX + VISUAL HIERARCHY TREE)        -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Column="0" RowDefinitions="*, 4, *" Background="#1E1E22">
+
+      <!-- PARTE SUPERIOR: TOOLBOX DE CONTROLES UI COM BUSCA RÁPIDA -->
+      <DockPanel Grid.Row="0">
+        <!-- Cabeçalho da Toolbox -->
+        <Border DockPanel.Dock="Top"
+                Background="#252528"
+                BorderBrush="#2D2D32"
+                BorderThickness="0,0,0,1"
+                Padding="8,6">
+          <Grid ColumnDefinitions="*, Auto">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <PathIcon Data="M2,4H8V10H2V4M10,4H16V10H10V4M18,4H24V10H18V4M2,12H8V18H2V12M10,12H16V18H10V12M18,12H24V18H18V12Z"
+                        Width="13" Height="13" Foreground="#007ACC"/>
+              <TextBlock Classes="sectionheader" Text="UI Toolbox" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding FilteredFactories.Count, StringFormat='{}{0} items'}"
+                       FontSize="10"
+                       Foreground="#888888"
+                       VerticalAlignment="Center"/>
+          </Grid>
+        </Border>
+
+        <!-- Campo de Busca Rápida (Filtro) -->
+        <Border DockPanel.Dock="Top"
+                Background="#1A1A1D"
+                BorderBrush="#2A2A2E"
+                BorderThickness="0,0,0,1"
+                Padding="6,4">
+          <Grid ColumnDefinitions="Auto, *">
+            <PathIcon Grid.Column="0"
+                      Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"
+                      Width="11" Height="11"
+                      Foreground="#888888"
+                      Margin="4,0,6,0"
+                      VerticalAlignment="Center"/>
+            <TextBox Grid.Column="1"
+                     Text="{Binding SearchFilter, Mode=TwoWay}"
+                     Watermark="Search controls (Button, Grid, Text...)"
+                     FontSize="11"
+                     Background="#252528"
+                     BorderBrush="#38383D"
+                     BorderThickness="1"
+                     CornerRadius="3"
+                     Padding="6,3"
+                     VerticalContentAlignment="Center"/>
+          </Grid>
+        </Border>
+
+        <!-- Lista de Controles da Toolbox -->
+        <ListBox ItemsSource="{Binding FilteredFactories}"
+                 Background="Transparent"
+                 Margin="2">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="uivm:IUIElementFactory">
+              <Border Padding="6,4" Margin="0,1" CornerRadius="3" Background="#252528">
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                  <PathIcon Grid.Column="0"
+                            Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"
+                            Width="13" Height="13"
+                            Foreground="#0098FF"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"/>
+
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}"
+                               FontWeight="SemiBold"
+                               FontSize="11"
+                               Foreground="#EEEEEE"/>
+                    <TextBlock Text="{Binding Category}"
+                               FontSize="9"
+                               Foreground="#888888"/>
+                  </StackPanel>
+
+                  <Button Grid.Column="2"
+                          Classes="treeaction"
+                          ToolTip.Tip="Add element to hierarchy"
+                          Command="{Binding #PageEditorRoot.((vm:UIPageEditorViewModel)DataContext).AddChildCommand}"
+                          CommandParameter="{Binding}">
+                    <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="10" Height="10" Foreground="#30D158"/>
+                  </Button>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+      <!-- Divisor ajustável entre Toolbox e Visual Hierarchy -->
+      <GridSplitter Grid.Row="1" Background="#141416" ResizeDirection="Rows"/>
+
+      <!-- PARTE INFERIOR: TREEVIEW DA HIERARQUIA DE ELEMENTOS DA UI -->
+      <DockPanel Grid.Row="2">
+        <!-- Topo da Hierarquia: Título e Comandos Rápidos -->
+        <Border DockPanel.Dock="Top"
+                Background="#252528"
+                BorderBrush="#2D2D32"
+                BorderThickness="0,0,0,1"
+                Padding="8,6">
+          <Grid ColumnDefinitions="*, Auto">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <PathIcon Data="M3,3H21V5H3V3M3,7H21V9H3V7M3,11H21V13H3V11M3,15H21V17H3V15M3,19H21V21H3V19Z"
+                        Width="13" Height="13" Foreground="#007ACC"/>
+              <TextBlock Classes="sectionheader" Text="Visual Hierarchy" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+              <Button Classes="treeaction" ToolTip.Tip="Group into Grid" Command="{Binding GroupIntoCommand}">
+                <PathIcon Data="M3,3H11V11H3V3M13,3H21V11H13V3M3,13H11V21H3V13M13,13H21V21H13V13Z" Width="11" Height="11" Foreground="#30D158"/>
+              </Button>
+              <Button Classes="treeaction" ToolTip.Tip="Ungroup panel" Command="{Binding UngroupCommand}">
+                <PathIcon Data="M3,3H9V5H5V9H3V3M3,21H9V19H5V15H3V21M15,3H21V9H19V5H15V3M21,15V21H15V19H19V15H21Z" Width="11" Height="11" Foreground="#FF9F0A"/>
+              </Button>
+              <Button Classes="treeaction" ToolTip.Tip="Duplicate (Ctrl+D)" Command="{Binding DuplicateCommand}">
+                <PathIcon Data="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" Width="11" Height="11" Foreground="#007ACC"/>
+              </Button>
+              <Button Classes="treeaction" ToolTip.Tip="Delete (Del)" Command="{Binding DeleteCommand}">
+                <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" Width="11" Height="11" Foreground="#FF453A"/>
+              </Button>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Rodapé da Hierarquia: Informação de Seleção -->
+        <Border DockPanel.Dock="Bottom"
+                Background="#1A1A1D"
+                BorderBrush="#2A2A2E"
+                BorderThickness="0,1,0,0"
+                Padding="8,4">
+          <TextBlock Text="{Binding SelectedElement.Name, FallbackValue='No element selected', StringFormat='Selected: {0}'}"
+                     FontSize="10" Foreground="#888888"/>
+        </Border>
+
+        <!-- TreeView Hierárquico de Elementos da UI -->
+        <TreeView ItemsSource="{Binding HierarchyRoot, Mode=OneWay, Converter={sd:Yield}}"
+                  SelectedItems="{Binding SelectedContent}"
+                  SelectionMode="Multiple"
+                  Background="Transparent"
+                  Margin="2">
+          <TreeView.ContextMenu>
+            <ContextMenu>
+              <MenuItem Header="Group Into Grid" Command="{Binding GroupIntoCommand}">
+                <MenuItem.Icon>
+                  <PathIcon Data="M3,3H11V11H3V3M13,3H21V11H13V3M3,13H11V21H3V13M13,13H21V21H13V13Z" Width="12" Height="12" Foreground="#30D158"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Ungroup" Command="{Binding UngroupCommand}">
+                <MenuItem.Icon>
+                  <PathIcon Data="M3,3H9V5H5V9H3V3M3,21H9V19H5V15H3V21M15,3H21V9H19V5H15V3M21,15V21H15V19H19V15H21Z" Width="12" Height="12" Foreground="#FF9F0A"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <Separator />
+              <MenuItem Header="Move Up" Command="{Binding MoveUpCommand}">
+                <MenuItem.Icon>
+                  <PathIcon Data="M7,14L12,9L17,14H7Z" Width="12" Height="12"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Move Down" Command="{Binding MoveDownCommand}">
+                <MenuItem.Icon>
+                  <PathIcon Data="M7,10L12,15L17,10H7Z" Width="12" Height="12"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <Separator />
+              <MenuItem Header="Duplicate" Command="{Binding DuplicateCommand}" InputGesture="Ctrl+D">
+                <MenuItem.Icon>
+                  <PathIcon Data="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" Width="12" Height="12" Foreground="#007ACC"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="Delete" Command="{Binding DeleteCommand}" InputGesture="Del">
+                <MenuItem.Icon>
+                  <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" Width="12" Height="12" Foreground="#FF453A"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <Separator />
+              <MenuItem Header="Rename" Command="{Binding RenameCommand}" InputGesture="F2">
+                <MenuItem.Icon>
+                  <PathIcon Data="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" Width="12" Height="12"/>
+                </MenuItem.Icon>
+              </MenuItem>
+            </ContextMenu>
+          </TreeView.ContextMenu>
+
+          <Control.DataTemplates>
+            <!-- Template para Raiz (UIRootViewModel) -->
+            <TreeDataTemplate DataType="{x:Type vm2:UIRootViewModel}"
+                              ItemsSource="{Binding Children}">
+              <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2">
+                <PathIcon Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"
+                          Width="13" Height="13"
+                          Foreground="#30D158"
+                          VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Name}"
+                           FontWeight="Bold"
+                           FontSize="12"
+                           Foreground="#FFFFFF"
+                           VerticalAlignment="Center"/>
+              </StackPanel>
+            </TreeDataTemplate>
+
+            <!-- Template para Elementos UI (UIElementViewModel) -->
+            <TreeDataTemplate DataType="{x:Type vm2:UIElementViewModel}"
+                              ItemsSource="{Binding Children}">
+              <Grid ColumnDefinitions="Auto, *, Auto" HorizontalAlignment="Stretch" Margin="0,1">
+                <PathIcon Grid.Column="0"
+                          Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"
+                          Width="12" Height="12"
+                          Foreground="#0098FF"
+                          Margin="0,0,6,0"
+                          VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Name}"
+                             FontSize="12"
+                             Foreground="#ECECEC"
+                             VerticalAlignment="Center"/>
+                  <TextBlock Text="{Binding ElementType.Name, StringFormat='({0})'}"
+                             FontSize="10"
+                             Foreground="#888888"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Grid.Column="2"
+                           Text="{Binding Children.Count}"
+                           FontSize="10"
+                           Foreground="#666666"
+                           Margin="6,0,0,0"
+                           VerticalAlignment="Center"/>
+              </Grid>
+            </TreeDataTemplate>
+          </Control.DataTemplates>
+
+          <StyledElement.Styles>
+            <Style Selector="TreeViewItem">
+              <Setter Property="IsExpanded" Value="True"/>
+              <Setter Property="Padding" Value="4,2"/>
+            </Style>
+          </StyledElement.Styles>
+        </TreeView>
+      </DockPanel>
     </Grid>
-    <TextBlock Text="{Binding Asset.Name}" />
-  </DockPanel>
+
+    <!-- Divisor ajustável entre painel lateral e viewport central -->
+    <GridSplitter Grid.Column="1" Background="#141416" ResizeDirection="Columns"/>
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 2: PAINEL CENTRAL PARA LAYOUT E DESENHO DA INTERFACE (CANVAS/VIEW) -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Column="2" RowDefinitions="Auto, *" Background="#0C0C0E">
+
+      <!-- BARRA DE FERRAMENTAS SUPERIOR DO PAINEL CENTRAL -->
+      <Border Grid.Row="0"
+              Background="#1A1A1E"
+              BorderBrush="#2D2D32"
+              BorderThickness="0,0,0,1"
+              Padding="8,6">
+        <Grid ColumnDefinitions="Auto, *, Auto">
+
+          <!-- Bloco Esquerdo: Título e Status da UIPage -->
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="UIPage Design Canvas"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       Foreground="#FFFFFF"
+                       VerticalAlignment="Center"/>
+            <Border Width="1" Height="16" Background="#3A3A40"/>
+            <TextBlock Text="{Binding Asset.Name, StringFormat='Asset: {0}'}"
+                       FontSize="11"
+                       Foreground="#AAAAAA"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <!-- Bloco Central: Controles de Zoom e Snapping -->
+          <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+            <Button Classes="toolbtn" ToolTip.Tip="Zoom In" Command="{Binding ZoomInCommand}">
+              <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="11" Height="11"/>
+            </Button>
+            <Button Classes="toolbtn" ToolTip.Tip="Reset Zoom" Command="{Binding ResetZoomCommand}">
+              <TextBlock Text="{Binding ZoomLevel, StringFormat='{}{0:P0}'}" FontSize="11" FontWeight="SemiBold"/>
+            </Button>
+            <Button Classes="toolbtn" ToolTip.Tip="Zoom Out" Command="{Binding ZoomOutCommand}">
+              <PathIcon Data="M19,13H5V11H19V13Z" Width="11" Height="11"/>
+            </Button>
+
+            <Border Width="1" Height="16" Background="#3A3A40" Margin="4,0"/>
+
+            <TextBlock Text="Snap:" FontSize="11" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="2,0"/>
+            <TextBlock Text="{Binding SnapValue, StringFormat='{}{0:F1}px'}" FontSize="11" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <!-- Bloco Direito: Propriedades da UI -->
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Classes="toolbtn"
+                    ToolTip.Tip="View Asset &amp; UI Properties"
+                    Command="{Binding ShowPropertiesCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <PathIcon Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"
+                          Width="12" Height="12" Foreground="#007ACC"/>
+                <TextBlock Text="Properties" FontSize="11" Foreground="#CCCCCC"/>
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- ÁREA DE DESENHO E VIEWPORT NATIVO VULKAN -->
+      <Grid Grid.Row="1" Background="#121214">
+        <!-- Host Nativo da Viewport Vulkan para renderizar a UI Stride em tempo real -->
+        <eac:StrideViewportControl x:Name="UIViewport"
+                                   HorizontalAlignment="Stretch"
+                                   VerticalAlignment="Stretch" />
+
+        <!-- Overlay de Guias, Artboard e Status da UI -->
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                BorderBrush="#33FFFFFF"
+                BorderThickness="1"
+                CornerRadius="4"
+                Width="800"
+                Height="450"
+                Background="#08007ACC"
+                IsHitTestVisible="False">
+          <!-- Moldura indicativa da área da tela da UI -->
+          <Grid>
+            <!-- Badge Superior: Dimensão do Canvas -->
+            <Border HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Background="#99000000"
+                    CornerRadius="3"
+                    Margin="8"
+                    Padding="6,3">
+              <TextBlock Text="Virtual Canvas: 1920 x 1080 (16:9)"
+                         FontSize="10"
+                         Foreground="#AAAAAA"/>
+            </Border>
+
+            <!-- Badge Inferior: Elemento Ativo / Raiz -->
+            <Border HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Background="#B3000000"
+                    CornerRadius="3"
+                    Margin="8"
+                    Padding="6,3">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"
+                          Width="11" Height="11" Foreground="#30D158"/>
+                <TextBlock Text="{Binding ActiveRoot.Name, FallbackValue='Hierarchy Root', StringFormat='Active Canvas Root: {0}'}"
+                           FontSize="10"
+                           Foreground="#E0E0E0"/>
+              </StackPanel>
+            </Border>
+          </Grid>
+        </Border>
+
+        <!-- Barra de Status Inferior da Viewport -->
+        <Border HorizontalAlignment="Stretch"
+                VerticalAlignment="Bottom"
+                Background="#E01A1A1E"
+                BorderBrush="#2D2D32"
+                BorderThickness="0,1,0,0"
+                Padding="8,4">
+          <Grid ColumnDefinitions="Auto, *, Auto">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="Stride UI Engine: Active" FontSize="10" Foreground="#30D158"/>
+              <Border Width="1" Height="12" Background="#3A3A40"/>
+              <TextBlock Text="{Binding SelectedItems.Count, StringFormat='Selected Elements: {0}'}" FontSize="10" Foreground="#AAAAAA"/>
+            </StackPanel>
+
+            <TextBlock Grid.Column="2"
+                       Text="{Binding ZoomLevel, StringFormat='Scale: {0:P0}'}"
+                       FontSize="10"
+                       Foreground="#AAAAAA"/>
+          </Grid>
+        </Border>
+      </Grid>
+    </Grid>
+  </Grid>
 </UserControl>

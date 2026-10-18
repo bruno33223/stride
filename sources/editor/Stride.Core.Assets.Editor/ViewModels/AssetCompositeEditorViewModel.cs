@@ -46,6 +46,42 @@ public abstract class AssetCompositeEditorViewModel<TAsset, TAssetViewModel> : A
     }
 
     /// <summary>
+    /// Clears the selection.
+    /// </summary>
+    public void ClearSelection()
+    {
+        SelectedContent.Clear();
+    }
+
+    /// <summary>
+    /// Fixes up and restores selection after parts have been moved or modified.
+    /// </summary>
+    public void FixupAndRestoreSelection(IEnumerable<object> previousSelection, IReadOnlyCollection<object> newSelection)
+    {
+        var fixedUpSelection = new List<object>();
+        foreach (var item in previousSelection)
+        {
+            if (!newSelection.Contains(item))
+                continue;
+
+            var part = item as IAssetPartViewModel;
+            if (part == null)
+            {
+                fixedUpSelection.Add(item);
+                continue;
+            }
+
+            // The part can have been moved from another asset into the current one.
+            part = FindPartViewModel(new AbsoluteId(Asset.Id, part.Id.ObjectId));
+            if (part == null)
+                continue;
+
+            fixedUpSelection.Add(part);
+        }
+        SelectedContent.AddRange(fixedUpSelection);
+    }
+
+    /// <summary>
     /// Resolves the provided <paramref name="obj"/> into its corresponding id, or <c>null</c>.
     /// </summary>
     /// <param name="obj"></param>

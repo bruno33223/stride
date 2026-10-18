@@ -20,17 +20,14 @@ partial class SessionViewModel
     /// The current instance of <see cref="SessionViewModel"/>.
     /// </summary>
     /// <remarks>Accessing this property is allowed only from view-side code, in places it would be hard to get ortherwise.</remarks>
-    public static SessionViewModel Instance
+    public static SessionViewModel? Instance
     {
         get
         {
             semaphore.Wait();
             try
             {
-                // This getter should only be legimitely called when the session has been created.
-                // Therefore we assume isn't null here.
-                Debug.Assert(instance is not null);
-                return instance!;
+                return instance;
             }
             finally
             {

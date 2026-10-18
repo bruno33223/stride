@@ -1,0 +1,66 @@
+// Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
+// Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
+
+using Stride.Core.Extensions;
+using Stride.Core.Presentation.Collections;
+using Stride.Core.Presentation.ViewModels;
+
+namespace Stride.Core.Assets.Editor.Components.TemplateDescriptions.ViewModels;
+
+public class TemplateDescriptionGroupViewModel : DispatcherViewModel, IComparable<TemplateDescriptionGroupViewModel>
+{
+    public const string Separator = "/";
+
+    private readonly SortedObservableCollection<TemplateDescriptionGroupViewModel> subGroups = [];
+
+    public TemplateDescriptionGroupViewModel(TemplateDescriptionGroupViewModel parent, string name)
+        : this(parent.SafeArgument(nameof(parent)).ServiceProvider, name)
+    {
+        ArgumentNullException.ThrowIfNull(parent);
+        Parent = parent;
+        Parent.subGroups.Add(this);
+    }
+
+    public TemplateDescriptionGroupViewModel(IViewModelServiceProvider serviceProvider, string name)
+        : base(serviceProvider)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        Name = name;
+        Templates = [];
+        DependentProperties.Add(nameof(Parent), [nameof(Path)]);
+    }
+
+    public string Name { get; }
+
+    public string Path => IsRoot ? "" : Parent!.Path + Name + (Name.Length > 0 ? Separator : "");
+
+    public TemplateDescriptionGroupViewModel? Parent { get; }
+
+    public bool IsRoot => Parent == null;
+
+    public IReadOnlyObservableCollection<TemplateDescriptionGroupViewModel> SubGroups => subGroups;
+
+    public ObservableList<ITemplateDescriptionViewModel> Templates { get; }
+
+    public IEnumerable<ITemplateDescriptionViewModel> GetTemplatesRecursively()
+    {
+        var allGroup = SubGroups.SelectDeep(x => x.SubGroups);
+        return Templates.Concat(allGroup.SelectMany(x => x.Templates));
+    }
+
+    public void Clear()
+    {
+        subGroups.Clear();
+        Templates.Clear();
+    }
+
+    public int CompareTo(TemplateDescriptionGroupViewModel? other)
+    {
+        return other != null ? string.Compare(Name, other.Name, StringComparison.InvariantCultureIgnoreCase) : -1;
+    }
+
+    public override string ToString()
+    {
+        return "TemplateDescriptionGroupViewModel [" + Path + "]";
+    }
+}

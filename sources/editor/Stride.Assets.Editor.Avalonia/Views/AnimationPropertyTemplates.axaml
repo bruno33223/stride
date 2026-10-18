@@ -1,0 +1,100 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+                    xmlns:aev="using:Stride.Assets.Editor.Avalonia.Views"
+                    xmlns:caec="using:Stride.Core.Assets.Editor.Avalonia.Converters"
+                    xmlns:caev="using:Stride.Core.Assets.Editor.Avalonia.Views"
+                    xmlns:cpqvm="using:Stride.Core.Presentation.Quantum.ViewModels"
+                    xmlns:s="using:System"
+                    x:Class="Stride.Assets.Editor.Avalonia.Views.AnimationPropertyTemplates">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Views/DefaultPropertyTemplateProviders.axaml"/>
+  </ResourceDictionary.MergedDictionaries>
+
+  <DrawingImage x:Key="ImageEditCurve">
+    <DrawingGroup>
+      <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+      <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M9,13L9,11.474C8.011,10.722 7.321,9.687 6.752,8.832 6.565,8.552 6.376,8.268 6.182,8L2,8 2,6.843C1.784,6.908,1.566,6.98,1.349,7.062L0,7.564 0,4.346 0.679,4.116C1.128,3.963,1.57,3.838,2,3.742L2,3 7,3 7,4.526C7.988,5.278 8.678,6.313 9.248,7.168 9.435,7.448 9.624,7.732 9.817,8L14,8 14,9.157C14.248,9.082,14.47,9.006,14.65,8.938L16,8.434 16,11.653 15.322,11.884C14.873,12.037,14.431,12.162,14,12.258L14,13z" />
+      <GeometryDrawing Brush="#FF414141" Geometry="F1M15,9.875C14.487,10.066,13.773,10.292,13,10.411L13,9 10,9 10,9.725C9.415,9.212 8.933,8.498 8.416,7.723 7.761,6.74 7.042,5.68 6,5.053L6,4 3,4 3,4.577C2.25,4.679,1.557,4.874,1,5.062L1,6.125C1.513,5.934,2.227,5.708,3,5.588L3,7 6,7 6,6.275C6.585,6.788 7.067,7.502 7.584,8.277 8.239,9.261 8.958,10.32 10,10.946L10,12 13,12 13,11.423C13.75,11.321,14.443,11.127,15,10.938z" />
+    </DrawingGroup>
+  </DrawingImage>
+
+  <DataTemplate x:Key="CurveTemplate" DataType="cpqvm:NodeViewModel">
+    <DockPanel>
+      <Button DockPanel.Dock="Right" Margin="2,0,0,0" Padding="0" Width="16" Height="16" Background="Transparent"
+              Command="{Binding [EditCurve]}" ToolTip.Tip="{sd:LocalizeString Edit curve, Context=ToolTip}">
+        <Image Source="{StaticResource ImageEditCurve}" Width="16" Height="16"/>
+      </Button>
+      <ContentPresenter Content="{Binding}" ContentTemplate="{x:Static caev:PropertyViewHelper.EditorProviders}" />
+    </DockPanel>
+  </DataTemplate>
+
+  <!-- Provider for IComputeCurve<Color4> editor -->
+  <aev:ComputeCurveColor4TemplateProvider x:Key="ComputeCurveColor4PropertyTemplateProvider" caev:PropertyViewHelper.TemplateCategory="PropertyEditor"
+                                         Template="{StaticResource CurveTemplate}" OverrideRule="Most" />
+  <!-- Provider for IComputeCurve<float> editor -->
+  <aev:ComputeCurveFloatTemplateProvider x:Key="ComputeCurveFloatPropertyTemplateProvider" caev:PropertyViewHelper.TemplateCategory="PropertyEditor"
+                                        Template="{StaticResource CurveTemplate}" OverrideRule="Most" />
+  <!-- Provider for IComputeCurve<Quaternion> editor -->
+  <aev:ComputeCurveQuaternionTemplateProvider x:Key="ComputeCurveQuaternionPropertyTemplateProvider" caev:PropertyViewHelper.TemplateCategory="PropertyEditor"
+                                             Template="{StaticResource CurveTemplate}" OverrideRule="Most" />
+  <!-- Provider for IComputeCurve<Vector2> editor -->
+  <aev:ComputeCurveVector2TemplateProvider x:Key="ComputeCurveVector2PropertyTemplateProvider" caev:PropertyViewHelper.TemplateCategory="PropertyEditor"
+                                          Template="{StaticResource CurveTemplate}" OverrideRule="Most" />
+  <!-- Provider for IComputeCurve<Vector3> editor -->
+  <aev:ComputeCurveVector3TemplateProvider x:Key="ComputeCurveVector3PropertyTemplateProvider" caev:PropertyViewHelper.TemplateCategory="PropertyEditor"
+                                          Template="{StaticResource CurveTemplate}" OverrideRule="Most" />
+  <!-- Provider for IComputeCurve<Vector4> editor -->
+  <aev:ComputeCurveVector4TemplateProvider x:Key="ComputeCurveVector4PropertyTemplateProvider" caev:PropertyViewHelper.TemplateCategory="PropertyEditor"
+                                          Template="{StaticResource CurveTemplate}" OverrideRule="Most" />
+
+  <!-- Providers for number with a range editors -->
+  <aev:AnimationFrameTemplateProvider x:Key="AnimationFrameTemplateProvider" caev:PropertyViewHelper.TemplateCategory="PropertyEditor" OverrideRule="Most">
+    <DataTemplate DataType="cpqvm:NodeViewModel">
+      <Grid ColumnDefinitions="3*,*">
+        <Slider x:Name="Slider" Grid.Column="0" Height="22" VerticalAlignment="Center"
+                Minimum="{Binding ConverterParameter=Parent.Parent.[AnimationTimeMinimum].NodeValue, Converter={sd:Chained {caec:NodePathToObject}, {caec:DifferentValuesToNull}, {aev:TimeToFrames}}}"
+                Maximum="{Binding ConverterParameter=Parent.Parent.[AnimationTimeMaximum].NodeValue, Converter={sd:Chained {caec:NodePathToObject}, {caec:DifferentValuesToNull}, {aev:TimeToFrames}}}"
+                SmallChange="1" LargeChange="1" IsSnapToTickEnabled="True" TickFrequency="1"
+                Value="{Binding #TextBox.Value, Mode=TwoWay}">
+          <Interaction.Behaviors>
+            <DataTriggerBehavior Binding="{Binding ConverterParameter=Parent.Parent.[AnimationTimeMinimum].NodeValue, Converter={caec:NodePathToObject}}" Value="{x:Static cpqvm:NodeViewModel.DifferentValues}">
+              <ChangePropertyAction PropertyName="IsVisible" Value="False"/>
+            </DataTriggerBehavior>
+            <DataTriggerBehavior Binding="{Binding ConverterParameter=Parent.Parent.[AnimationTimeMaximum].NodeValue, Converter={caec:NodePathToObject}}" Value="{x:Static cpqvm:NodeViewModel.DifferentValues}">
+              <ChangePropertyAction PropertyName="IsVisible" Value="False"/>
+            </DataTriggerBehavior>
+          </Interaction.Behaviors>
+        </Slider>
+        <sd:NumericTextBox x:Name="TextBox" Grid.Column="1" Margin="6,2,2,2" DecimalPlaces="0"
+                           Value="{Binding NodeValue, Converter={sd:Chained {caec:DifferentValuesToNull}, {aev:TimeToFrames}}, UpdateSourceTrigger=Explicit}"
+                           Minimum="{Binding ConverterParameter=Parent.Parent.[AnimationTimeMinimum].NodeValue, Converter={sd:Chained {caec:NodePathToObject}, {caec:DifferentValuesToNull}, {aev:TimeToFrames}}, FallbackValue=0}"
+                           Maximum="{Binding ConverterParameter=Parent.Parent.[AnimationTimeMaximum].NodeValue, Converter={sd:Chained {caec:NodePathToObject}, {caec:DifferentValuesToNull}, {aev:TimeToFrames}}, FallbackValue={x:Static s:TimeSpan.MaxValue}}">
+          <Interaction.Behaviors>
+            <DataTriggerBehavior Binding="{Binding NodeValue}" Value="{x:Static cpqvm:NodeViewModel.DifferentValues}">
+              <ChangePropertyAction PropertyName="PlaceholderText" Value="{sd:LocalizeString (Different values)}"/>
+            </DataTriggerBehavior>
+            <DataTriggerBehavior Binding="{Binding ConverterParameter=Parent.Parent.[AnimationTimeMinimum].NodeValue, Converter={caec:NodePathToObject}}" Value="{x:Static cpqvm:NodeViewModel.DifferentValues}">
+              <ChangePropertyAction PropertyName="Grid.Column" Value="0"/>
+              <ChangePropertyAction PropertyName="Grid.ColumnSpan" Value="2"/>
+            </DataTriggerBehavior>
+            <DataTriggerBehavior Binding="{Binding ConverterParameter=Parent.Parent.[AnimationTimeMaximum].NodeValue, Converter={caec:NodePathToObject}}" Value="{x:Static cpqvm:NodeViewModel.DifferentValues}">
+              <ChangePropertyAction PropertyName="Grid.Column" Value="0"/>
+              <ChangePropertyAction PropertyName="Grid.ColumnSpan" Value="2"/>
+            </DataTriggerBehavior>
+          </Interaction.Behaviors>
+        </sd:NumericTextBox>
+      </Grid>
+    </DataTemplate>
+  </aev:AnimationFrameTemplateProvider>
+
+  <!-- Providers for number with a range editors -->
+  <aev:AnimationFrameBoxTemplateProvider x:Key="AnimationFrameBoxTemplateProvider" caev:PropertyViewHelper.TemplateCategory="PropertyEditor" OverrideRule="Most">
+    <DataTemplate DataType="cpqvm:NodeViewModel">
+      <sd:NumericTextBox x:Name="TextBox" Margin="6,2,2,2" DecimalPlaces="3"
+                         Value="{Binding NodeValue, Converter={aev:TimeToFrames}, UpdateSourceTrigger=Explicit}"
+                         Minimum="0"
+                         Maximum="922337203685477"/>
+    </DataTemplate>
+  </aev:AnimationFrameBoxTemplateProvider>
+</ResourceDictionary>

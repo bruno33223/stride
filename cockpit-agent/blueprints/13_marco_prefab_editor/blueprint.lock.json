@@ -1,0 +1,35 @@
+{
+  "schema_version": "2.0",
+  "epic_name": "13_marco_prefab_editor",
+  "goal": "Portabilidade e consolidação integral do Prefab Editor, Nested Archetypes e Asset Composites para Linux Nativo (Avalonia 12 + Vulkan RADV)",
+  "created_at": "2026-10-16 08:04:04",
+  "slices": [
+    {
+      "id": "slice-1",
+      "title": "Prefab ViewModels, Archetype Engine & Base Part Linking",
+      "criteria_hash": "1846882c1fada106",
+      "max_attempts": 5,
+      "target_files": []
+    },
+    {
+      "id": "slice-2",
+      "title": "Prefab Editor Controllers, Game-Side Loading & Services",
+      "criteria_hash": "fb8b7e4d82b86d85",
+      "max_attempts": 5,
+      "target_files": []
+    },
+    {
+      "id": "slice-3",
+      "title": "Prefab Editor Avalonia View, TreeView Helper & Instance Script",
+      "criteria_hash": "adabf4e682d13df2",
+      "max_attempts": 5,
+      "target_files": []
+    }
+  ],
+  "human_gates": {
+    "gate_plan_approved": false,
+    "gate_ship_approved": false,
+    "last_approved_at": null,
+    "approved_by": null
+  }
+}

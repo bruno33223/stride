@@ -18,15 +18,20 @@ public sealed class UserDocumentationService
     private readonly HashSet<string> undocumentedAssemblies = [];
     private readonly HashSet<string> documentedAssemblies = [];
     private readonly object lockObj = new();
-    private readonly SessionViewModel session;
+    private readonly SessionViewModel? session;
 
-    public UserDocumentationService(SessionViewModel session)
+    public UserDocumentationService() : this(null)
+    {
+    }
+
+    public UserDocumentationService(SessionViewModel? session)
     {
         this.session = session;
     }
 
     public string? GetMemberDocumentation(IMemberDescriptor member, Type rootType)
     {
+        if (member == null) throw new ArgumentNullException(nameof(member));
         string result;
         string key;
 
@@ -38,7 +43,7 @@ public sealed class UserDocumentationService
 
             lock (lockObj)
             {
-                if (cachedDocumentations.TryGetValue(key, out result))
+                if (cachedDocumentations.TryGetValue(key, out result!))
                     return result;
             }
         }
@@ -53,12 +58,13 @@ public sealed class UserDocumentationService
 
         lock (lockObj)
         {
-            return cachedDocumentations.TryGetValue(key, out result) ? result : null;
+            return cachedDocumentations.TryGetValue(key, out result!) ? result : null;
         }
     }
 
     public string? GetPropertyKeyDocumentation(PropertyKey propertyKey)
     {
+        if (propertyKey == null) throw new ArgumentNullException(nameof(propertyKey));
         var ownerType = propertyKey.OwnerType;
         if (ownerType == null)
             return null;
@@ -72,13 +78,16 @@ public sealed class UserDocumentationService
 
         lock (lockObj)
         {
-            return cachedDocumentations.TryGetValue(key, out string result) ? result : null;
+            return cachedDocumentations.TryGetValue(key, out string? result) ? result : null;
         }
     }
 
     public void ClearCachedAssemblyDocumentation(Assembly assembly)
     {
+        if (assembly == null) throw new ArgumentNullException(nameof(assembly));
         var assemblyName = assembly.GetName().Name;
+        if (assemblyName == null)
+            return;
 
         lock (lockObj)
         {
@@ -89,11 +98,14 @@ public sealed class UserDocumentationService
 
     public bool CacheAssemblyDocumentation(Assembly assembly)
     {
+        if (assembly == null) throw new ArgumentNullException(nameof(assembly));
         // Can't process dynamic assemblies (they don't have a location)
         if (assembly.IsDynamic)
             return false;
 
         var assemblyName = assembly.GetName().Name;
+        if (assemblyName == null)
+            return false;
 
         // Check if the assembly has already been marked as undocumented
         if (undocumentedAssemblies.Contains(assemblyName))
@@ -103,7 +115,7 @@ public sealed class UserDocumentationService
         if (!documentedAssemblies.Contains(assemblyName))
         {
             var location = assembly.Location;
-            if (string.IsNullOrEmpty(location) && session.CurrentProject?.Package != null)
+            if (string.IsNullOrEmpty(location) && session?.CurrentProject?.Package != null)
             {
                 //Try to find the assembly in the loaded assemblies, since Location won't be populated in the case of User assemblies
                 var package = session.CurrentProject.Package;
@@ -141,13 +153,12 @@ public sealed class UserDocumentationService
         return documentedAssemblies.Contains(assemblyName);
     }
 
-    private void CacheAssemblyDocumentationFromPath(string assemblyName, string location)
+    public void CacheAssemblyDocumentationFromPath(string assemblyName, string location)
     {
         if (string.IsNullOrEmpty(location) || documentedAssemblies.Contains(assemblyName))
         {
             return;
         }
-
 
         var basePath = Path.Combine(Path.GetDirectoryName(location) ?? "", Path.GetFileNameWithoutExtension(location));
         if (!CacheCustomDocumentation(basePath + ".usrdoc"))
@@ -175,7 +186,7 @@ public sealed class UserDocumentationService
     /// </summary>
     /// <param name="filePath">The file location.</param>
     /// <returns>Returns true if the file was successfully cached or empty.</returns>
-    private bool CacheXmlDocumentation(string filePath)
+    public bool CacheXmlDocumentation(string filePath)
     {
         if (!File.Exists(filePath))
         {
@@ -191,7 +202,11 @@ public sealed class UserDocumentationService
 
                 foreach (XmlNode node in doc.GetElementsByTagName("userdoc"))
                 {
-                    var key = node.ParentNode.Attributes["name"]?.Value;
+                    var parent = node.ParentNode;
+                    if (parent?.Attributes == null)
+                        continue;
+
+                    var key = parent.Attributes["name"]?.Value;
                     var documentation = node.InnerText.Trim();
 
                     if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(documentation))
@@ -220,7 +235,7 @@ public sealed class UserDocumentationService
     /// </summary>
     /// <param name="filePath">The file location.</param>
     /// <returns>Returns true if the file was successfully cached or empty.</returns>
-    private bool CacheCustomDocumentation(string filePath)
+    public bool CacheCustomDocumentation(string filePath)
     {
         if (!File.Exists(filePath))
         {

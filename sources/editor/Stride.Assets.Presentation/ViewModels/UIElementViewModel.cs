@@ -7,21 +7,31 @@ using Stride.Core.Assets.Presentation.Components.Properties;
 using Stride.Core.Assets.Presentation.ViewModels;
 using Stride.Core.Presentation.Quantum;
 using Stride.Core.Quantum;
+using Stride.Core.Presentation.ViewModels;
 using Stride.UI;
 using Stride.UI.Controls;
 using Stride.UI.Panels;
 
 namespace Stride.Assets.Presentation.ViewModels;
 
-public class UIElementViewModel : UIHierarchyItemViewModel, IAssetPropertyProviderViewModel
+public class UIElementViewModel : UIHierarchyItemViewModel, IAssetPropertyProviderViewModel, IIsEditableViewModel
 {
     private string? name;
+    private bool isEditing;
 
     public UIElementViewModel(UIBaseViewModel asset, UIElementDesign elementDesign)
         : base(asset, GetOrCreateChildPartDesigns((UIAssetBase)asset.Asset, elementDesign))
     {
         UIElementDesign = elementDesign;
         ElementType = AssetSideUIElement.GetType();
+    }
+
+    public bool IsEditable => true;
+
+    public bool IsEditing
+    {
+        get => isEditing;
+        set => SetValue(ref isEditing, value);
     }
 
     public UIElement AssetSideUIElement => UIElementDesign.UIElement;
@@ -50,7 +60,7 @@ public class UIElementViewModel : UIHierarchyItemViewModel, IAssetPropertyProvid
         return node;
     }
 
-    internal UIElementDesign UIElementDesign { get; }
+    public UIElementDesign UIElementDesign { get; }
 
     AssetViewModel IAssetPropertyProviderViewModel.RelatedAsset => Asset;
 

@@ -1,0 +1,280 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+             xmlns:vm="using:Stride.Assets.Editor.ViewModels"
+             xmlns:local="using:Stride.Assets.Editor.Avalonia.Views"
+             xmlns:behaviors="using:Stride.Assets.Editor.Avalonia.Views.Behaviors"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+             x:Class="Stride.Assets.Editor.Avalonia.Views.CurveEditorView"
+             x:DataType="vm:CurveEditorViewModel">
+
+  <UserControl.Resources>
+    <x:Int32 x:Key="ParamFitAll">0</x:Int32>
+    <x:Int32 x:Key="ParamFitHeight">1</x:Int32>
+    <x:Int32 x:Key="ParamFitWidth">-1</x:Int32>
+    <x:Int32 x:Key="ParamFirstKey">-2147483648</x:Int32>
+    <x:Int32 x:Key="ParamPrevKey">-1</x:Int32>
+    <x:Int32 x:Key="ParamNextKey">1</x:Int32>
+    <x:Int32 x:Key="ParamLastKey">2147483647</x:Int32>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <!-- Botões da barra de ferramentas -->
+    <Style Selector="Button.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.toolbtn:pointerover">
+      <Setter Property="Background" Value="#35353A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="ToggleButton.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ToggleButton.toolbtn:checked">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Botões de ícones de cabeçalho -->
+    <Style Selector="Button.iconbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="5,3"/>
+      <Setter Property="Foreground" Value="#AAAAAA"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.iconbtn:pointerover">
+      <Setter Property="Background" Value="#333338"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Cabeçalhos das seções -->
+    <Style Selector="Border.sectionheader">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Setter Property="Padding" Value="8,5"/>
+    </Style>
+    <Style Selector="TextBlock.sectiontitle">
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="Foreground" Value="#AAAAAA"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Separador vertical da toolbar -->
+    <Style Selector="Rectangle.separator">
+      <Setter Property="Width" Value="1"/>
+      <Setter Property="Height" Value="16"/>
+      <Setter Property="Fill" Value="#38383E"/>
+      <Setter Property="Margin" Value="4,0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="240,4,*">
+    <!-- Painel Lateral Esquerdo: Lista de Curvas -->
+    <DockPanel Grid.Column="0" Background="#1E1E22">
+      <!-- Cabeçalho do Painel -->
+      <Border DockPanel.Dock="Top" Classes="sectionheader">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0" Text="Curvas" Classes="sectiontitle"/>
+          <Button Grid.Column="1" Classes="iconbtn"
+                  Command="{Binding RemoveSelectedCurveCommand}"
+                  ToolTip.Tip="Remover curva selecionada">
+            <Path Width="12" Height="12" Stretch="Uniform" Fill="#CCCCCC"
+                  Data="M 2,2 L 10,10 M 10,2 L 2,10" Stroke="#CCCCCC" StrokeThickness="1.5"/>
+          </Button>
+        </Grid>
+      </Border>
+
+      <!-- Árvore Hierárquica de Curvas -->
+      <TreeView ItemsSource="{Binding Curves}"
+                SelectedItem="{Binding SelectedCurve, Mode=TwoWay}"
+                SelectionMode="Single"
+                Background="Transparent"
+                BorderThickness="0"
+                Margin="2">
+        <TreeView.ItemTemplate>
+          <TreeDataTemplate ItemsSource="{Binding Children}" x:DataType="vm:CurveViewModelBase">
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <!-- Indicador de cor da curva -->
+              <Border Width="10" Height="10" CornerRadius="2"
+                      Background="{Binding Color, Converter={sd:ColorConverter}}"
+                      BorderBrush="#44444A" BorderThickness="1"
+                      VerticalAlignment="Center"/>
+              <!-- Nome da Curva -->
+              <TextBlock Text="{Binding DisplayName}"
+                         Foreground="#DDDDDD"
+                         FontSize="12"
+                         VerticalAlignment="Center"/>
+            </StackPanel>
+          </TreeDataTemplate>
+        </TreeView.ItemTemplate>
+      </TreeView>
+    </DockPanel>
+
+    <!-- Divisor ajustável (GridSplitter) -->
+    <GridSplitter Grid.Column="1" Background="#28282C" ResizeDirection="Columns"/>
+
+    <!-- Painel Principal Direito: Barra de Ferramentas e Canvas Gráfico -->
+    <DockPanel Grid.Column="2" Background="#18181A">
+      <!-- Barra de Ferramentas Superior -->
+      <Border DockPanel.Dock="Top" Classes="sectionheader">
+        <WrapPanel Orientation="Horizontal">
+          <!-- Alternar Mira / Crosshair Tracker -->
+          <ToggleButton Classes="toolbtn" IsChecked="{Binding #CurveCanvas.IsTrackerActive}"
+                        ToolTip.Tip="Exibir ou ocultar mira de rastreamento" Margin="2,0">
+            <Path Width="14" Height="14" Stretch="Uniform" Fill="#CCCCCC"
+                  Data="M 7,0 L 7,4 M 7,10 L 7,14 M 0,7 L 4,7 M 10,7 L 14,7 M 7,2 A 5,5 0 1 0 7,12 A 5,5 0 1 0 7,2"
+                  Stroke="#CCCCCC" StrokeThickness="1.2"/>
+          </ToggleButton>
+
+          <Rectangle Classes="separator"/>
+
+          <!-- Botões de Enquadramento / Ajuste de Visualização (Fit) -->
+          <Button Classes="toolbtn" Command="{Binding ResetViewCommand}" CommandParameter="{StaticResource ParamFitAll}"
+                  ToolTip.Tip="Enquadrar todas as curvas" Margin="2,0">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Path Width="12" Height="12" Stretch="Uniform" Fill="#CCCCCC"
+                    Data="M 1,1 L 4,1 M 1,1 L 1,4 M 11,1 L 8,1 M 11,1 L 11,4 M 1,11 L 4,11 M 1,11 L 1,8 M 11,11 L 8,11 M 11,11 L 11,8"
+                    Stroke="#CCCCCC" StrokeThickness="1.5"/>
+              <TextBlock Text="Ajustar" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Classes="toolbtn" Command="{Binding ResetViewCommand}" CommandParameter="{StaticResource ParamFitHeight}"
+                  ToolTip.Tip="Ajustar altura da curva" Margin="2,0">
+            <TextBlock Text="Ajustar Altura" VerticalAlignment="Center"/>
+          </Button>
+
+          <Button Classes="toolbtn" Command="{Binding ResetViewCommand}" CommandParameter="{StaticResource ParamFitWidth}"
+                  ToolTip.Tip="Ajustar largura da curva" Margin="2,0">
+            <TextBlock Text="Ajustar Largura" VerticalAlignment="Center"/>
+          </Button>
+
+          <Rectangle Classes="separator"/>
+
+          <!-- Navegação entre Keyframes -->
+          <Button Classes="toolbtn" Command="{Binding NavigateToControlPointCommand}" CommandParameter="{StaticResource ParamFirstKey}"
+                  ToolTip.Tip="Primeiro keyframe (Home)" Margin="2,0">
+            <Path Width="12" Height="12" Stretch="Uniform" Fill="#CCCCCC"
+                  Data="M 2,2 L 2,10 M 10,2 L 4,6 L 10,10 Z"/>
+          </Button>
+
+          <Button Classes="toolbtn" Command="{Binding NavigateToControlPointCommand}" CommandParameter="{StaticResource ParamPrevKey}"
+                  ToolTip.Tip="Keyframe anterior (Esquerda)" Margin="2,0">
+            <Path Width="12" Height="12" Stretch="Uniform" Fill="#CCCCCC"
+                  Data="M 9,2 L 3,6 L 9,10 Z"/>
+          </Button>
+
+          <Button Classes="toolbtn" Command="{Binding NavigateToControlPointCommand}" CommandParameter="{StaticResource ParamNextKey}"
+                  ToolTip.Tip="Próximo keyframe (Direita)" Margin="2,0">
+            <Path Width="12" Height="12" Stretch="Uniform" Fill="#CCCCCC"
+                  Data="M 3,2 L 9,6 L 3,10 Z"/>
+          </Button>
+
+          <Button Classes="toolbtn" Command="{Binding NavigateToControlPointCommand}" CommandParameter="{StaticResource ParamLastKey}"
+                  ToolTip.Tip="Último keyframe (End)" Margin="2,0">
+            <Path Width="12" Height="12" Stretch="Uniform" Fill="#CCCCCC"
+                  Data="M 10,2 L 10,10 M 2,2 L 8,6 L 2,10 Z"/>
+          </Button>
+
+          <Rectangle Classes="separator"/>
+
+          <!-- Excluir Keyframes Selecionados -->
+          <Button Classes="toolbtn" Command="{Binding DeleteSelectedPointsCommand}"
+                  ToolTip.Tip="Excluir keyframes selecionados (Delete)" Margin="2,0">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Path Width="12" Height="12" Stretch="Uniform" Fill="#E57373"
+                    Data="M 2,3 L 10,3 M 4,3 L 4,1 M 8,3 L 8,1 M 3,3 L 3,11 L 9,11 L 9,3"
+                    Stroke="#E57373" StrokeThickness="1.2"/>
+              <TextBlock Text="Excluir" VerticalAlignment="Center" Foreground="#E57373"/>
+            </StackPanel>
+          </Button>
+
+          <Rectangle Classes="separator"/>
+
+          <!-- Comandos de Tangente -->
+          <Button Classes="toolbtn" Command="{Binding SetTangentLinearCommand}"
+                  ToolTip.Tip="Tangente Linear" Margin="2,0">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Path Width="12" Height="12" Stretch="Uniform"
+                    Data="M 1,11 L 11,1" Stroke="#CCCCCC" StrokeThickness="1.5"/>
+              <TextBlock Text="Linear" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Classes="toolbtn" Command="{Binding SetTangentFlatCommand}"
+                  ToolTip.Tip="Tangente Plana / Flat (Horizontal)" Margin="2,0">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Path Width="12" Height="12" Stretch="Uniform"
+                    Data="M 1,6 L 11,6" Stroke="#CCCCCC" StrokeThickness="1.5"/>
+              <TextBlock Text="Plana" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Button Classes="toolbtn" Command="{Binding SetTangentSmoothCommand}"
+                  ToolTip.Tip="Tangente Suave / Smooth" Margin="2,0">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <Path Width="12" Height="12" Stretch="Uniform"
+                    Data="M 1,11 C 4,11 8,1 11,1" Stroke="#CCCCCC" StrokeThickness="1.5"/>
+              <TextBlock Text="Suave" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+
+          <Rectangle Classes="separator"/>
+
+          <!-- Edição Direta do Keyframe Selecionado -->
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                      IsVisible="{Binding SingleSelectedControlPoint, Converter={x:Static ObjectConverters.IsNotNull}}"
+                      Margin="4,0">
+            <TextBlock Text="Chave:" VerticalAlignment="Center" Foreground="#999999" FontSize="11"/>
+            <TextBox Text="{Binding SingleSelectedControlPoint.ActualKey, Mode=TwoWay}"
+                     Width="70" Height="24" FontSize="11" Padding="4,2"
+                     VerticalContentAlignment="Center" Background="#1E1E22" BorderBrush="#35353A"/>
+
+            <TextBlock Text="Valor:" VerticalAlignment="Center" Foreground="#999999" FontSize="11" Margin="4,0,0,0"/>
+            <TextBox Text="{Binding SingleSelectedControlPoint.ActualValue, Mode=TwoWay}"
+                     Width="70" Height="24" FontSize="11" Padding="4,2"
+                     VerticalContentAlignment="Center" Background="#1E1E22" BorderBrush="#35353A"/>
+          </StackPanel>
+        </WrapPanel>
+      </Border>
+
+      <!-- Área Gráfica Interativa (Canvas de Curvas) -->
+      <local:CurveCanvasControl x:Name="CurveCanvas"
+                                ViewModel="{Binding}"
+                                Focusable="True">
+        <Interaction.Behaviors>
+          <behaviors:AxisPaneBehavior XAxis="{Binding SelectedCurve.XAxis}"
+                                      YAxis="{Binding SelectedCurve.YAxis}"
+                                      DrawingView="{Binding #CurveCanvas}"/>
+          <behaviors:AxisZoomBehavior XAxis="{Binding SelectedCurve.XAxis}"
+                                      YAxis="{Binding SelectedCurve.YAxis}"
+                                      DrawingView="{Binding #CurveCanvas}"/>
+        </Interaction.Behaviors>
+      </local:CurveCanvasControl>
+    </DockPanel>
+  </Grid>
+</UserControl>

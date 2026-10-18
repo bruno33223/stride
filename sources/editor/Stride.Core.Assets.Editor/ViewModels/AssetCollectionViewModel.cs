@@ -1,3 +1,6 @@
+using Stride.Core.IO;
+using Stride.Core.Assets.Templates;
+using Stride.Core.Assets.Editor.Components.TemplateDescriptions.ViewModels;
 // Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
 
@@ -77,6 +80,15 @@ public enum DisplayAssetMode
 
 public sealed class AssetCollectionViewModel : DispatcherViewModel
 {
+    [DataContract(nameof(AssetFilterViewModelData))]
+    public sealed class AssetFilterViewModelData
+    {
+        public string DisplayName = "";
+        public string Filter = "";
+        public bool IsActive = false;
+        public FilterCategory category = FilterCategory.AssetName;
+    }
+
     private readonly ObservableSet<AssetViewModel> assets = [];
     private readonly HashSet<DirectoryBaseViewModel> monitoredDirectories = [];
     private readonly ObservableSet<AssetViewModel> selectedAssets = [];
@@ -142,6 +154,22 @@ public sealed class AssetCollectionViewModel : DispatcherViewModel
     public IReadOnlyObservableCollection<AssetFilterViewModel> CurrentAssetFilters => currentAssetFilters;
 
     /// <summary>
+    /// Gets the list of available type filters.
+    /// </summary>
+    public IReadOnlyCollection<AssetFilterViewModel> TypeFilters => typeFilters;
+
+    private Func<AssetViewModel, bool>? customFilter;
+
+    /// <summary>
+    /// Gets or sets a custom filter function to filter assets.
+    /// </summary>
+    public Func<AssetViewModel, bool>? CustomFilter
+    {
+        get => customFilter;
+        set => SetValue(ref customFilter, value, RefreshFilters);
+    }
+
+    /// <summary>
     /// The filter text actively being searched.
     /// </summary>
     public string? AssetFilterPattern
@@ -202,7 +230,11 @@ public sealed class AssetCollectionViewModel : DispatcherViewModel
         currentAssetFilters.Remove(filter);
     }
     
-    private void AddAssetFilter(AssetFilterViewModel filter)
+    /// <summary>
+    /// Adds an asset filter.
+    /// </summary>
+    /// <param name="filter">The filter to add.</param>
+    public void AddAssetFilter(AssetFilterViewModel filter)
     {
         filter.IsActive = true;
         currentAssetFilters.Add(filter);
@@ -285,6 +317,9 @@ public sealed class AssetCollectionViewModel : DispatcherViewModel
 
     private bool Match(AssetViewModel asset)
     {
+        if (CustomFilter != null && !CustomFilter(asset))
+            return false;
+
         // Type filters are OR-ed
         var activeTypeFilters = currentAssetFilters.Where(f => f is { Category: FilterCategory.AssetType, IsActive: true }).ToList();
         if (activeTypeFilters.Count > 0 && !activeTypeFilters.Any(f => f.Match(asset)))
@@ -299,6 +334,43 @@ public sealed class AssetCollectionViewModel : DispatcherViewModel
     /// </summary>
     // FIXME: do we need both ActiveProperties and AssetCollection.AssetViewProperties?
     //        could be related to reusing this class for ReferencesViewModel and EditorDialogService
+
+    public async Task<List<AssetViewModel>> RunAssetTemplate(ITemplateDescriptionViewModel template, IList<UFile>? files, PropertyContainer? customParameters = null)
+    {
+        if (template?.GetTemplate() is not TemplateAssetDescription templateDescription)
+            return [];
+
+        var targetLocation = Session.CurrentProject?.Package.RootDirectory ?? (UDirectory)"";
+        var package = Session.CurrentProject?.Package ?? Session.LocalPackages.FirstOrDefault()?.Package;
+        if (package is null)
+            return [];
+
+        var parameters = new AssetTemplateGeneratorParameters(targetLocation, files)
+        {
+            Name = templateDescription.DefaultOutputName ?? "Asset",
+            Description = templateDescription,
+            Package = package,
+        };
+        if (customParameters != null)
+        {
+            foreach (var kvp in customParameters)
+                parameters.Tags[kvp.Key] = kvp.Value;
+        }
+
+        var generator = TemplateManager.FindTemplateGenerator(parameters);
+        if (generator != null && await generator.PrepareForRun(parameters) && generator.Run(parameters))
+        {
+            var resultList = new List<AssetViewModel>();
+            foreach (var asset in Session.AllAssets)
+            {
+                if (asset.Name == parameters.Name)
+                    resultList.Add(asset);
+            }
+            return resultList;
+        }
+        return [];
+    }
+
     public SessionObjectPropertiesViewModel AssetViewProperties { get; }
 
     /// <remarks>
@@ -344,8 +416,8 @@ public sealed class AssetCollectionViewModel : DispatcherViewModel
         if (assetList.Count != SelectedAssets.Count || !assetList.All(x => SelectedAssets.Contains(x)))
         {
             selectedContent.Clear();
-            // FIXME xplat-editor filters
             selectedContent.AddRange(assetList);
+            RefreshFilters();
         }
     }
 
@@ -529,5 +601,30 @@ public sealed class AssetCollectionViewModel : DispatcherViewModel
     private void UpdateSingleSelectedContent()
     {
         SingleSelectedContent = SelectedContent.Count == 1 ? SelectedContent.First() : null;
+    }
+
+    /// <inheritdoc />
+    public override void Destroy()
+    {
+        EnsureNotDestroyed(nameof(AssetCollectionViewModel));
+
+        foreach (var directory in monitoredDirectories)
+        {
+            directory.Assets.CollectionChanged -= AssetsCollectionInDirectoryChanged;
+            ((INotifyCollectionChanged)directory.SubDirectories).CollectionChanged -= SubDirectoriesCollectionInDirectoryChanged;
+        }
+        monitoredDirectories.Clear();
+
+        foreach (var filter in currentAssetFilters)
+        {
+            filter.PropertyChanged -= OnFilterPropertyChanged;
+        }
+
+        selectedContent.CollectionChanged -= SelectedContentCollectionChanged;
+        SelectedLocations.CollectionChanged -= SelectedLocationCollectionChanged;
+
+        AssetViewProperties.Destroy();
+
+        base.Destroy();
     }
 }

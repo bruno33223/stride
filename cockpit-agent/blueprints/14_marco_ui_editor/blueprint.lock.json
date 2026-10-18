@@ -1,0 +1,35 @@
+{
+  "schema_version": "2.0",
+  "epic_name": "14_marco_ui_editor",
+  "goal": "Portabilidade e consolidação integral do UI Editor, UI Canvas e Visual Adorners para Linux Nativo (Avalonia 12 + Vulkan RADV)",
+  "created_at": "2026-10-16 16:01:41",
+  "slices": [
+    {
+      "id": "slice-1",
+      "title": "UI ViewModels & Element Hierarchy",
+      "criteria_hash": "b2d68706ac6ead2f",
+      "max_attempts": 5,
+      "target_files": []
+    },
+    {
+      "id": "slice-2",
+      "title": "UI Game Services, Layout & Camera",
+      "criteria_hash": "4c56316bed728f41",
+      "max_attempts": 5,
+      "target_files": []
+    },
+    {
+      "id": "slice-3",
+      "title": "Visual Adorners & Avalonia Controls",
+      "criteria_hash": "86bfeca162298b7d",
+      "max_attempts": 5,
+      "target_files": []
+    }
+  ],
+  "human_gates": {
+    "gate_plan_approved": false,
+    "gate_ship_approved": false,
+    "last_approved_at": null,
+    "approved_by": null
+  }
+}

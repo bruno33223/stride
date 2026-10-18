@@ -9,8 +9,31 @@
     <ProjectReference Include="..\..\tests\xunit.runner.stride\xunit.runner.stride.csproj" />
     <ProjectReference Include="..\..\assets\Stride.Core.Assets.Quantum.Tests\Stride.Core.Assets.Quantum.Tests.csproj" />
     <ProjectReference Include="..\Stride.Core.Assets.Editor\Stride.Core.Assets.Editor.csproj" />
+    <ProjectReference Include="..\Stride.Core.Assets.Presentation\Stride.Core.Assets.Presentation.csproj" />
+    <ProjectReference Include="..\Stride.Assets.Presentation\Stride.Assets.Presentation.csproj" />
+    <ProjectReference Include="..\Stride.Assets.Editor\Stride.Assets.Editor.csproj" />
+    <ProjectReference Include="..\Stride.Core.Assets.Editor.Avalonia\Stride.Core.Assets.Editor.Avalonia.csproj" />
+    <ProjectReference Include="..\Stride.Assets.Editor.Avalonia\Stride.Assets.Editor.Avalonia.csproj" />
+    <ProjectReference Include="..\Stride.Editor\Stride.Editor.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="../Stride.GameStudio.Avalonia/ViewModels/FixAssetReferencesViewModel.cs">
+      <Link>ViewModels/FixAssetReferencesViewModel.cs</Link>
+    </Compile>
+
+    <Compile Remove="TestEffectCompilerServerSessionIntegration.cs" Condition="!Exists('$(MSBuildProjectDirectory)/../Stride.Assets.Editor/EffectCompilerServerSession.cs')" />
+    <Compile Remove="TestThumbnailCompilersAndCommandsIntegration.cs" Condition="!Exists('$(MSBuildProjectDirectory)/../Stride.Assets.Presentation/Thumbnails/ProceduralModelThumbnailCompiler.cs')" />
+    <Compile Remove="TestSoundPreviewGameServiceIntegration.cs" Condition="!Exists('$(MSBuildProjectDirectory)/../Stride.Assets.Presentation/Thumbnails/SoundThumbnailCompiler.cs')" />
+    <Compile Remove="TestSpriteStudioThumbnailsAndCacheIntegration.cs" Condition="!Exists('$(MSBuildProjectDirectory)/../Stride.Assets.Presentation/Thumbnails/SpriteStudioSheetThumbnailCompiler.cs')" />
+    <Compile Remove="TestThumbnailInfrastructure.cs" Condition="!Exists('$(MSBuildProjectDirectory)/../Stride.Assets.Presentation/Thumbnails/TextureThumbnailCompiler.cs')" />
+    <Compile Remove="TestValueConvertersAndTemplateProvidersIntegration.cs" Condition="!Exists('$(MSBuildProjectDirectory)/../Stride.Core.Assets.Editor.Avalonia/Converters/AbstractNodeEntryMatchesNodeValue.cs')" />
+    <Compile Remove="TestAssetPickerContractsAndCommandsIntegration.cs" />
+    <Compile Remove="TestUIGameServicesAndLayoutIntegration.cs" />
+    <Compile Remove="TestCurveAxesAndRenderingIntegration.cs" />
+    <Compile Remove="TestCurveEditorViewModelsIntegration.cs" />
+    <Compile Remove="TestFixAssetReferencesApplication.cs" />
+    <Compile Remove="TestDragDropBehaviors.cs" />
+
     <None Include="app.config" />
   </ItemGroup>
 

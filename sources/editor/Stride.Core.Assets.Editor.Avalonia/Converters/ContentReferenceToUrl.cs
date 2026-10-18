@@ -22,14 +22,14 @@ public sealed class ContentReferenceToUrl : ValueConverterBase<ContentReferenceT
             return "(Different values)";
 
         var contentReference = value as IReference ?? AttachedReferenceManager.GetOrCreateAttachedReference(value);
-        var asset = contentReference.Id != AssetId.Empty ? SessionViewModel.Instance.GetAssetById(contentReference.Id) : null;
+        var asset = contentReference.Id != AssetId.Empty ? SessionViewModel.Instance?.GetAssetById(contentReference.Id) : null;
         return asset is not null ? asset.Url : ContentReferenceHelper.BrokenReference;
     }
 
     public override object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         var url = value as string;
-        if (SessionViewModel.Instance.AllAssets.FirstOrDefault(x => x.Url == url) is not { } asset)
+        if (SessionViewModel.Instance?.AllAssets.FirstOrDefault(x => x.Url == url) is not { } asset)
             return null;
 
         var contentType = AssetRegistry.GetContentType(asset.AssetType)!;

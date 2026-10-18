@@ -1,0 +1,29 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+                    xmlns:views="using:Stride.Assets.Editor.Avalonia.Views"
+                    xmlns:caev="using:Stride.Core.Assets.Editor.Avalonia.Views"
+                    xmlns:cpqvm="using:Stride.Core.Presentation.Quantum.ViewModels"
+                    x:Class="Stride.Assets.Editor.Avalonia.Views.VisualScriptingTemplates">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Views/DefaultPropertyTemplateProviders.axaml"/>
+  </ResourceDictionary.MergedDictionaries>
+
+  <views:ScriptVariableReferenceTemplateProvider x:Key="ScriptVariableReferenceTemplateProvider" OverrideRule="Most" caev:PropertyViewHelper.TemplateCategory="PropertyEditor">
+    <DataTemplate DataType="cpqvm:NodeViewModel" x:CompileBindings="False">
+      <ComboBox DisplayMemberBinding="{Binding Name}"
+                SelectedItem="{Binding NodeValue}"
+                ItemsSource="{sd:MultiBinding {Binding Root.OwnerBlock.Method.Editor.SemanticModel}, {Binding Root.OwnerBlock.Method}, Converter={views:AvailableVariableReferenceValueConverter}}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:CompileBindings="False">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+              <TextBlock Text="{Binding Kind, Mode=OneWay}"/>
+              <TextBlock Text="{Binding Name, Mode=OneWay}" FontWeight="Bold"/>
+              <TextBlock Text="{Binding Type, Mode=OneWay, StringFormat='({0})'}" Foreground="Gray"/>
+            </StackPanel>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </DataTemplate>
+  </views:ScriptVariableReferenceTemplateProvider>
+</ResourceDictionary>

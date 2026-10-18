@@ -3,6 +3,7 @@
 
 using Stride.Core.Assets.Editor.Quantum.NodePresenters.Commands;
 using Stride.Core.Assets.Editor.Quantum.NodePresenters.Updaters;
+using Stride.Core.Assets.Editor.Services;
 using Stride.Core.Assets.Editor.ViewModels;
 using Stride.Core.Assets.Presentation.Components.Properties;
 using Stride.Core.Assets.Presentation.Quantum.NodePresenters;
@@ -36,8 +37,7 @@ public class SessionObjectPropertiesViewModel : PropertiesViewModel
         ViewModelService.NodeViewModelFactory = new AssetNodeViewModelFactory();
 
         var dialogService = ServiceProvider.Get<IDialogService>();
-        // FIXME xplat-editor
-        //var documentationService = session.ServiceProvider.Get<UserDocumentationService>();
+        var documentationService = session.ServiceProvider.TryGet<UserDocumentationService>();
 
         RegisterNodePresenterCommand(new CopyPropertyCommand());
         RegisterNodePresenterCommand(new PastePropertyCommand());
@@ -50,8 +50,10 @@ public class SessionObjectPropertiesViewModel : PropertiesViewModel
         RegisterNodePresenterCommand(new ResetOverrideCommand());
 
         RegisterNodePresenterUpdater(new ArchetypeNodeUpdater());
-        // FIXME xplat-editor
-        //RegisterNodePresenterUpdater(new DocumentationNodeUpdater(documentationService));
+        if (documentationService != null)
+        {
+            RegisterNodePresenterUpdater(new DocumentationNodeUpdater(documentationService));
+        }
         RegisterNodePresenterUpdater(new OwnerAssetUpdater());
         RegisterNodePresenterUpdater(new SessionNodeUpdater(session));
     }
@@ -142,18 +144,19 @@ public class SessionObjectPropertiesViewModel : PropertiesViewModel
     {
         base.OnPropertyChanged(propertyNames);
         // Do this only when the property has changed from the UI thread
-        if (!Dispatcher.CheckAccess())
+        if (Dispatcher != null && !Dispatcher.CheckAccess())
             return;
 
         if (!contextLock && propertyNames.Any(x => x is nameof(ViewModel) or nameof(CanDisplayProperties) or nameof(FallbackMessage)))
         {
             contextLock = true;
-            if (Session.ActiveProperties != this)
+            if (Session != null && Session.ActiveProperties != this)
             {
                 // FIXME xplat-editor
                 //Session.ActiveProperties.ClearSelection();
             }
-            Session.ActiveProperties = this;
+            if (Session != null)
+                Session.ActiveProperties = this;
             contextLock = false;
         }
     }

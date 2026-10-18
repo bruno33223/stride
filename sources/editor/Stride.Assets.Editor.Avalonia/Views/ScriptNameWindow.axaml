@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="using:Stride.Assets.Editor.Avalonia.Views"
+        mc:Ignorable="d" d:DesignWidth="360" d:DesignHeight="260"
+        x:Class="Stride.Assets.Editor.Avalonia.Views.ScriptNameWindow"
+        x:DataType="views:ScriptNameWindow"
+        Title="New script" Height="260" Width="360"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        CanResize="False">
+  <Grid RowDefinitions="*,Auto" Margin="20">
+    <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*" Margin="10">
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="Class:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+      <TextBox x:Name="ClassNameTextBox" Grid.Row="0" Grid.Column="1" Margin="0,5" Width="200" HorizontalAlignment="Left" KeyDown="TextBoxKeyDown"/>
+
+      <TextBlock x:Name="TemplateLabel" Grid.Row="1" Grid.Column="0" Text="Template:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+      <ComboBox x:Name="TemplateComboBox" Grid.Row="1" Grid.Column="1" Margin="0,5" Width="200" HorizontalAlignment="Left">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:CompileBindings="False">
+            <TextBlock Text="{Binding Name}"/>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+
+      <TextBlock Grid.Row="2" Grid.Column="0" Text="Namespace:" VerticalAlignment="Center" Margin="0,5,10,5"/>
+      <TextBox x:Name="NamespaceTextBox" Grid.Row="2" Grid.Column="1" Margin="0,5" Width="200" HorizontalAlignment="Left" KeyDown="TextBoxKeyDown"/>
+    </Grid>
+
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,15,0,0">
+      <Button Content="Create script"
+              Padding="16,6"
+              Click="ButtonOk"/>
+      <Button Content="Cancel"
+              Padding="16,6"
+              Click="ButtonCancel"/>
+    </StackPanel>
+  </Grid>
+</Window>

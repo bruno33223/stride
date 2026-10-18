@@ -1,0 +1,138 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+                    xmlns:aev="using:Stride.Assets.Editor.Avalonia.Views"
+                    xmlns:caec="using:Stride.Core.Assets.Editor.Avalonia.Converters"
+                    xmlns:caev="using:Stride.Core.Assets.Editor.Avalonia.Views"
+                    xmlns:cpqvm="using:Stride.Core.Presentation.Quantum.ViewModels"
+                    xmlns:s="using:System"
+                    xmlns:ui="using:Stride.UI"
+                    x:Class="Stride.Assets.Editor.Avalonia.Views.UIPropertyTemplates">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Views/DefaultPropertyTemplateProviders.axaml"/>
+  </ResourceDictionary.MergedDictionaries>
+
+  <DrawingImage x:Key="ImageThicknessLeft">
+    <DrawingGroup>
+      <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+      <GeometryDrawing Brush="#FFFFFF" Geometry="F1M8.707,3.207L4.914,7 15,7 15,9 4.914,9 8.707,12.793 7.293,14.207 1.086,8 7.293,1.793z" />
+    </DrawingGroup>
+  </DrawingImage>
+
+  <DrawingImage x:Key="ImageThicknessRight">
+    <DrawingGroup>
+      <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M0,0L16,0 16,16 0,16z" />
+      <GeometryDrawing Brush="#FFFFFF" Geometry="F1M7.293,12.793L11.086,9 1,9 1,7 11.086,7 7.293,3.207 8.707,1.793 14.914,8 8.707,14.207z" />
+    </DrawingGroup>
+  </DrawingImage>
+
+  <DrawingImage x:Key="ImageThicknessUp">
+    <DrawingGroup>
+      <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+      <GeometryDrawing Brush="#FFFFFFFF" Geometry="F1M12.793,8.707L9,4.914 9,15 7,15 7,4.914 3.207,8.707 1.793,7.293 8,1.086 14.207,7.293z" />
+    </DrawingGroup>
+  </DrawingImage>
+
+  <DrawingImage x:Key="ImageThicknessDown">
+    <DrawingGroup>
+      <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M0,0L16,0 16,16 0,16z" />
+      <GeometryDrawing Brush="#FFFFFFFF" Geometry="F1M3.207,7.293L7,11.086 7,0.999999999999999 9,0.999999999999999 9,11.086 12.793,7.293 14.207,8.707 8,14.914 1.793,8.707z" />
+    </DrawingGroup>
+  </DrawingImage>
+
+  <DrawingImage x:Key="ImageThicknessBack">
+    <DrawingGroup>
+      <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+      <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M15,0.999499999999999L5,0.999499999999999 5,6.9995 2,6.9995 2,13.9995 9,13.9995 9,10.9995 15,10.9995z" />
+      <GeometryDrawing Brush="#FF414141" Geometry="F1M6,1.9995L6,6.9995 8,6.9995 8,3.9995 12,3.9995 12,7.9995 9,7.9995 9,9.9995 14,9.9995 14,1.9995z M8,12.9995L3,12.9995 3,7.9995 8,7.9995z" />
+      <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M12,7.9995L9,7.9995 9,6.9995 8,6.9995 8,3.9995 12,3.9995z" />
+    </DrawingGroup>
+  </DrawingImage>
+
+  <DrawingImage x:Key="ImageThicknessFront">
+    <DrawingGroup>
+      <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+      <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M8.0001,0.999700000000001L8.0001,3.9997 2.0011,3.9997 2.0011,14.0007 12.0001,14.0007 12.0001,7.9997 15.0001,7.9997 15.0001,0.999700000000001z" />
+      <GeometryDrawing Brush="#FF424242" Geometry="F1M9,7L5,7 5,11 9,11z M11,13L3,13 3,5 11,5z M14,2L14,7 12,7 12,4 9,4 9,2z" />
+      <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M9,11L5,11 5,7 9,7z" />
+    </DrawingGroup>
+  </DrawingImage>
+
+  <ControlTheme x:Key="{x:Type aev:AngleEditor}" TargetType="aev:AngleEditor">
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Template">
+      <ControlTemplate TargetType="aev:AngleEditor">
+        <sd:NumericTextBox Value="{Binding Degrees, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                           DecimalPlaces="{Binding DecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                           ToolTip.Tip="{sd:LocalizeString Angle in degrees, Context=Tooltip}"/>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
+  <ControlTheme x:Key="{x:Type aev:ThicknessEditor}" TargetType="aev:ThicknessEditor">
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Template">
+      <ControlTemplate TargetType="aev:ThicknessEditor">
+        <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto">
+          <!-- Left -->
+          <Image Grid.Row="0" Grid.Column="0" ToolTip.Tip="Left" Width="16" Height="16"
+                 Source="{StaticResource ImageThicknessLeft}"/>
+          <sd:NumericTextBox Grid.Row="0" Grid.Column="1" TextAlignment="Center"
+                             Value="{Binding Left, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             DecimalPlaces="{Binding DecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"/>
+          <!-- Right -->
+          <Image Grid.Row="0" Grid.Column="2" ToolTip.Tip="Right" Width="16" Height="16"
+                 Source="{StaticResource ImageThicknessRight}"/>
+          <sd:NumericTextBox Grid.Row="0" Grid.Column="3" TextAlignment="Center"
+                             Value="{Binding Right, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             DecimalPlaces="{Binding DecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"/>
+          <!-- Top -->
+          <Image Grid.Row="1" Grid.Column="0" ToolTip.Tip="Top" Width="16" Height="16"
+                 Source="{StaticResource ImageThicknessUp}"/>
+          <sd:NumericTextBox Grid.Row="1" Grid.Column="1" TextAlignment="Center"
+                             Value="{Binding Top, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             DecimalPlaces="{Binding DecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"/>
+          <!-- Bottom -->
+          <Image Grid.Row="1" Grid.Column="2" ToolTip.Tip="Bottom" Width="16" Height="16"
+                 Source="{StaticResource ImageThicknessDown}"/>
+          <sd:NumericTextBox Grid.Row="1" Grid.Column="3" TextAlignment="Center"
+                             Value="{Binding Bottom, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             DecimalPlaces="{Binding DecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"/>
+          <!-- Back -->
+          <Image Grid.Row="2" Grid.Column="0" ToolTip.Tip="Back" Width="16" Height="16"
+                 Source="{StaticResource ImageThicknessBack}"/>
+          <sd:NumericTextBox Grid.Row="2" Grid.Column="1" TextAlignment="Center"
+                             Value="{Binding Back, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             DecimalPlaces="{Binding DecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"/>
+          <!-- Front -->
+          <Image Grid.Row="2" Grid.Column="2" ToolTip.Tip="Front" Width="16" Height="16"
+                 Source="{StaticResource ImageThicknessFront}"/>
+          <sd:NumericTextBox Grid.Row="2" Grid.Column="3" TextAlignment="Center"
+                             Value="{Binding Front, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                             DecimalPlaces="{Binding DecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"/>
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
+  <caev:TypeAndPropertyNameMatchTemplateProvider x:Key="RotationTemplateProvider" Type="{x:Type s:Single}" PropertyName="Rotation" caev:PropertyViewHelper.TemplateCategory="PropertyEditor">
+    <DataTemplate DataType="cpqvm:NodeViewModel">
+      <aev:AngleEditor Value="{Binding NodeValue}" DecimalPlaces="3"/>
+    </DataTemplate>
+  </caev:TypeAndPropertyNameMatchTemplateProvider>
+
+  <caev:TypeMatchTemplateProvider x:Key="StripDefinitionTemplateProvider" Type="{x:Type ui:StripDefinition}" caev:PropertyViewHelper.TemplateCategory="PropertyEditor">
+    <DataTemplate DataType="cpqvm:NodeViewModel">
+      <UniformGrid Rows="1">
+        <ContentPresenter Content="{Binding ConverterParameter=[SizeValue], Converter={caec:NodePathToObject}}" ContentTemplate="{x:Static caev:PropertyViewHelper.EditorProviders}" />
+        <ContentPresenter Content="{Binding ConverterParameter=[Type_], Converter={caec:NodePathToObject}}" ContentTemplate="{x:Static caev:PropertyViewHelper.EditorProviders}" />
+      </UniformGrid>
+    </DataTemplate>
+  </caev:TypeMatchTemplateProvider>
+
+  <caev:TypeMatchTemplateProvider x:Key="ThicknessTemplateProvider" Type="{x:Type ui:Thickness}" caev:PropertyViewHelper.TemplateCategory="PropertyEditor">
+    <DataTemplate DataType="cpqvm:NodeViewModel">
+      <aev:ThicknessEditor Value="{Binding NodeValue}" DecimalPlaces="3" />
+    </DataTemplate>
+  </caev:TypeMatchTemplateProvider>
+</ResourceDictionary>

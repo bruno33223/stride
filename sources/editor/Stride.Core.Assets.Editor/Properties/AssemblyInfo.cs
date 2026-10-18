@@ -4,3 +4,6 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Stride.Core.Assets.Editor.Tests")]
+[assembly: InternalsVisibleTo("Stride.Assets.Editor")]
+[assembly: InternalsVisibleTo("Stride.Assets.Editor.Avalonia")]
+[assembly: InternalsVisibleTo("Stride.Assets.Presentation")]

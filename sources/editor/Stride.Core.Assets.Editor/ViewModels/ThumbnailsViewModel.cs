@@ -26,9 +26,7 @@ public class ThumbnailsViewModel : DispatcherViewModel
         : base(session.SafeArgument(nameof(session)).ServiceProvider)
     {
         this.session = session;
-        // FIXME xplat-editor
-        //session.AssetCollection.FilteredContent.CollectionChanged += VisibleAssetsChanged;
-        session.AssetCollection.SelectedContent.CollectionChanged += VisibleAssetsChanged;
+        session.AssetCollection.FilteredAssets.CollectionChanged += VisibleAssetsChanged;
         session.AssetPropertiesChanged += AssetPropertiesChanged;
         ServiceProvider.ServiceRegistered += ServiceRegistered;
     }
@@ -36,9 +34,7 @@ public class ThumbnailsViewModel : DispatcherViewModel
     /// <inheritdoc/>
     public override void Destroy()
     {
-        // FIXME xplat-editor
-        //session.AssetCollection.FilteredContent.CollectionChanged -= VisibleAssetsChanged;
-        session.AssetCollection.SelectedContent.CollectionChanged -= VisibleAssetsChanged;
+        session.AssetCollection.FilteredAssets.CollectionChanged -= VisibleAssetsChanged;
         session.AssetPropertiesChanged -= AssetPropertiesChanged;
         ServiceProvider.ServiceRegistered -= ServiceRegistered;
 
@@ -123,9 +119,7 @@ public class ThumbnailsViewModel : DispatcherViewModel
 
     private void VisibleAssetsChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // FIXME xplat-editor
-        //IncreaseThumbnailPriority(session.AssetCollection.FilteredContent.OfType<AssetViewModel>());
-        IncreaseThumbnailPriority(session.AssetCollection.SelectedContent.OfType<AssetViewModel>());
+        IncreaseThumbnailPriority(session.AssetCollection.FilteredAssets);
     }
 
     private void AssetPropertiesChanged(object? sender, AssetChangedEventArgs e)
@@ -142,7 +136,10 @@ public class ThumbnailsViewModel : DispatcherViewModel
             Dispatcher.InvokeAsync(async () =>
             {
                 asset.ThumbnailData = e.Data;
-                await e.Data.PrepareForPresentation(Dispatcher);
+                if (e.Data != null)
+                {
+                    await e.Data.PrepareForPresentation(Dispatcher);
+                }
             });
         }
     }

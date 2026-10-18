@@ -19,5 +19,7 @@
     <ProjectReference Include="..\..\editor\Stride.Core.Assets.Presentation\Stride.Core.Assets.Presentation.csproj" />
   </ItemGroup>
 
+  <Import Project="..\..\editor\Stride.Core.MostRecentlyUsedFiles\Stride.Core.MostRecentlyUsedFiles.projitems" Label="Shared" />
+
   <Import Project="$(StrideRoot)sources/sdk/Stride.Build.Sdk.Editor/Sdk/Sdk.targets" />
 </Project>

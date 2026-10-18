@@ -1,0 +1,243 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+             xmlns:vm="using:Stride.Assets.Editor.ViewModels"
+             xmlns:eac="using:Stride.Editor.Avalonia.Controls"
+             xmlns:caeb="using:Stride.Core.Assets.Editor.Avalonia.Behaviors"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
+             x:Class="Stride.Assets.Editor.Avalonia.Views.MaterialEditorView"
+             x:DataType="vm:MaterialEditorViewModel">
+
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Themes/PropertyViewTheme.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="Button.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.toolbtn:pointerover">
+      <Setter Property="Background" Value="#35353A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="ToggleButton.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ToggleButton.toolbtn:checked">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="Border.sectionheader">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+    <Style Selector="TextBlock.sectiontitle">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="#E0E0E0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Border.propcard">
+      <Setter Property="Background" Value="#222226"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Padding" Value="10,8"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="*, 4, 420">
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 0: PREVIEW CENTRALIZADO DO MATERIAL                                -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Column="0" Background="#0C0C0E">
+      <!-- Stride Native Viewport Control -->
+      <eac:StrideViewportControl x:Name="MaterialViewport"
+                                 HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Stretch" />
+
+      <!-- OVERLAY SUPERIOR: BARRA DE FERRAMENTAS DO PREVIEW DE MATERIAL -->
+      <Border HorizontalAlignment="Stretch"
+              VerticalAlignment="Top"
+              Margin="10,10,10,0"
+              Padding="8,5"
+              CornerRadius="5"
+              Background="#E01A1A1E"
+              BorderBrush="#40FFFFFF"
+              BorderThickness="1">
+        <Grid ColumnDefinitions="Auto, *, Auto">
+          <!-- Nome do Material e Tags -->
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <PathIcon Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4Z"
+                      Width="14" Height="14" Foreground="#FF9F0A"/>
+            <TextBlock Text="{Binding MaterialName, StringFormat='Material: {0}'}"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       Foreground="#FFFFFF"
+                       VerticalAlignment="Center"/>
+            <Border Background="#2D2D32" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+              <TextBlock Text="PBR Metallic/Roughness" FontSize="10" Foreground="#30D158"/>
+            </Border>
+          </StackPanel>
+
+          <!-- Seletor de Primitiva e Ambiente -->
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+            <!-- Formas de Preview -->
+            <Button Classes="toolbtn"
+                    Command="{Binding SelectPreviewShapeCommand}"
+                    CommandParameter="{x:Static vm:MaterialPreviewShape.Sphere}"
+                    ToolTip.Tip="Sphere Primitive">
+              <TextBlock Text="Sphere" FontSize="11"/>
+            </Button>
+            <Button Classes="toolbtn"
+                    Command="{Binding SelectPreviewShapeCommand}"
+                    CommandParameter="{x:Static vm:MaterialPreviewShape.Cube}"
+                    ToolTip.Tip="Cube Primitive">
+              <TextBlock Text="Cube" FontSize="11"/>
+            </Button>
+            <Button Classes="toolbtn"
+                    Command="{Binding SelectPreviewShapeCommand}"
+                    CommandParameter="{x:Static vm:MaterialPreviewShape.Cylinder}"
+                    ToolTip.Tip="Cylinder Primitive">
+              <TextBlock Text="Cylinder" FontSize="11"/>
+            </Button>
+            <Button Classes="toolbtn"
+                    Command="{Binding SelectPreviewShapeCommand}"
+                    CommandParameter="{x:Static vm:MaterialPreviewShape.Plane}"
+                    ToolTip.Tip="Plane Primitive">
+              <TextBlock Text="Plane" FontSize="11"/>
+            </Button>
+
+            <Border Width="1" Height="16" Background="#3A3A40" Margin="4,0"/>
+
+            <!-- Rotação Automática -->
+            <ToggleButton Classes="toolbtn"
+                          IsChecked="{Binding AutoRotate, Mode=TwoWay}"
+                          ToolTip.Tip="Toggle Auto Rotation">
+              <PathIcon Data="M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13 17.75,13.97 17.3,14.8L18.76,16.26C19.54,15.03 20,13.57 20,12A8,8 0 0,0 12,4Z"
+                        Width="11" Height="11"/>
+            </ToggleButton>
+
+            <Button Classes="toolbtn" Command="{Binding ResetCameraCommand}" ToolTip.Tip="Reset Camera">
+              <PathIcon Data="M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12H4A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4Z" Width="11" Height="11"/>
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- OVERLAY INFERIOR: RESUMO DOS SHADERS/CAMADAS -->
+      <Border HorizontalAlignment="Stretch"
+              VerticalAlignment="Bottom"
+              Margin="10,0,10,10"
+              Padding="8,4"
+              CornerRadius="4"
+              Background="#D0151518"
+              BorderBrush="#25FFFFFF"
+              BorderThickness="1">
+        <Grid ColumnDefinitions="Auto, *, Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="Forward Shading" FontSize="11" Foreground="#888888"/>
+            <TextBlock Text="Opaque" FontSize="11" Foreground="#888888"/>
+          </StackPanel>
+          <TextBlock Grid.Column="2"
+                     Text="{Binding LayerCount, StringFormat='Layers: {0}'}"
+                     FontSize="11"
+                     Foreground="#FF9F0A"/>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- DIVISOR AJUSTÁVEL -->
+    <GridSplitter Grid.Column="1" Background="#141416" ResizeDirection="Columns"/>
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 2: PAINEL DE PROPRIEDADES DO MATERIAL                              -->
+    <!-- ========================================================================= -->
+    <DockPanel Grid.Column="2" Background="#1E1E22">
+      <!-- Cabeçalho -->
+      <Border Classes="sectionheader" DockPanel.Dock="Top">
+        <Grid ColumnDefinitions="*, Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <PathIcon Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"
+                      Width="13" Height="13" Foreground="#007ACC"/>
+            <TextBlock Classes="sectiontitle" Text="Material Properties"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Conteúdo das Propriedades com Suporte a PropertyView Quântico -->
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10" Spacing="8">
+
+          <!-- Painel PropertyView Quântico Dinâmico do Stride -->
+          <sd:PropertyView ItemsSource="{Binding EditorProperties.ViewModel.RootNode.Children}"
+                           IsVisible="{Binding EditorProperties.CanDisplayProperties}">
+            <Interaction.Behaviors>
+              <caeb:PropertyViewAutoExpandNodesBehavior ViewModel="{Binding EditorProperties.ViewModel, Mode=OneWay}" />
+            </Interaction.Behaviors>
+          </sd:PropertyView>
+
+          <!-- Seção de Acesso Rápido a Shading / Surface -->
+          <Border Classes="propcard">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Surface / MicroSurface" FontWeight="SemiBold" FontSize="11" Foreground="#0098FF"/>
+              <Grid ColumnDefinitions="*, Auto" Margin="0,2">
+                <TextBlock Text="Model:" FontSize="11" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Metallic / Roughness" FontSize="11" Foreground="#FFFFFF"/>
+              </Grid>
+              <Grid ColumnDefinitions="*, Auto" Margin="0,2">
+                <TextBlock Text="Culling:" FontSize="11" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="Back" FontSize="11" Foreground="#FFFFFF"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- Seção de Camadas de Blend -->
+          <Border Classes="propcard">
+            <StackPanel Spacing="6">
+              <Grid ColumnDefinitions="*, Auto">
+                <TextBlock Text="Material Blend Layers" FontWeight="SemiBold" FontSize="11" Foreground="#30D158"/>
+                <TextBlock Grid.Column="1" Text="{Binding LayerCount, StringFormat='Count: {0}'}" FontSize="10" Foreground="#888888"/>
+              </Grid>
+              <TextBlock Text="Layers are evaluated from bottom to top for composite material blending."
+                         FontSize="10"
+                         Foreground="#777777"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+
+        </StackPanel>
+      </ScrollViewer>
+    </DockPanel>
+
+  </Grid>
+</UserControl>

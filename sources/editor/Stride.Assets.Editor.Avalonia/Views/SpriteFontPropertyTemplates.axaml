@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+                    xmlns:aev="using:Stride.Assets.Editor.Avalonia.Views"
+                    xmlns:caec="using:Stride.Core.Assets.Editor.Avalonia.Converters"
+                    xmlns:caev="using:Stride.Core.Assets.Editor.Avalonia.Views"
+                    xmlns:cpqvm="using:Stride.Core.Presentation.Quantum.ViewModels"
+                    x:Class="Stride.Assets.Editor.Avalonia.Views.SpriteFontPropertyTemplates">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Views/DefaultPropertyTemplateProviders.axaml"/>
+  </ResourceDictionary.MergedDictionaries>
+
+  <!-- Provides a ComboBox with all available fonts from the system -->
+  <aev:SpriteFontFontNamePropertyTemplateProvider x:Key="SpriteFontFontNameTemplateProvider" OverrideRule="Most"
+                                                  caev:PropertyViewHelper.TemplateCategory="PropertyEditor">
+    <DataTemplate DataType="cpqvm:NodeViewModel">
+      <ComboBox Margin="2" HorizontalAlignment="Stretch" SelectedItem="{Binding NodeValue}" ItemsSource="{Binding ConverterParameter=Root.[SpriteFontAvailableFonts], Converter={caec:NodePathToObject}}"/>
+    </DataTemplate>
+  </aev:SpriteFontFontNamePropertyTemplateProvider>
+
+</ResourceDictionary>

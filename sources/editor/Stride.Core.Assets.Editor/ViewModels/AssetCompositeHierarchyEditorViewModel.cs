@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using Stride.Core.Assets.Presentation.ViewModels;
 using Stride.Core.Extensions;
 using Stride.Core.Presentation.Collections;
+using Stride.Core.Presentation.Commands;
 using Stride.Core.Presentation.Quantum;
 
 namespace Stride.Core.Assets.Editor.ViewModels;
@@ -38,6 +39,61 @@ public abstract class AssetCompositeHierarchyEditorViewModel<TAssetPartDesign, T
     public TItemViewModel RootPart { get => rootPart; private set => SetValue(ref rootPart, value); }
 
     public ObservableSet<TItemViewModel> SelectedItems { get; } = [];
+
+    public ICommandBase? CopyCommand { get; protected set; }
+
+    public ICommandBase? CutCommand { get; protected set; }
+
+    public ICommandBase? DeleteCommand { get; protected set; }
+
+    public ICommandBase? DuplicateSelectionCommand { get; protected set; }
+
+    public ICommandBase? PasteCommand { get; protected set; }
+
+    /// <summary>
+    /// Gets the root items in the given collection, excluding any item whose parent or ancestor is also in the collection.
+    /// </summary>
+    public static ISet<TItemViewModel> GetCommonRoots(IReadOnlyCollection<TItemViewModel> items)
+    {
+        var hashSet = new HashSet<TItemViewModel>(items);
+        foreach (var item in items)
+        {
+            var parent = item.Parent;
+            while (parent != null)
+            {
+                if (hashSet.Contains(parent))
+                {
+                    hashSet.Remove(item);
+                    break;
+                }
+                parent = parent.Parent;
+            }
+        }
+        return hashSet;
+    }
+
+    /// <summary>
+    /// Gets the root items in the given collection, excluding any item whose parent or ancestor is also in the collection.
+    /// </summary>
+    public static ISet<TViewModel> GetCommonRoots<TViewModel>(IReadOnlyCollection<TViewModel> items)
+        where TViewModel : AssetCompositeItemViewModel
+    {
+        var hashSet = new HashSet<TViewModel>(items);
+        foreach (var item in items)
+        {
+            var parent = (item as AssetCompositeItemViewModel<TAssetViewModel, TItemViewModel>)?.Parent;
+            while (parent != null)
+            {
+                if (hashSet.Contains((TViewModel)(object)parent))
+                {
+                    hashSet.Remove(item);
+                    break;
+                }
+                parent = parent.Parent;
+            }
+        }
+        return hashSet;
+    }
     
     /// <inheritdoc/>
     public override void Destroy()

@@ -2,14 +2,813 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
              xmlns:vm="using:Stride.Assets.Editor.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:qvm="using:Stride.Core.Presentation.Quantum.ViewModels"
+             xmlns:views="using:Stride.Assets.Editor.Avalonia.Views"
+             xmlns:roslyn="using:Microsoft.CodeAnalysis"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="768"
              x:Class="Stride.Assets.Editor.Avalonia.Views.VisualScriptEditorView"
              x:DataType="vm:VisualScriptEditorViewModel">
-  <DockPanel>
-    <Grid DockPanel.Dock="Top">
-      <TextBlock Text="VisualScript Editor" />
+
+  <UserControl.Resources>
+    <views:SymbolToDisplayStringConverter x:Key="SymbolDisplayConverter"/>
+    <views:SymbolToContainingTypeConverter x:Key="SymbolContainingTypeConverter"/>
+    <views:MethodToDisplayNameConverter x:Key="MethodDisplayConverter"/>
+    <views:NodeToSymbolNameConverter x:Key="NodeSymbolNameConverter"/>
+    <views:NodeToSymbolTypeConverter x:Key="NodeSymbolTypeConverter"/>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <!-- Estilo comum para botões de ação compactos -->
+    <Style Selector="Button.actionbtn">
+      <Setter Property="Background" Value="#2A2A2E"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#38383D"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="7,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.actionbtn:pointerover">
+      <Setter Property="Background" Value="#383840"/>
+      <Setter Property="BorderBrush" Value="#7C3AED"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Botões de cabeçalho da lista (+ / - / ▲ / ▼) -->
+    <Style Selector="Button.iconbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="5,3"/>
+      <Setter Property="Foreground" Value="#AAAAAA"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.iconbtn:pointerover">
+      <Setter Property="Background" Value="#333338"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Cabeçalhos das seções -->
+    <Style Selector="Border.sectionheader">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+    <Style Selector="TextBlock.sectiontitle">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="#E0E0E0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ListBox estilizado com tema dark -->
+    <Style Selector="ListBox.darklist">
+      <Setter Property="Background" Value="#1E1E22"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="4"/>
+    </Style>
+    <Style Selector="ListBox.darklist ListBoxItem">
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="Margin" Value="0,1"/>
+      <Setter Property="CornerRadius" Value="3"/>
+    </Style>
+    <Style Selector="ListBox.darklist ListBoxItem:selected">
+      <Setter Property="Background" Value="#2D2245"/>
+    </Style>
+
+    <!-- Estilo para blocos / nós no grafo -->
+    <Style Selector="Border.graphnode">
+      <Setter Property="Background" Value="#222226"/>
+      <Setter Property="BorderBrush" Value="#38383D"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="6"/>
+      <Setter Property="BoxShadow" Value="0 4 12 0 #50000000"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Border.graphnode:pointerover">
+      <Setter Property="BorderBrush" Value="#7C3AED"/>
+    </Style>
+    <Style Selector="Border.graphnode.selected">
+      <Setter Property="BorderBrush" Value="#A855F7"/>
+      <Setter Property="BorderThickness" Value="2"/>
+      <Setter Property="BoxShadow" Value="0 0 16 3 #807C3AED"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto, *">
+
+    <!-- ========================================================================= -->
+    <!-- BARRA SUPERIOR: CABEÇALHO DO EDITOR & AÇÕES RÁPIDAS -->
+    <!-- ========================================================================= -->
+    <Border Grid.Row="0"
+            Background="#202024"
+            BorderBrush="#2D2D32"
+            BorderThickness="0,0,0,1"
+            Padding="12,8">
+      <Grid ColumnDefinitions="Auto, *, Auto">
+
+        <!-- Título e Nome do Script Visual -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Border Background="#7C3AED" CornerRadius="4" Padding="7,3">
+            <TextBlock Text="VISUAL SCRIPT" FontSize="10" FontWeight="Bold" Foreground="White"/>
+          </Border>
+          <TextBlock Text="Visual Script Editor"
+                     FontWeight="Bold"
+                     FontSize="13"
+                     Foreground="#FFFFFF"
+                     VerticalAlignment="Center"/>
+          <TextBlock Text="—" Foreground="#666666" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding Asset.Name}"
+                     Foreground="#4EC9B0"
+                     FontWeight="SemiBold"
+                     FontSize="13"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Configuração de Classe Base no Centro -->
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+          <TextBlock Text="Base Class:" FontSize="11" Foreground="#888888" VerticalAlignment="Center"/>
+          <TextBox Text="{Binding BaseType, Mode=TwoWay}"
+                   Watermark="Stride.Engine.SyncScript"
+                   Width="240"
+                   FontSize="11"
+                   Padding="6,3"
+                   Background="#18181A"
+                   BorderBrush="#38383D"
+                   BorderThickness="1"
+                   CornerRadius="3"/>
+        </StackPanel>
+
+        <!-- Ações Globais Rápidas -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <Button Classes="actionbtn"
+                  Command="{Binding AddNewMethodCommand}"
+                  ToolTip.Tip="Add new Script Method">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="10" Height="10" Foreground="#30D158"/>
+              <TextBlock Text="New Method" FontSize="11"/>
+            </StackPanel>
+          </Button>
+
+          <Button Classes="actionbtn"
+                  Command="{Binding AddNewPropertyCommand}"
+                  ToolTip.Tip="Add new Variable/Property">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="10" Height="10" Foreground="#0098FF"/>
+              <TextBlock Text="New Variable" FontSize="11"/>
+            </StackPanel>
+          </Button>
+
+          <Border Width="1" Height="16" Background="#3A3A40" Margin="2,0"/>
+
+          <Button Classes="actionbtn"
+                  Command="{Binding VisibleMethod.DeleteSelectionCommand, FallbackValue={x:Null}}"
+                  ToolTip.Tip="Delete selected node or link">
+            <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
+                      Width="11" Height="11" Foreground="#FF6B6B"/>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ========================================================================= -->
+    <!-- ÁREA PRINCIPAL: DIVIDIDA EM PAINEL LATERAL (ESQ) E ÁREA DE GRAFO (DIR) -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Row="1" ColumnDefinitions="360, 4, *">
+
+      <!-- ======================================================================= -->
+      <!-- COLUNA ESQUERDA: VARIÁVEIS, MÉTODOS E ASSINATURA/PARÂMETROS -->
+      <!-- ======================================================================= -->
+      <Grid Grid.Column="0" RowDefinitions="*, 4, *, 4, 220" Background="#1A1A1D">
+
+        <!-- SEÇÃO 1: VARIÁVEIS / PROPRIEDADES DO SCRIPT -->
+        <DockPanel Grid.Row="0">
+          <Border Classes="sectionheader" DockPanel.Dock="Top">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <PathIcon Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4Z"
+                          Width="12" Height="12" Foreground="#0098FF"/>
+                <TextBlock Classes="sectiontitle" Text="Variables &amp; Properties"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                <Button Classes="iconbtn" Command="{Binding AddNewPropertyCommand}" ToolTip.Tip="Add Variable">
+                  <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding RemoveSelectedPropertiesCommand}" ToolTip.Tip="Remove Selected Variable">
+                  <PathIcon Data="M19,13H5V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <!-- Lista de Variáveis -->
+          <ListBox x:Name="VariablesListBox"
+                   Classes="darklist"
+                   SelectionMode="Multiple"
+                   SelectedItems="{Binding SelectedProperties}"
+                   ItemsSource="{Binding Properties.Children, FallbackValue={x:Null}}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="qvm:NodeViewModel">
+                <Grid ColumnDefinitions="Auto, *, Auto" Margin="2,0">
+                  <PathIcon Grid.Column="0"
+                            Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4Z"
+                            Width="11" Height="11"
+                            Foreground="#0098FF"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"/>
+                  <TextBox Grid.Column="1"
+                           Text="{ReflectionBinding [Name_].NodeValue, Mode=TwoWay, FallbackValue=''}"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="#E0E0E0"
+                           Background="Transparent"
+                           BorderThickness="0"
+                           Padding="0"
+                           VerticalAlignment="Center"/>
+                  <Border Grid.Column="2"
+                          Background="#252528"
+                          CornerRadius="3"
+                          Padding="5,1"
+                          Margin="4,0,0,0"
+                          VerticalAlignment="Center">
+                    <TextBox Text="{ReflectionBinding [Type_].NodeValue, Mode=TwoWay, FallbackValue='bool'}"
+                             FontSize="10"
+                             Foreground="#888888"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Padding="0"
+                             VerticalAlignment="Center"/>
+                  </Border>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+
+        <!-- Divisor ajustável entre Variáveis e Métodos -->
+        <GridSplitter Grid.Row="1" Background="#141416" ResizeDirection="Rows"/>
+
+        <!-- SEÇÃO 2: MÉTODOS / FUNÇÕES DO SCRIPT -->
+        <DockPanel Grid.Row="2">
+          <Border Classes="sectionheader" DockPanel.Dock="Top">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <PathIcon Data="M3,3H21V5H3V3M3,7H21V9H3V7M3,11H21V13H3V11M3,15H21V17H3V15M3,19H21V21H3V19Z"
+                          Width="12" Height="12" Foreground="#30D158"/>
+                <TextBlock Classes="sectiontitle" Text="Methods &amp; Functions"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                <ComboBox x:Name="OverridableMethodsComboBox"
+                          ItemsSource="{Binding OverridableMethods}"
+                          PlaceholderText="+ Override..."
+                          MaxDropDownHeight="320"
+                          Width="135"
+                          FontSize="10"
+                          Padding="4,2"
+                          VerticalAlignment="Center">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding Converter={StaticResource MethodDisplayConverter}}" FontSize="10"/>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Classes="iconbtn" Command="{Binding AddNewMethodCommand}" ToolTip.Tip="Add Method">
+                  <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding RemoveSelectedMethodCommand}" ToolTip.Tip="Remove Selected Method">
+                  <PathIcon Data="M19,13H5V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <!-- Lista de Métodos -->
+          <ListBox Classes="darklist"
+                   ItemsSource="{Binding Methods}"
+                   SelectedItem="{Binding SelectedMethod, Mode=TwoWay}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:VisualScriptMethodViewModel">
+                <Grid ColumnDefinitions="Auto, *, Auto" Margin="2,0">
+                  <PathIcon Grid.Column="0"
+                            Data="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+                            Width="11" Height="11"
+                            Foreground="#4EC9B0"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"/>
+                  <TextBox Grid.Column="1"
+                           Text="{Binding Name, Mode=TwoWay}"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Background="Transparent"
+                           BorderThickness="0"
+                           Padding="0"
+                           VerticalAlignment="Center"/>
+                  <Border Grid.Column="2"
+                          Background="#252528"
+                          CornerRadius="3"
+                          Padding="5,1"
+                          Margin="4,0,0,0"
+                          VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ReturnType, FallbackValue='void'}"
+                               FontSize="10"
+                               Foreground="#888888"/>
+                  </Border>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+
+        <!-- Divisor ajustável entre Métodos e Parâmetros -->
+        <GridSplitter Grid.Row="3" Background="#141416" ResizeDirection="Rows"/>
+
+        <!-- SEÇÃO 3: DETALHES & PARÂMETROS DO MÉTODO SELECIONADO -->
+        <DockPanel Grid.Row="4" DataContext="{Binding VisibleMethod, FallbackValue={x:Null}}">
+          <Border Classes="sectionheader" DockPanel.Dock="Top">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <PathIcon Data="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4Z"
+                          Width="12" Height="12" Foreground="#DCDCAA"/>
+                <TextBlock Classes="sectiontitle" Text="Signature &amp; Parameters"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                <Button Classes="iconbtn" Command="{Binding AddNewParameterCommand}" ToolTip.Tip="Add Parameter">
+                  <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding RemoveSelectedParametersCommand}" ToolTip.Tip="Remove Selected Parameter">
+                  <PathIcon Data="M19,13H5V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <!-- Configuração de Retorno e Modificadores do Método -->
+          <Border DockPanel.Dock="Top" Background="#1C1C20" Padding="8,6">
+            <StackPanel Spacing="4">
+              <Grid ColumnDefinitions="Auto, *">
+                <TextBlock Grid.Column="0" Text="Return:" FontSize="10" Foreground="#888888" VerticalAlignment="Center" Width="48"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding Method.ReturnType, Mode=TwoWay, FallbackValue='void'}"
+                         FontSize="11"
+                         Padding="4,2"
+                         Background="#141416"
+                         BorderBrush="#2D2D32"
+                         BorderThickness="1"
+                         CornerRadius="3"/>
+              </Grid>
+              <Grid ColumnDefinitions="Auto, *, Auto">
+                <TextBlock Grid.Column="0" Text="Modifier:" FontSize="10" Foreground="#888888" VerticalAlignment="Center" Width="48"/>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding Method.Accessibility, FallbackValue='Public'}"
+                           FontSize="11"
+                           Foreground="#DCDCAA"
+                           VerticalAlignment="Center"/>
+                <CheckBox Grid.Column="2"
+                          IsChecked="{Binding Method.IsStatic, Mode=TwoWay, FallbackValue=False}"
+                          Content="Static"
+                          FontSize="10"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- Lista de Parâmetros do Método -->
+          <ListBox x:Name="ParametersListBox"
+                   Classes="darklist"
+                   SelectionMode="Multiple"
+                   SelectedItems="{Binding SelectedParameters}"
+                   ItemsSource="{Binding Parameters.Children, FallbackValue={x:Null}}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="qvm:NodeViewModel">
+                <Grid ColumnDefinitions="Auto, *, Auto" Margin="2,0">
+                  <PathIcon Grid.Column="0"
+                            Data="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4Z"
+                            Width="11" Height="11"
+                            Foreground="#DCDCAA"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"/>
+                  <TextBox Grid.Column="1"
+                           Text="{ReflectionBinding [Name_].NodeValue, Mode=TwoWay, FallbackValue=''}"
+                           FontSize="11"
+                           FontWeight="SemiBold"
+                           Foreground="#CCCCCC"
+                           Background="Transparent"
+                           BorderThickness="0"
+                           Padding="0"
+                           VerticalAlignment="Center"/>
+                  <Border Grid.Column="2"
+                          Background="#252528"
+                          CornerRadius="3"
+                          Padding="5,1"
+                          Margin="4,0,0,0"
+                          VerticalAlignment="Center">
+                    <TextBox Text="{ReflectionBinding [Type_].NodeValue, Mode=TwoWay, FallbackValue='bool'}"
+                             FontSize="10"
+                             Foreground="#888888"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Padding="0"
+                             VerticalAlignment="Center"/>
+                  </Border>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+
+      </Grid>
+
+      <!-- Divisor ajustável entre painel esquerdo e direito -->
+      <GridSplitter Grid.Column="1" Background="#141416" ResizeDirection="Columns"/>
+
+      <!-- ======================================================================= -->
+      <!-- COLUNA CENTRAL/DIREITA: TELA DE GRAFO VISUAL & BLOCOS/CONEXÕES -->
+      <!-- ======================================================================= -->
+      <Grid Grid.Column="2" RowDefinitions="Auto, *, Auto" Background="#141417">
+
+        <!-- Barra de Ferramentas da Tela de Grafo -->
+        <Border Grid.Row="0"
+                Background="#1E1E22"
+                BorderBrush="#2D2D32"
+                BorderThickness="0,0,0,1"
+                Padding="10,6">
+          <Grid ColumnDefinitions="Auto, *, Auto">
+
+            <!-- Informações do Grafo Ativo -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Border Background="#1C2D42" BorderBrush="#007ACC" BorderThickness="1" CornerRadius="3" Padding="6,2">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <PathIcon Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"
+                            Width="10" Height="10" Foreground="#0098FF" VerticalAlignment="Center"/>
+                  <TextBlock Text="{Binding VisibleMethod.Method.Name, FallbackValue='(No method selected)'}"
+                             FontSize="11"
+                             FontWeight="SemiBold"
+                             Foreground="#FFFFFF"/>
+                </StackPanel>
+              </Border>
+
+              <TextBlock Text="{Binding VisibleMethod.Blocks.Count, FallbackValue=0, StringFormat='{}{0} blocks'}"
+                         FontSize="11"
+                         Foreground="#888888"
+                         VerticalAlignment="Center"/>
+
+              <TextBlock Text="•" Foreground="#555555" VerticalAlignment="Center"/>
+
+              <TextBlock Text="{Binding VisibleMethod.Links.Count, FallbackValue=0, StringFormat='{}{0} links'}"
+                         FontSize="11"
+                         Foreground="#888888"
+                         VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Ações e Gerador de Blocos -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+              <!-- Menu Flyout para Adicionar Blocos -->
+              <Button Classes="actionbtn" Content="+ Add Block ▾">
+                <Button.Flyout>
+                  <Flyout Placement="BottomEdgeAlignedRight">
+                    <ScrollViewer MaxHeight="320" Width="260">
+                      <StackPanel Spacing="6" Margin="4">
+                        <TextBlock Text="Add Script Block"
+                                   FontWeight="SemiBold"
+                                   FontSize="11"
+                                   Foreground="#7C3AED"
+                                   Margin="4,2"/>
+                        <Border Height="1" Background="#333338"/>
+                        <ItemsControl ItemsSource="{Binding BlockTemplateDescriptionCollection.AllTemplates}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BlockTemplateDescriptionViewModel">
+                              <Button Background="Transparent"
+                                      BorderThickness="0"
+                                      Padding="6,4"
+                                      HorizontalAlignment="Stretch"
+                                      HorizontalContentAlignment="Left"
+                                      Command="{Binding $parent[UserControl].((vm:VisualScriptEditorViewModel)DataContext).VisibleMethod.RunBlockTemplateCommand, FallbackValue={x:Null}}"
+                                      CommandParameter="{Binding}">
+                                <Grid ColumnDefinitions="*, Auto">
+                                  <TextBlock Grid.Column="0" Text="{Binding Name}" FontSize="11" Foreground="#CCCCCC"/>
+                                  <TextBlock Grid.Column="1" Text="{Binding Category}" FontSize="9" Foreground="#666666"/>
+                                </Grid>
+                              </Button>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Flyout>
+                </Button.Flyout>
+              </Button>
+            </StackPanel>
+
+          </Grid>
+        </Border>
+
+        <!-- CANVAS / TELA DE GRAFO NATIVO COM NÓS E CONEXÕES 2D -->
+        <ScrollViewer Grid.Row="1"
+                      x:Name="GraphScrollViewer"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      Background="#131316">
+          <Grid x:Name="GraphCanvasGrid"
+                Width="3200"
+                Height="2400"
+                Background="#131316">
+
+            <!-- Anchor element for opening context menus at drop / cursor position -->
+            <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch" IsHitTestVisible="False">
+              <Border x:Name="ContextMenuAnchor" Canvas.Left="0" Canvas.Top="0" Width="1" Height="1" Background="Transparent"/>
+            </Canvas>
+
+            <!-- Grade de Fundo Sutil / Padrão Blueprint -->
+            <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Opacity="0.18">
+              <Rectangle Width="3200" Height="2400" Fill="#111114"/>
+            </Canvas>
+
+            <!-- Camada de Conexões / Splines Bezier entre Pinos -->
+            <views:VisualScriptLinksControl x:Name="LinksControl"
+                                            Method="{Binding VisibleMethod}"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Stretch"/>
+
+            <!-- Camada de Blocos / Nós do Grafo Posicionados em Coordenadas Reais -->
+            <ItemsControl x:Name="BlocksItemsControl"
+                          Classes="blockscanvas"
+                          ItemsSource="{Binding VisibleMethod.Blocks, FallbackValue={x:Null}}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <Canvas Width="3200" Height="2400" Background="Transparent"/>
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.Styles>
+                <Style Selector="ItemsControl.blockscanvas > ContentPresenter" x:DataType="vm:BlockNodeVertex">
+                  <Setter Property="Canvas.Left" Value="{Binding PositionX}"/>
+                  <Setter Property="Canvas.Top" Value="{Binding PositionY}"/>
+                </Style>
+              </ItemsControl.Styles>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:BlockNodeVertex">
+                  <Border Classes="graphnode"
+                          Classes.selected="{Binding IsSelected}"
+                          Width="220"
+                          VerticalAlignment="Top">
+                    <Grid RowDefinitions="Auto, Auto, Auto">
+
+                      <!-- Cabeçalho do Bloco -->
+                      <Border Grid.Row="0"
+                              Background="#2A223D"
+                              BorderBrush="#3D3055"
+                              BorderThickness="0,0,0,1"
+                              CornerRadius="5,5,0,0"
+                              Padding="8,6">
+                        <Grid ColumnDefinitions="*, Auto">
+                          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <PathIcon Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3Z"
+                                      Width="10" Height="10" Foreground="#7C3AED" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding Title}"
+                                       FontWeight="Bold"
+                                       FontSize="11"
+                                       Foreground="#FFFFFF"
+                                       TextTrimming="CharacterEllipsis"/>
+                          </StackPanel>
+
+                          <!-- Indicador de Posição / ID -->
+                          <TextBlock Grid.Column="1"
+                                     Text="{Binding Position, StringFormat='({0})'}"
+                                     FontSize="9"
+                                     Foreground="#666666"
+                                     VerticalAlignment="Center"/>
+                        </Grid>
+                      </Border>
+
+                      <!-- Corpo do Bloco: Conectores Input e Output -->
+                      <Grid Grid.Row="1" ColumnDefinitions="*, *" Margin="6,8">
+
+                        <!-- Conectores de Entrada (Inputs) -->
+                        <ItemsControl Grid.Column="0" ItemsSource="{Binding InputSlots}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:VisualScriptSlotViewModel">
+                              <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,3">
+                                <Ellipse Width="9" Height="9"
+                                         Fill="#30D158"
+                                         Stroke="#1E8236"
+                                         StrokeThickness="1"
+                                         VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="10"
+                                           Foreground="#CCCCCC"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                              </StackPanel>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Conectores de Saída (Outputs) -->
+                        <ItemsControl Grid.Column="1" ItemsSource="{Binding OutputSlots}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:VisualScriptSlotViewModel">
+                              <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" Margin="0,3">
+                                <TextBlock Text="{Binding Name}"
+                                           FontSize="10"
+                                           Foreground="#CCCCCC"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"/>
+                                <Ellipse Width="9" Height="9"
+                                         Fill="#0098FF"
+                                         Stroke="#0066AA"
+                                         StrokeThickness="1"
+                                         VerticalAlignment="Center"/>
+                              </StackPanel>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                      </Grid>
+
+                      <!-- Indicador de Erros / Diagnósticos Roslyn (se houver) -->
+                      <Border Grid.Row="2"
+                              IsVisible="{Binding ViewModel.Diagnostics.Count}"
+                              Background="#3D1818"
+                              BorderBrush="#C05050"
+                              BorderThickness="0,1,0,0"
+                              CornerRadius="0,0,5,5"
+                              Padding="6,3">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                          <PathIcon Data="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                                    Width="10" Height="10" Foreground="#FF6B6B" VerticalAlignment="Center"/>
+                          <TextBlock Text="{Binding ViewModel.Diagnostics.Count, StringFormat='{}{0} diagnostic errors'}"
+                                     FontSize="9"
+                                     Foreground="#FF8888"/>
+                        </StackPanel>
+                      </Border>
+
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+          </Grid>
+        </ScrollViewer>
+
+        <!-- Barra de Status Inferior -->
+        <Border Grid.Row="2"
+                Background="#1B1B1F"
+                BorderBrush="#25252A"
+                BorderThickness="0,1,0,0"
+                Padding="10,4">
+          <Grid ColumnDefinitions="*, Auto">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Text="Visual Script Editor" FontSize="10" Foreground="#666666"/>
+              <TextBlock Text="•" FontSize="10" Foreground="#444444"/>
+              <TextBlock Text="Linux Native Avalonia 12" FontSize="10" Foreground="#7C3AED"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Diagnostics.Count, StringFormat='Total Diagnostics: {0}'}"
+                         FontSize="10"
+                         Foreground="#AAAAAA"/>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+      </Grid>
+
     </Grid>
-    <TextBlock Text="{Binding Asset.Name}" />
-  </DockPanel>
+
+    <!-- ========================================================================= -->
+    <!-- MODAL OVERLAY: ROSLYN SYMBOL SEARCH (ELIMINAÇÃO DE DEADLOCK) -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Row="0" Grid.RowSpan="2"
+          x:Name="SymbolSearchOverlay"
+          IsVisible="{Binding SymbolSearchOpen, Mode=TwoWay}"
+          Background="#80000000"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Stretch">
+      <Border Width="520" Height="440"
+              Background="#222226"
+              BorderBrush="#7C3AED"
+              BorderThickness="1.5"
+              CornerRadius="8"
+              BoxShadow="0 10 32 0 #B0000000"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+        <Grid RowDefinitions="Auto, Auto, *, Auto" Margin="16">
+
+          <!-- Cabeçalho do Modal -->
+          <Grid Grid.Row="0" ColumnDefinitions="*, Auto" Margin="0,0,0,12">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Border Background="#7C3AED" CornerRadius="4" Padding="6,2">
+                <PathIcon Data="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"
+                          Width="11" Height="11" Foreground="White"/>
+              </Border>
+              <TextBlock Text="Select Method / Symbol (Roslyn)"
+                         FontWeight="Bold"
+                         FontSize="13"
+                         Foreground="#FFFFFF"
+                         VerticalAlignment="Center"/>
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Classes="iconbtn"
+                    x:Name="BtnCloseSymbolSearch"
+                    ToolTip.Tip="Cancel (Esc)">
+              <PathIcon Data="M19,6.41L17.59,5 12,10.59 6.41,5 5,6.41 10.59,12 5,17.59 6.41,19 12,13.41 17.59,19 19,17.59 13.41,12 19,6.41Z"
+                        Width="11" Height="11" Foreground="#AAAAAA"/>
+            </Button>
+          </Grid>
+
+          <!-- Campo de Busca -->
+          <TextBox Grid.Row="1"
+                   x:Name="TxtSymbolSearch"
+                   Text="{Binding SymbolSearchText, Mode=TwoWay}"
+                   Watermark="Type method name to filter (e.g. Update, Add, ToString)..."
+                   FontSize="12"
+                   Padding="8,6"
+                   Background="#18181B"
+                   BorderBrush="#3D3055"
+                   BorderThickness="1"
+                   CornerRadius="4"
+                   Margin="0,0,0,10"/>
+
+          <!-- Lista de Símbolos Encontrados -->
+          <Border Grid.Row="2"
+                  Background="#18181A"
+                  BorderBrush="#2A2A2E"
+                  BorderThickness="1"
+                  CornerRadius="4">
+            <ListBox x:Name="LstSymbolSearchResults"
+                     Classes="darklist"
+                     ItemsSource="{Binding SymbolSearchValues}"
+                     SelectedItem="{Binding SymbolSearchValidatedItem, Mode=TwoWay}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="roslyn:ISymbol">
+                  <Grid ColumnDefinitions="Auto, *, Auto" Margin="4,3">
+                    <PathIcon Grid.Column="0"
+                              Data="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4Z"
+                              Width="11" Height="11" Foreground="#4EC9B0" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                      <TextBlock Text="{Binding Converter={StaticResource SymbolDisplayConverter}}"
+                                 FontWeight="SemiBold"
+                                 FontSize="11"
+                                 Foreground="#FFFFFF"/>
+                      <TextBlock Text="{Binding Converter={StaticResource SymbolContainingTypeConverter}}"
+                                 FontSize="9"
+                                 Foreground="#888888"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="2"
+                               Text="{Binding ContainingAssembly.Name, FallbackValue=''}"
+                               FontSize="9"
+                               Foreground="#666666"
+                               VerticalAlignment="Center"/>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Border>
+
+          <!-- Barra Inferior de Ação -->
+          <Grid Grid.Row="3" ColumnDefinitions="*, Auto, Auto" Margin="0,12,0,0">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding SymbolSearchValues.Count, StringFormat='{}{0} symbols found'}"
+                       FontSize="10" Foreground="#888888" VerticalAlignment="Center"/>
+            <Button Grid.Column="1"
+                    Classes="actionbtn"
+                    x:Name="BtnCancelSymbolSearch"
+                    Content="Cancel"
+                    Margin="0,0,8,0"/>
+            <Button Grid.Column="2"
+                    Classes="actionbtn"
+                    x:Name="BtnSelectSymbolSearch"
+                    Content="Select Symbol"
+                    Background="#7C3AED"
+                    Foreground="#FFFFFF"
+                    FontWeight="SemiBold"/>
+          </Grid>
+
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- Floating Drag & Drop Visual for Variables -->
+    <Canvas Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False">
+      <Border x:Name="DragVisualBorder"
+              IsVisible="False"
+              Canvas.Left="0"
+              Canvas.Top="0"
+              Background="#2A223D"
+              BorderBrush="#7C3AED"
+              BorderThickness="1.5"
+              CornerRadius="5"
+              Padding="8,5"
+              BoxShadow="0 4 12 0 #80000000">
+        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <PathIcon Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4Z"
+                    Width="11" Height="11" Foreground="#0098FF" VerticalAlignment="Center"/>
+          <TextBlock x:Name="TxtDragVisualName" Text="Variable" FontSize="11" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Border>
+    </Canvas>
+
+  </Grid>
 </UserControl>

@@ -52,6 +52,24 @@ public sealed class AssetFilterViewModel : DispatcherViewModel, IEquatable<Asset
     /// Whether the filter is enabled.
     /// </summary>
     public bool IsActive { get => isActive; set => SetValue(ref isActive, value); }
+
+    private bool isReadOnly;
+
+    /// <summary>
+    /// Gets or sets whether this filter is read-only (cannot be toggled or removed).
+    /// </summary>
+    public bool IsReadOnly
+    {
+        get => isReadOnly;
+        set
+        {
+            SetValue(ref isReadOnly, value, () =>
+            {
+                RemoveFilterCommand.IsEnabled = !value;
+                ToggleIsActiveCommand.IsEnabled = !value;
+            });
+        }
+    }
     
     /// <summary>
     /// Removes itself from the parent. See <see cref="AssetCollectionViewModel.RemoveAssetFilter"/>

@@ -1,0 +1,401 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+             xmlns:vm="using:Stride.Assets.Editor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="650"
+             x:Class="Stride.Assets.Editor.Avalonia.Views.VideoEditorView"
+             x:DataType="vm:VideoEditorViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button.playbtn">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#35353A"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="Width" Value="36"/>
+      <Setter Property="Height" Value="36"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.playbtn:pointerover">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+    </Style>
+
+    <Style Selector="Button.ctrlbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Padding" Value="7,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.ctrlbtn:pointerover">
+      <Setter Property="Background" Value="#35353A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="ToggleButton.ctrlbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Padding" Value="7,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ToggleButton.ctrlbtn:checked">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="Border.sectionheader">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+    <Style Selector="TextBlock.sectiontitle">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="#E0E0E0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Border.infocard">
+      <Setter Property="Background" Value="#222226"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="Padding" Value="12,10"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="*, 4, 380">
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 0: DISPLAY DE VÍDEO E CONTROLES DE TRANSPORTE                      -->
+    <!-- ========================================================================= -->
+    <DockPanel Grid.Column="0" Background="#141417">
+
+      <!-- Cabeçalho Superior -->
+      <Border Classes="sectionheader" DockPanel.Dock="Top">
+        <Grid ColumnDefinitions="*, Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <PathIcon Data="M18,3H6A3,3 0 0,0 3,6V18A3,3 0 0,0 6,21H18A3,3 0 0,0 21,18V6A3,3 0 0,0 18,3M18,19H6A1,1 0 0,1 5,18V6A1,1 0 0,1 6,5H18A1,1 0 0,1 19,6V18A1,1 0 0,1 18,19M10,8.5V15.5L15.5,12L10,8.5Z"
+                      Width="14" Height="14" Foreground="#FF453A"/>
+            <TextBlock Text="{Binding Asset.Name, StringFormat='Video: {0}'}"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       Foreground="#FFFFFF"
+                       VerticalAlignment="Center"/>
+            <Border Background="#2D2D32" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding ResolutionString}" FontSize="10" Foreground="#AAAAAA"/>
+            </Border>
+          </StackPanel>
+
+          <!-- Badges de Codec / Canal -->
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Border Background="#351515" CornerRadius="3" Padding="6,2">
+              <TextBlock Text="MPEG-4 / H.264"
+                         FontSize="10"
+                         FontWeight="SemiBold"
+                         Foreground="#FF453A"/>
+            </Border>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Painel Inferior: Controles de Vídeo e Timeline -->
+      <Border DockPanel.Dock="Bottom"
+              Background="#1A1A1E"
+              BorderBrush="#2D2D32"
+              BorderThickness="0,1,0,0"
+              Padding="14,12">
+        <Grid RowDefinitions="Auto, Auto, Auto">
+
+          <!-- Linha 0: Trimming Points (Mark In / Mark Out) -->
+          <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,6">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
+              <Button Classes="ctrlbtn" Command="{Binding SetInPointCommand}" ToolTip.Tip="Set Trim Start (In Point)">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <PathIcon Data="M5,5H7V19H5V5M19,5V19L11,12L19,5Z" Width="10" Height="10"/>
+                  <TextBlock Text="Mark In" FontSize="10"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="ctrlbtn" Command="{Binding SetOutPointCommand}" ToolTip.Tip="Set Trim End (Out Point)">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <TextBlock Text="Mark Out" FontSize="10"/>
+                  <PathIcon Data="M19,5H17V19H19V5M5,5V19L13,12L5,5Z" Width="10" Height="10"/>
+                </StackPanel>
+              </Button>
+              <Button Classes="ctrlbtn" Command="{Binding ResetTrimmingCommand}" ToolTip.Tip="Reset Trimming Limits">
+                <TextBlock Text="Reset Trim" FontSize="10"/>
+              </Button>
+            </StackPanel>
+
+            <TextBlock Grid.Column="2"
+                       Text="{Binding CurrentTime, StringFormat='Timecode: {0:hh\\:mm\\:ss\\.ff}'}"
+                       FontSize="11"
+                       FontFamily="Consolas, monospace"
+                       Foreground="#FF453A"
+                       VerticalAlignment="Center"/>
+          </Grid>
+
+          <!-- Linha 1: Scrubber de Vídeo -->
+          <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding CurrentTime, StringFormat='{}{0:mm\\:ss\\.ff}'}"
+                       FontSize="11"
+                       FontFamily="Consolas, monospace"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0"/>
+
+            <Slider Grid.Column="1"
+                    Minimum="0"
+                    Maximum="1"
+                    Value="{Binding Progress, Mode=TwoWay}"
+                    VerticalAlignment="Center"/>
+
+            <TextBlock Grid.Column="2"
+                       Text="{Binding TotalDuration, StringFormat='{}{0:mm\\:ss\\.ff}'}"
+                       FontSize="11"
+                       FontFamily="Consolas, monospace"
+                       Foreground="#888888"
+                       VerticalAlignment="Center"
+                       Margin="10,0,0,0"/>
+          </Grid>
+
+          <!-- Linha 2: Botões de Transporte (Step Back, Play, Pause, Stop, Step Forward, Loop, Volume) -->
+          <Grid Grid.Row="2" ColumnDefinitions="Auto, *, Auto">
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6">
+              <!-- Step Back 1 Frame -->
+              <Button Classes="ctrlbtn" Command="{Binding StepBackwardCommand}" ToolTip.Tip="Step Backward 1 Frame">
+                <PathIcon Data="M19,5L11,12L19,19V5M9,5H7V19H9V5Z" Width="12" Height="12"/>
+              </Button>
+
+              <!-- Play -->
+              <Button Classes="playbtn" Command="{Binding PlayCommand}" ToolTip.Tip="Play Video">
+                <PathIcon Data="M8,5.14V19.14L19,12.14L8,5.14Z" Width="14" Height="14" Foreground="#30D158"/>
+              </Button>
+
+              <!-- Pause -->
+              <Button Classes="playbtn" Command="{Binding PauseCommand}" ToolTip.Tip="Pause Video">
+                <PathIcon Data="M14,19H18V5H14M6,19H10V5H6V19Z" Width="14" Height="14" Foreground="#FF9F0A"/>
+              </Button>
+
+              <!-- Stop -->
+              <Button Classes="playbtn" Command="{Binding StopCommand}" ToolTip.Tip="Stop Video">
+                <PathIcon Data="M18,18H6V6H18V18Z" Width="13" Height="13" Foreground="#FF453A"/>
+              </Button>
+
+              <!-- Step Forward 1 Frame -->
+              <Button Classes="ctrlbtn" Command="{Binding StepForwardCommand}" ToolTip.Tip="Step Forward 1 Frame">
+                <PathIcon Data="M5,5L13,12L5,19V5M15,5H17V19H15V5Z" Width="12" Height="12"/>
+              </Button>
+
+              <Border Width="1" Height="20" Background="#3A3A40" Margin="4,0"/>
+
+              <!-- Loop Toggle -->
+              <ToggleButton Classes="ctrlbtn" IsChecked="{Binding IsLooping, Mode=TwoWay}" ToolTip.Tip="Loop Video">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <PathIcon Data="M17,17H7V14L3,18L7,22V19H19V13H17M7,7H17V10L21,6L17,2V5H5V11H7V7Z" Width="12" Height="12"/>
+                  <TextBlock Text="Loop" FontSize="11"/>
+                </StackPanel>
+              </ToggleButton>
+            </StackPanel>
+
+            <!-- Seção de Volume -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <!-- Mute -->
+              <ToggleButton Classes="ctrlbtn" IsChecked="{Binding IsMuted, Mode=TwoWay}" ToolTip.Tip="Mute Audio">
+                <PathIcon Data="M3,9H7L12,4V20L7,15H3V9M16.59,12L14,9.41L15.41,8L18,10.59L20.59,8L22,9.41L19.41,12L22,14.59L20.59,16L18,13.41L15.41,16L14,14.59L16.59,12Z"
+                          Width="13" Height="13" Foreground="#FF9F0A"/>
+              </ToggleButton>
+
+              <Slider Width="90"
+                      Minimum="0"
+                      Maximum="1"
+                      Value="{Binding Volume, Mode=TwoWay}"
+                      VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding Volume, StringFormat='{}{0:P0}'}"
+                         FontSize="11"
+                         Foreground="#AAAAAA"
+                         VerticalAlignment="Center"
+                         Width="35"/>
+            </StackPanel>
+
+          </Grid>
+        </Grid>
+      </Border>
+
+      <!-- Área Central: Tela do Vídeo (Monitor Viewport) -->
+      <Grid Background="#0A0A0C" Margin="14">
+        <!-- Moldura da Tela de Vídeo -->
+        <Border BorderBrush="#202028"
+                BorderThickness="1"
+                CornerRadius="6"
+                Background="#040406">
+          <Grid>
+            <!-- Centro: Simulação de Superfície de Exibição de Vídeo -->
+            <Border BorderBrush="#15151D"
+                    BorderThickness="1"
+                    Margin="20"
+                    Background="#070709"
+                    CornerRadius="4">
+              <Grid>
+                <!-- Grade Guia de Enquadramento Cinematográfico -->
+                <Grid ColumnDefinitions="*, *, *">
+                  <Border Grid.Column="0" BorderBrush="#10FFFFFF" BorderThickness="0,0,1,0"/>
+                  <Border Grid.Column="1" BorderBrush="#10FFFFFF" BorderThickness="0,0,1,0"/>
+                </Grid>
+                <Grid RowDefinitions="*, *, *">
+                  <Border Grid.Row="0" BorderBrush="#10FFFFFF" BorderThickness="0,0,0,1"/>
+                  <Border Grid.Row="1" BorderBrush="#10FFFFFF" BorderThickness="0,0,0,1"/>
+                </Grid>
+
+                <!-- Ícone Central e Status de Playback -->
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                  <PathIcon Data="M18,3H6A3,3 0 0,0 3,6V18A3,3 0 0,0 6,21H18A3,3 0 0,0 21,18V6A3,3 0 0,0 18,3M18,19H6A1,1 0 0,1 5,18V6A1,1 0 0,1 6,5H18A1,1 0 0,1 19,6V18A1,1 0 0,1 18,19M10,8.5V15.5L15.5,12L10,8.5Z"
+                            Width="48" Height="48"
+                            Foreground="#40FF453A"/>
+                  <TextBlock Text="Video Frame Buffer Display"
+                             FontSize="12"
+                             FontWeight="SemiBold"
+                             Foreground="#555555"
+                             HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Overlay de Resolução do Vídeo -->
+                <Border HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Margin="10"
+                        Padding="6,3"
+                        Background="#A0000000"
+                        CornerRadius="3">
+                  <TextBlock Text="{Binding ResolutionString}"
+                             FontSize="10"
+                             Foreground="#AAAAAA"/>
+                </Border>
+              </Grid>
+            </Border>
+          </Grid>
+        </Border>
+      </Grid>
+
+    </DockPanel>
+
+    <!-- DIVISOR AJUSTÁVEL -->
+    <GridSplitter Grid.Column="1" Background="#141416" ResizeDirection="Columns"/>
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 2: CONFIGURAÇÃO, DIMENSÕES E TRIMMING DO VÍDEO                     -->
+    <!-- ========================================================================= -->
+    <DockPanel Grid.Column="2" Background="#1E1E22">
+      <!-- Cabeçalho -->
+      <Border Classes="sectionheader" DockPanel.Dock="Top">
+        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <PathIcon Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"
+                    Width="13" Height="13" Foreground="#FF453A"/>
+          <TextBlock Classes="sectiontitle" Text="Video Properties &amp; Trimming"/>
+        </StackPanel>
+      </Border>
+
+      <!-- Conteúdo do Inspetor de Vídeo -->
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="12" Spacing="8">
+
+          <!-- Card: Dimensões (Size) -->
+          <Border Classes="infocard">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Target Dimensions" FontSize="11" FontWeight="SemiBold" Foreground="#ECECEC"/>
+              <Grid ColumnDefinitions="*, *" Margin="0,2">
+                <StackPanel Grid.Column="0" Spacing="2">
+                  <TextBlock Text="Width" FontSize="10" Foreground="#AAAAAA"/>
+                  <TextBlock Text="{Binding Width, StringFormat='{}{0:0}'}" FontWeight="Bold" FontSize="13" Foreground="#FFFFFF"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                  <TextBlock Text="Height" FontSize="10" Foreground="#AAAAAA"/>
+                  <TextBlock Text="{Binding Height, StringFormat='{}{0:0}'}" FontWeight="Bold" FontSize="13" Foreground="#FFFFFF"/>
+                </StackPanel>
+              </Grid>
+              <Grid ColumnDefinitions="*, Auto" Margin="0,2">
+                <TextBlock Text="Use percentages" FontSize="11" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                <CheckBox Grid.Column="1" IsChecked="{Binding IsSizeInPercentage}" IsEnabled="False"/>
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- Card: Trimming (Corte de Vídeo) -->
+          <Border Classes="infocard">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Trimming (In/Out Points)" FontSize="11" FontWeight="SemiBold" Foreground="#FF9F0A"/>
+              <Grid ColumnDefinitions="*, *" Margin="0,2">
+                <StackPanel Grid.Column="0" Spacing="2">
+                  <TextBlock Text="Start Time" FontSize="10" Foreground="#AAAAAA"/>
+                  <TextBlock Text="{Binding StartTime, StringFormat='{}{0:mm\\:ss\\.ff}'}"
+                             FontFamily="Consolas, monospace"
+                             FontWeight="Bold"
+                             FontSize="12"
+                             Foreground="#30D158"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                  <TextBlock Text="End Time" FontSize="10" Foreground="#AAAAAA"/>
+                  <TextBlock Text="{Binding EndTime, StringFormat='{}{0:mm\\:ss\\.ff}'}"
+                             FontFamily="Consolas, monospace"
+                             FontWeight="Bold"
+                             FontSize="12"
+                             Foreground="#FF453A"/>
+                </StackPanel>
+              </Grid>
+              <TextBlock Text="Trim video length by marking In and Out cue points on the timeline."
+                         FontSize="10"
+                         Foreground="#777777"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+
+          <!-- Card: Áudio do Vídeo -->
+          <Border Classes="infocard">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel Grid.Column="0" Spacing="2">
+                <TextBlock Text="Force Mono Channel" FontSize="11" FontWeight="SemiBold" Foreground="#ECECEC"/>
+                <TextBlock Text="Re-encodes video audio track to mono."
+                           FontSize="10"
+                           Foreground="#777777"/>
+              </StackPanel>
+              <CheckBox Grid.Column="1"
+                        IsChecked="{Binding IsAudioChannelMono}"
+                        IsEnabled="False"
+                        VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+
+          <!-- Card: Arquivo Fonte -->
+          <Border Classes="infocard">
+            <StackPanel Spacing="3">
+              <TextBlock Text="Source Video File" FontSize="11" Foreground="#AAAAAA"/>
+              <TextBlock Text="{Binding SourceFile}"
+                         FontSize="10"
+                         Foreground="#70B0FF"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+
+        </StackPanel>
+      </ScrollViewer>
+    </DockPanel>
+
+  </Grid>
+</UserControl>

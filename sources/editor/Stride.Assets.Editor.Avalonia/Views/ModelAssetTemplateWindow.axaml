@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:templates="using:Stride.Assets.Editor.Templates"
+        xmlns:views="using:Stride.Assets.Editor.Avalonia.Views"
+        mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="420"
+        x:Class="Stride.Assets.Editor.Avalonia.Views.ModelAssetTemplateWindow"
+        x:DataType="views:ModelAssetTemplateWindow"
+        Title="Import from model"
+        SizeToContent="Height" Width="480"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        CanResize="False">
+  <StackPanel Margin="10">
+    <Border Background="{DynamicResource ThemeAccentBrush4}" Margin="10,10,10,0" CornerRadius="3" Padding="12,8">
+      <TextBlock Text="Materials and textures" FontSize="15" FontWeight="SemiBold"/>
+    </Border>
+    <Border Margin="10,5,10,10">
+      <StackPanel Spacing="6">
+        <CheckBox Content="Import materials" IsChecked="{Binding Parameters.ImportMaterials}" Margin="5,2"/>
+        <CheckBox Content="Deduplicate materials" IsChecked="{Binding Parameters.DeduplicateMaterials}" IsVisible="{Binding Parameters.ShowDeduplicateMaterialsCheckBox}" Margin="5,2"/>
+        <TextBlock Text="Warning: Deduplicate materials is currently not supported for FBX files" Margin="5,2" IsVisible="{Binding Parameters.ShowFbxDedupeNotSupportedWarning}" Foreground="Orange"/>
+        <CheckBox Content="Import textures" IsChecked="{Binding Parameters.ImportTextures}" Margin="5,2"/>
+        <CheckBox Content="Import Animations" IsChecked="{Binding Parameters.ImportAnimations}" Margin="5,2"/>
+      </StackPanel>
+    </Border>
+
+    <Border Background="{DynamicResource ThemeAccentBrush4}" Margin="10,0" CornerRadius="3" Padding="12,8">
+      <TextBlock Text="Skeleton" FontSize="15" FontWeight="SemiBold"/>
+    </Border>
+    <Border Margin="10,5,10,10">
+      <StackPanel Spacing="6">
+        <RadioButton Content="Import skeleton" Margin="5,2" IsChecked="{Binding Parameters.ImportSkeleton}" GroupName="SkeletonGroup"/>
+        <RadioButton Content="No skeleton" Margin="5,2" IsChecked="{Binding Parameters.DontImportSkeleton}" GroupName="SkeletonGroup"/>
+        <RadioButton Content="Use another skeleton for this model" Margin="5,2" IsChecked="{Binding Parameters.ReuseSkeleton}" x:Name="ReuseRadioButton" GroupName="SkeletonGroup"/>
+      </StackPanel>
+    </Border>
+
+    <UniformGrid Rows="1" Margin="10,15,10,5">
+      <Button Content="OK" Margin="0,0,10,0" Padding="8" HorizontalContentAlignment="Center" Click="ButtonOk" IsDefault="True"/>
+      <Button Content="Cancel" Margin="10,0,0,0" Padding="8" HorizontalContentAlignment="Center" Click="ButtonCancel" IsCancel="True"/>
+    </UniformGrid>
+  </StackPanel>
+</Window>

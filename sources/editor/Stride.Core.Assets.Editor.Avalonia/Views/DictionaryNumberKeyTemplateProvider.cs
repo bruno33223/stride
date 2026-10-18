@@ -7,7 +7,7 @@ using Stride.Core.Reflection;
 
 namespace Stride.Core.Assets.Editor.Avalonia.Views;
 
-public sealed class DictionaryNumberKeyTemplateProvider : DictionaryTemplateProvider
+public class DictionaryNumberKeyTemplateProvider : DictionaryTemplateProvider
 {
     public override string Name => "DictionaryNumberKey";
 

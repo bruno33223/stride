@@ -1,0 +1,393 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+             xmlns:vm="using:Stride.Assets.Editor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="600"
+             x:Class="Stride.Assets.Editor.Avalonia.Views.SoundEditorView"
+             x:DataType="vm:SoundEditorViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button.playbtn">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#35353A"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="Width" Value="36"/>
+      <Setter Property="Height" Value="36"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.playbtn:pointerover">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+    </Style>
+
+    <Style Selector="Button.ctrlbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Padding" Value="8,5"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.ctrlbtn:pointerover">
+      <Setter Property="Background" Value="#35353A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="ToggleButton.ctrlbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="4"/>
+      <Setter Property="Padding" Value="8,5"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ToggleButton.ctrlbtn:checked">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="Border.sectionheader">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+    <Style Selector="TextBlock.sectiontitle">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="#E0E0E0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Border.infocard">
+      <Setter Property="Background" Value="#222226"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="5"/>
+      <Setter Property="Padding" Value="12,10"/>
+      <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="*, 4, 360">
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 0: DISPLAY DE ÁUDIO, WAVEFORM E CONTROLES DE REPRODUÇÃO            -->
+    <!-- ========================================================================= -->
+    <DockPanel Grid.Column="0" Background="#141417">
+
+      <!-- Cabeçalho Superior -->
+      <Border Classes="sectionheader" DockPanel.Dock="Top">
+        <Grid ColumnDefinitions="*, Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <PathIcon Data="M12,2A3,3 0 0,0 9,5V11A3,3 0 0,0 12,14A3,3 0 0,0 15,11V5A3,3 0 0,0 12,2M19,11C19,14.53 16.39,17.44 13,17.93V21H11V17.93C7.61,17.44 5,14.53 5,11H7A5,5 0 0,0 12,16A5,5 0 0,0 17,11H19Z"
+                      Width="14" Height="14" Foreground="#30D158"/>
+            <TextBlock Text="{Binding Asset.Name, StringFormat='Audio: {0}'}"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       Foreground="#FFFFFF"
+                       VerticalAlignment="Center"/>
+            <Border Background="#2D2D32" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Channels}" FontSize="10" Foreground="#AAAAAA"/>
+            </Border>
+          </StackPanel>
+
+          <!-- Badges de Status -->
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Border Background="#1E3A2F" CornerRadius="3" Padding="6,2">
+              <TextBlock Text="{Binding SampleRate, StringFormat='{}{0} Hz'}"
+                         FontSize="10"
+                         FontWeight="SemiBold"
+                         Foreground="#30D158"/>
+            </Border>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Painel Inferior: Controles de Reprodução e Volume -->
+      <Border DockPanel.Dock="Bottom"
+              Background="#1A1A1E"
+              BorderBrush="#2D2D32"
+              BorderThickness="0,1,0,0"
+              Padding="14,12">
+        <Grid RowDefinitions="Auto, Auto" Margin="0">
+
+          <!-- Linha 1: Slider de Progresso e Tempo -->
+          <Grid Grid.Row="0" ColumnDefinitions="Auto, *, Auto" Margin="0,0,0,10">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding CurrentTime, StringFormat='{}{0:mm\\:ss\\.ff}'}"
+                       FontSize="11"
+                       FontFamily="Consolas, monospace"
+                       Foreground="#30D158"
+                       VerticalAlignment="Center"
+                       Margin="0,0,10,0"/>
+
+            <!-- Scrubber de Progresso -->
+            <Slider Grid.Column="1"
+                    Minimum="0"
+                    Maximum="1"
+                    Value="{Binding Progress, Mode=TwoWay}"
+                    VerticalAlignment="Center"/>
+
+            <TextBlock Grid.Column="2"
+                       Text="{Binding TotalDuration, StringFormat='{}{0:mm\\:ss\\.ff}'}"
+                       FontSize="11"
+                       FontFamily="Consolas, monospace"
+                       Foreground="#888888"
+                       VerticalAlignment="Center"
+                       Margin="10,0,0,0"/>
+          </Grid>
+
+          <!-- Linha 2: Botões de Transporte (Play, Pause, Stop, Loop) e Controle de Volume -->
+          <Grid Grid.Row="1" ColumnDefinitions="Auto, *, Auto">
+
+            <!-- Botões de Play/Pause/Stop/Loop -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+              <!-- Play -->
+              <Button Classes="playbtn" Command="{Binding PlayCommand}" ToolTip.Tip="Play Audio">
+                <PathIcon Data="M8,5.14V19.14L19,12.14L8,5.14Z" Width="14" Height="14" Foreground="#30D158"/>
+              </Button>
+
+              <!-- Pause -->
+              <Button Classes="playbtn" Command="{Binding PauseCommand}" ToolTip.Tip="Pause Audio">
+                <PathIcon Data="M14,19H18V5H14M6,19H10V5H6V19Z" Width="14" Height="14" Foreground="#FF9F0A"/>
+              </Button>
+
+              <!-- Stop -->
+              <Button Classes="playbtn" Command="{Binding StopCommand}" ToolTip.Tip="Stop Audio">
+                <PathIcon Data="M18,18H6V6H18V18Z" Width="13" Height="13" Foreground="#FF453A"/>
+              </Button>
+
+              <Border Width="1" Height="20" Background="#3A3A40" Margin="4,0"/>
+
+              <!-- Loop Toggle -->
+              <ToggleButton Classes="ctrlbtn" IsChecked="{Binding IsLooping, Mode=TwoWay}" ToolTip.Tip="Loop Audio">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <PathIcon Data="M17,17H7V14L3,18L7,22V19H19V13H17M7,7H17V10L21,6L17,2V5H5V11H7V7Z" Width="12" Height="12"/>
+                  <TextBlock Text="Loop" FontSize="11"/>
+                </StackPanel>
+              </ToggleButton>
+            </StackPanel>
+
+            <!-- Seção de Volume -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <!-- Mute Button -->
+              <ToggleButton Classes="ctrlbtn" IsChecked="{Binding IsMuted, Mode=TwoWay}" ToolTip.Tip="Mute Audio">
+                <PathIcon Data="M3,9H7L12,4V20L7,15H3V9M16.59,12L14,9.41L15.41,8L18,10.59L20.59,8L22,9.41L19.41,12L22,14.59L20.59,16L18,13.41L15.41,16L14,14.59L16.59,12Z"
+                          Width="13" Height="13" Foreground="#FF9F0A"/>
+              </ToggleButton>
+
+              <!-- Slider de Volume -->
+              <PathIcon Data="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12Z"
+                        Width="12" Height="12" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+              <Slider Width="100"
+                      Minimum="0"
+                      Maximum="1"
+                      Value="{Binding Volume, Mode=TwoWay}"
+                      VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding Volume, StringFormat='{}{0:P0}'}"
+                         FontSize="11"
+                         Foreground="#AAAAAA"
+                         VerticalAlignment="Center"
+                         Width="35"/>
+            </StackPanel>
+
+          </Grid>
+        </Grid>
+      </Border>
+
+      <!-- Área Central: Waveform Visualizer Display -->
+      <Grid Background="#0F0F12" Margin="14" ClipToBounds="True">
+        <!-- Grade de Frequência e Amplitude -->
+        <Border BorderBrush="#1C1C22" BorderThickness="1" CornerRadius="6">
+          <Grid>
+            <!-- Linhas de Medição de Decibéis (Grid Liners) -->
+            <Grid RowDefinitions="*, *, *, *, *">
+              <Border Grid.Row="0" BorderBrush="#1A1A22" BorderThickness="0,0,0,1"/>
+              <Border Grid.Row="1" BorderBrush="#1A1A22" BorderThickness="0,0,0,1"/>
+              <Border Grid.Row="2" BorderBrush="#262632" BorderThickness="0,0,0,1"/>
+              <Border Grid.Row="3" BorderBrush="#1A1A22" BorderThickness="0,0,0,1"/>
+            </Grid>
+
+            <!-- Onda Sonora Visual (Waveform Canvas com Barras / Picos de Áudio) -->
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="3">
+              <Border Width="4" Height="25" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="40" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="65" Background="#0098FF" CornerRadius="2"/>
+              <Border Width="4" Height="90" Background="#0098FF" CornerRadius="2"/>
+              <Border Width="4" Height="120" Background="#0098FF" CornerRadius="2"/>
+              <Border Width="4" Height="80" Background="#0098FF" CornerRadius="2"/>
+              <Border Width="4" Height="140" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="160" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="110" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="70" Background="#0098FF" CornerRadius="2"/>
+              <Border Width="4" Height="130" Background="#0098FF" CornerRadius="2"/>
+              <Border Width="4" Height="170" Background="#FF9F0A" CornerRadius="2"/>
+              <Border Width="4" Height="190" Background="#FF9F0A" CornerRadius="2"/>
+              <Border Width="4" Height="140" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="95" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="60" Background="#0098FF" CornerRadius="2"/>
+              <Border Width="4" Height="110" Background="#0098FF" CornerRadius="2"/>
+              <Border Width="4" Height="150" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="130" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="80" Background="#0098FF" CornerRadius="2"/>
+              <Border Width="4" Height="45" Background="#30D158" CornerRadius="2"/>
+              <Border Width="4" Height="20" Background="#30D158" CornerRadius="2"/>
+            </StackPanel>
+
+            <!-- Marcador Central de Zero-Crossing (0 dB) -->
+            <Border Height="1" Background="#4030D158" VerticalAlignment="Center"/>
+
+            <!-- Badge Superior Esquerdo do Formato de Áudio -->
+            <Border HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Margin="10"
+                    Padding="6,3"
+                    Background="#D0151518"
+                    CornerRadius="3">
+              <TextBlock Text="PCM 16-Bit / Floating Point Waveform"
+                         FontSize="10"
+                         Foreground="#888888"/>
+            </Border>
+          </Grid>
+        </Border>
+      </Grid>
+
+    </DockPanel>
+
+    <!-- DIVISOR AJUSTÁVEL -->
+    <GridSplitter Grid.Column="1" Background="#141416" ResizeDirection="Columns"/>
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 2: PAINEL DE INFORMAÇÕES DE TAXA DE AMOSTRAGEM / CANAIS            -->
+    <!-- ========================================================================= -->
+    <DockPanel Grid.Column="2" Background="#1E1E22">
+      <!-- Cabeçalho -->
+      <Border Classes="sectionheader" DockPanel.Dock="Top">
+        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <PathIcon Data="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"
+                    Width="13" Height="13" Foreground="#007ACC"/>
+          <TextBlock Classes="sectiontitle" Text="Audio Configuration &amp; Specs"/>
+        </StackPanel>
+      </Border>
+
+      <!-- Conteúdo do Inspetor de Áudio -->
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="12" Spacing="8">
+
+          <!-- Card: Taxa de Amostragem (Sample Rate) -->
+          <Border Classes="infocard">
+            <Grid ColumnDefinitions="Auto, *">
+              <PathIcon Grid.Column="0"
+                        Data="M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M19,12C19,8.83 16.89,6.15 14,5.29V3.23C18,4.14 21,7.72 21,12C21,16.28 18,19.86 14,20.77V18.7C16.89,17.84 19,15.17 19,12M12,4L7,9H3V15H7L12,20V4Z"
+                        Width="16" Height="16" Foreground="#30D158" Margin="0,0,10,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1" Spacing="2">
+                <TextBlock Text="Sample Rate" FontSize="11" Foreground="#AAAAAA"/>
+                <TextBlock Text="{Binding SampleRate, StringFormat='{}{0:N0} Hz'}"
+                           FontWeight="Bold"
+                           FontSize="14"
+                           Foreground="#FFFFFF"/>
+                <TextBlock Text="Target sampling frequency for asset compilation."
+                           FontSize="10"
+                           Foreground="#666666"/>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <!-- Card: Canais de Áudio (Channels / Spatialized) -->
+          <Border Classes="infocard">
+            <Grid ColumnDefinitions="Auto, *">
+              <PathIcon Grid.Column="0"
+                        Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4Z"
+                        Width="16" Height="16" Foreground="#0098FF" Margin="0,0,10,0" VerticalAlignment="Center"/>
+              <StackPanel Grid.Column="1" Spacing="2">
+                <TextBlock Text="Channels / Speaker Mode" FontSize="11" Foreground="#AAAAAA"/>
+                <TextBlock Text="{Binding Channels}"
+                           FontWeight="Bold"
+                           FontSize="13"
+                           Foreground="#FFFFFF"/>
+                <TextBlock Text="Configured audio channels for sound emission."
+                           FontSize="10"
+                           Foreground="#666666"/>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <!-- Card: Taxa de Compressão (Compression Ratio) -->
+          <Border Classes="infocard">
+            <StackPanel Spacing="6">
+              <Grid ColumnDefinitions="*, Auto">
+                <TextBlock Text="Compression Ratio" FontSize="11" Foreground="#AAAAAA"/>
+                <TextBlock Grid.Column="1"
+                           Text="{Binding CompressionRatio, StringFormat='{}{0}:1'}"
+                           FontWeight="Bold"
+                           FontSize="12"
+                           Foreground="#FF9F0A"/>
+              </Grid>
+              <ProgressBar Minimum="1" Maximum="40" Value="{Binding CompressionRatio}" Height="4" Foreground="#FF9F0A"/>
+            </StackPanel>
+          </Border>
+
+          <!-- Card: Streaming do Disco -->
+          <Border Classes="infocard">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel Grid.Column="0" Spacing="2">
+                <TextBlock Text="Stream From Disk" FontSize="11" FontWeight="SemiBold" Foreground="#ECECEC"/>
+                <TextBlock Text="Streams large audio files directly from disk."
+                           FontSize="10"
+                           Foreground="#777777"/>
+              </StackPanel>
+              <CheckBox Grid.Column="1"
+                        IsChecked="{Binding StreamFromDisk}"
+                        IsEnabled="False"
+                        VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+
+          <!-- Card: Spatialized 3D Audio -->
+          <Border Classes="infocard">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel Grid.Column="0" Spacing="2">
+                <TextBlock Text="Spatialized 3D Sound" FontSize="11" FontWeight="SemiBold" Foreground="#ECECEC"/>
+                <TextBlock Text="Enables 3D attenuation, HRTF and listener distance."
+                           FontSize="10"
+                           Foreground="#777777"/>
+              </StackPanel>
+              <CheckBox Grid.Column="1"
+                        IsChecked="{Binding Spatialized}"
+                        IsEnabled="False"
+                        VerticalAlignment="Center"/>
+            </Grid>
+          </Border>
+
+          <!-- Card: Arquivo Fonte -->
+          <Border Classes="infocard">
+            <StackPanel Spacing="3">
+              <TextBlock Text="Source File" FontSize="11" Foreground="#AAAAAA"/>
+              <TextBlock Text="{Binding SourceFile}"
+                         FontSize="10"
+                         Foreground="#70B0FF"
+                         TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+
+        </StackPanel>
+      </ScrollViewer>
+    </DockPanel>
+
+  </Grid>
+</UserControl>

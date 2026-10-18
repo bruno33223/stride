@@ -2,14 +2,392 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
              xmlns:vm="using:Stride.Assets.Editor.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
              x:Class="Stride.Assets.Editor.Avalonia.Views.SpriteSheetEditorView"
              x:DataType="vm:SpriteSheetEditorViewModel">
-  <DockPanel>
-    <Grid DockPanel.Dock="Top">
-      <TextBlock Text="SpriteSheet Editor" />
+
+  <UserControl.Styles>
+    <!-- Botões de barra de ferramentas -->
+    <Style Selector="Button.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.toolbtn:pointerover">
+      <Setter Property="Background" Value="#35353A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="ToggleButton.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ToggleButton.toolbtn:checked">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Botões de ação da lista (+ / dup / delete) -->
+    <Style Selector="Button.iconbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="5,3"/>
+      <Setter Property="Foreground" Value="#AAAAAA"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.iconbtn:pointerover">
+      <Setter Property="Background" Value="#333338"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Cabeçalhos das seções -->
+    <Style Selector="Border.sectionheader">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+    <Style Selector="TextBlock.sectiontitle">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="#E0E0E0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ListBox dark style -->
+    <Style Selector="ListBox.spritelist">
+      <Setter Property="Background" Value="#1A1A1D"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="2"/>
+    </Style>
+    <Style Selector="ListBox.spritelist ListBoxItem">
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="Margin" Value="2,1"/>
+      <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+    <Style Selector="ListBox.spritelist ListBoxItem:selected">
+      <Setter Property="Background" Value="#094771"/>
+    </Style>
+    <Style Selector="ListBox.spritelist ListBoxItem:pointerover">
+      <Setter Property="Background" Value="#2A2D32"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="320, 4, *">
+
+    <!-- ========================================================================= -->
+    <!-- PAINEL ESQUERDO: CONFIGURAÇÃO DO SPRITESHEET E LISTA DE SPRITES           -->
+    <!-- ========================================================================= -->
+    <DockPanel Grid.Column="0" Background="#1E1E22">
+      <!-- Cabeçalho: Título e Botão de Propriedades -->
+      <Border Classes="sectionheader" DockPanel.Dock="Top">
+        <Grid ColumnDefinitions="*, Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <PathIcon Data="M21,17H3V5H21M21,3H3A2,2 0 0,0 1,5V17A2,2 0 0,0 3,19H21A2,2 0 0,0 23,17V5A2,2 0 0,0 21,3M5,7H11V11H5M5,13H11V15H5M13,7H19V9H13M13,11H19V15H13"
+                      Width="13" Height="13" Foreground="#007ACC"/>
+            <TextBlock Classes="sectiontitle" Text="Sprite Sheet"/>
+          </StackPanel>
+          <Button Grid.Column="1" Classes="iconbtn"
+                  Command="{Binding DisplaySpriteSheetPropertiesCommand}"
+                  ToolTip.Tip="Propriedades do SpriteSheet">
+            <PathIcon Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"
+                      Width="12" Height="12"/>
+          </Button>
+        </Grid>
+      </Border>
+
+      <!-- Painel de Configurações da Folha: SheetType e ColorKey -->
+      <Border DockPanel.Dock="Top"
+              Background="#222226"
+              BorderBrush="#2D2D32"
+              BorderThickness="0,0,0,1"
+              Padding="10,8">
+        <StackPanel Spacing="8">
+          <!-- Sheet Type -->
+          <Grid ColumnDefinitions="Auto, *">
+            <TextBlock Grid.Column="0" Text="Sheet Type:"
+                       FontSize="11" Foreground="#AAAAAA"
+                       VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <ComboBox Grid.Column="1"
+                      SelectedIndex="{Binding SheetTypeIndex, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch"
+                      FontSize="11"
+                      Padding="6,3">
+              <ComboBoxItem Content="Sprite 2D"/>
+              <ComboBoxItem Content="UI (9-Slice)"/>
+            </ComboBox>
+          </Grid>
+
+          <!-- Color Key -->
+          <Grid ColumnDefinitions="Auto, *, Auto">
+            <CheckBox Grid.Column="0"
+                      IsChecked="{Binding ColorKeyEnabled, Mode=TwoWay}"
+                      Content="Color Key"
+                      FontSize="11"
+                      VerticalAlignment="Center"/>
+            <Border Grid.Column="1"
+                    IsVisible="{Binding ColorKeyEnabled}"
+                    Background="{Binding ColorKey, Converter={sd:ColorConverter}}"
+                    BorderBrush="#444448"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Height="20"
+                    Margin="8,0"
+                    VerticalAlignment="Center"
+                    ToolTip.Tip="Cor da chave de transparência"/>
+            <Button Grid.Column="2"
+                    Classes="toolbtn"
+                    IsVisible="{Binding ColorKeyEnabled}"
+                    Command="{Binding ToggleToolModeCommand}"
+                    CommandParameter="{x:Static vm:SpriteSheetEditorToolMode.ColorPick}"
+                    Padding="4,2"
+                    ToolTip.Tip="Conta-gotas (Pick Color Key)">
+              <PathIcon Data="M20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L13.84,6.41L11.53,4.1C11.14,3.71 10.5,3.71 10.11,4.1L8.7,5.5C8.31,5.9 8.31,6.53 8.7,6.92L9.84,8.07L3,14.91V21H9.09L15.93,14.16L17.08,15.3C17.47,15.7 18.1,15.7 18.5,15.3L19.9,13.89C20.29,13.5 20.29,12.86 19.9,12.47L17.59,10.16L20.71,7.04C21.1,6.65 21.1,6 20.71,5.63M6.92,19L5,17.08L11.06,11.03L12.97,12.94L6.92,19Z"
+                        Width="12" Height="12"/>
+            </Button>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Seção da Lista de Sprites: Cabeçalho com Botões Add, Duplicate, Delete, Up, Down -->
+      <Border Classes="sectionheader" DockPanel.Dock="Top">
+        <Grid ColumnDefinitions="*, Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <PathIcon Data="M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V5H19V19M13.96,12.29L11.21,15.83L9.25,13.47L6.5,17H17.5L13.96,12.29Z"
+                      Width="12" Height="12" Foreground="#4EC9B0"/>
+            <TextBlock Classes="sectiontitle" Text="Sprites"/>
+            <Border Background="#2D2D32" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding Sprites.Count}" FontSize="10" Foreground="#AAAAAA"/>
+            </Border>
+          </StackPanel>
+
+          <!-- Botões de Ação na Lista: Add, Duplicate, Delete, Up, Down -->
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+            <Button Classes="iconbtn" Command="{Binding AddNewImageCommand}" ToolTip.Tip="Adicionar Novo Sprite">
+              <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="12" Height="12" Foreground="#30D158"/>
+            </Button>
+            <Button Classes="iconbtn" Command="{Binding DuplicateSelectedImagesCommand}" ToolTip.Tip="Duplicar Sprites Selecionados">
+              <PathIcon Data="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z" Width="12" Height="12" Foreground="#0098FF"/>
+            </Button>
+            <Button Classes="iconbtn" Command="{Binding RemoveImageCommand}" ToolTip.Tip="Excluir Sprites Selecionados">
+              <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" Width="12" Height="12" Foreground="#FF453A"/>
+            </Button>
+            <Separator Width="1" Height="14" Background="#333338" Margin="2,0"/>
+            <Button Classes="iconbtn" Command="{Binding MoveImageCommand}" CommandParameter="-1" ToolTip.Tip="Mover para Cima">
+              <PathIcon Data="M7,14L12,9L17,14H7Z" Width="11" Height="11"/>
+            </Button>
+            <Button Classes="iconbtn" Command="{Binding MoveImageCommand}" CommandParameter="1" ToolTip.Tip="Mover para Baixo">
+              <PathIcon Data="M7,10L12,15L17,10H7Z" Width="11" Height="11"/>
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Lista de Sprites com Miniaturas -->
+      <ListBox x:Name="SpriteListBox" Classes="spritelist" SelectionMode="Multiple"
+               ItemsSource="{Binding Sprites}" SelectedItems="{Binding SelectedSprites}"
+               SelectedItem="{Binding CurrentSprite, Mode=TwoWay}">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:SpriteInfoViewModel">
+            <Grid ColumnDefinitions="Auto, Auto, *">
+              <!-- Miniatura / Placeholder Gráfico -->
+              <Border Grid.Column="0"
+                      Width="32" Height="32"
+                      Background="#252528"
+                      BorderBrush="#38383D"
+                      BorderThickness="1"
+                      CornerRadius="3"
+                      Margin="0,0,8,0"
+                      VerticalAlignment="Center">
+                <Grid>
+                  <!-- Ícone representativo de sprite / frame -->
+                  <PathIcon Data="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"
+                            Width="14" Height="14"
+                            Foreground="#666666"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+                  <!-- Miniatura real se o arquivo de origem estiver carregado -->
+                  <Image Source="{Binding Source}"
+                         Stretch="Uniform"
+                         Width="30" Height="30"/>
+                </Grid>
+              </Border>
+
+              <!-- Índice -->
+              <TextBlock Grid.Column="1"
+                         Text="{Binding Index, StringFormat=[{0}]}"
+                         FontSize="11"
+                         Foreground="#777777"
+                         VerticalAlignment="Center"
+                         Margin="0,0,6,0"/>
+
+              <!-- Informações do Sprite: Nome e Arquivo de Origem -->
+              <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2">
+                <TextBox Text="{Binding Name, Mode=TwoWay}"
+                         FontSize="11"
+                         FontWeight="SemiBold"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Padding="0"
+                         VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Source}"
+                           FontSize="9"
+                           Foreground="#666666"
+                           TextTrimming="CharacterEllipsis"/>
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </DockPanel>
+
+    <!-- Divisor ajustável entre painel esquerdo e preview central -->
+    <GridSplitter Grid.Column="1" Background="#141416" ResizeDirection="Columns"/>
+
+    <!-- ========================================================================= -->
+    <!-- ÁREA CENTRAL: PREVIEW / CANVAS 2D DO SPRITE                               -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Column="2" RowDefinitions="Auto, *" Background="#161618">
+      <!-- Toolbar Superior da Viewport 2D -->
+      <Border Grid.Row="0" Classes="sectionheader">
+        <Grid ColumnDefinitions="Auto, Auto, *, Auto">
+          <!-- Ferramentas de Zoom e Enquadramento -->
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
+            <Button Classes="iconbtn" Command="{Binding Viewport.ZoomInCommand}" ToolTip.Tip="Zoom In (+)">
+              <PathIcon Data="M15.5,14L20.5,19L19,20.5L14,15.5V14.71L13.73,14.43C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.43,13.73L14.71,14H15.5M9.5,5A4.5,4.5 0 0,0 5,9.5A4.5,4.5 0 0,0 9.5,14A4.5,4.5 0 0,0 14,9.5A4.5,4.5 0 0,0 9.5,5M10,7H9V9H7V10H9V12H10V10H12V9H10V7Z" Width="12" Height="12"/>
+            </Button>
+            <Button Classes="iconbtn" Command="{Binding Viewport.ZoomOutCommand}" ToolTip.Tip="Zoom Out (-)">
+              <PathIcon Data="M15.5,14H14.71L14.43,13.73C15.41,12.59 16,11.11 16,9.5A6.5,6.5 0 0,1 9.5,3A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,16C11.11,16 12.59,15.41 13.73,14.43L14,14.71V15.5L19,20.5L20.5,19L15.5,14M9.5,14C7,14 5,12 5,9.5C5,7 7,5 9.5,5C12,5 14,7 14,9.5C14,12 12,14 9.5,14M7,9H12V10H7V9Z" Width="12" Height="12"/>
+            </Button>
+            <Button Classes="iconbtn" Command="{Binding Viewport.ScaleToRealSizeCommand}" ToolTip.Tip="Escala Real 1:1">
+              <PathIcon Data="M19,12H17V15H14V17H17V20H19V17H22V15H19V12M10,5V12H8V7H6V5H10M4,3H20A2,2 0 0,1 22,5V13.35C21.41,13.13 20.73,13 20,13A6,6 0 0,0 14,19C14,19.73 14.13,20.41 14.35,21H4A2,2 0 0,1 2,21V5A2,2 0 0,1 4,3Z" Width="12" Height="12"/>
+            </Button>
+            <Button Classes="iconbtn" Command="{Binding Viewport.FitOnScreenCommand}" ToolTip.Tip="Ajustar à Tela">
+              <PathIcon Data="M3,5H7V3H3A2,2 0 0,0 1,5V9H3V5M19,3H15V5H19V9H21V5A2,2 0 0,0 19,3M3,15H1V19A2,2 0 0,0 3,21H7V19H3V15M21,15H19V19H15V21H19A2,2 0 0,0 21,19V15M17,8H7V16H17V8M15,14H9V10H15V14Z" Width="12" Height="12"/>
+            </Button>
+            <Button Classes="iconbtn" Command="{Binding FocusOnRegionCommand}" ToolTip.Tip="Focar na Região Selecionada">
+              <PathIcon Data="M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M3.05,13H1V11H3.05C3.5,6.83 6.83,3.5 11,3.05V1H13V3.05C17.17,3.5 20.5,6.83 20.95,11H23V13H20.95C20.5,17.17 17.17,20.5 13,20.95V23H11V20.95C6.83,20.5 3.5,17.17 3.05,13M12,5A7,7 0 0,0 5,12A7,7 0 0,0 12,19A7,7 0 0,0 19,12A7,7 0 0,0 12,5Z" Width="12" Height="12"/>
+            </Button>
+          </StackPanel>
+
+          <Separator Grid.Column="1" Width="1" Height="16" Background="#333338" Margin="8,0"/>
+
+          <!-- Ferramentas de Seleção / Ferramentas de Pixel -->
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+            <Button Classes="toolbtn" Command="{Binding UseWholeImageCommand}" ToolTip.Tip="Usar Imagem Completa">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <PathIcon Data="M4,4H20V20H4V4M6,6V18H18V6H6Z" Width="11" Height="11"/>
+                <TextBlock Text="Whole Image" FontSize="11"/>
+              </StackPanel>
+            </Button>
+            <ToggleButton Classes="toolbtn"
+                           Command="{Binding ToggleUseMagicWandCommand}"
+                           ToolTip.Tip="Varinha Mágica (Magic Wand)">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <PathIcon Data="M7.5,5.6L5,7L6.4,4.5L5,2L7.5,3.4L10,2L8.6,4.5L10,7L7.5,5.6M19.5,15.4L22,14L20.6,16.5L22,19L19.5,17.6L17,19L18.4,16.5L17,14L19.5,15.4M22,2L20.6,4.5L22,7L19.5,5.6L17,7L18.4,4.5L17,2L19.5,3.4L22,2M13.34,12.78L15.78,10.34L13.66,8.22L11.22,10.66L13.34,12.78M14.39,7.16C14.78,6.77 15.41,6.77 15.8,7.16L16.84,8.2C17.23,8.59 17.23,9.22 16.84,9.61L14.77,11.69L12.31,9.23L14.39,7.16M2,21V19L10.16,10.84L13.16,13.84L5,22H2M3.5,19.5H4.25L11,12.75L10.25,12L3.5,18.75V19.5Z" Width="11" Height="11"/>
+                <TextBlock Text="Magic Wand" FontSize="11"/>
+              </StackPanel>
+            </ToggleButton>
+            <ToggleButton Classes="toolbtn"
+                           IsChecked="{Binding SelectionHighlightEnabled, Mode=TwoWay}"
+                           ToolTip.Tip="Destacar Seleção (Highlight)">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <PathIcon Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4Z" Width="11" Height="11"/>
+                <TextBlock Text="Highlight" FontSize="11"/>
+              </StackPanel>
+            </ToggleButton>
+          </StackPanel>
+
+          <!-- Informações do Sprite Ativo -->
+          <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="{Binding CurrentSprite.Name, FallbackValue=''}"
+                       FontWeight="SemiBold"
+                       FontSize="11"
+                       Foreground="#E0E0E0"/>
+            <Border Background="#252528" CornerRadius="3" Padding="6,2" VerticalAlignment="Center"
+                    IsVisible="{Binding CurrentSprite, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <TextBlock Text="{Binding CurrentSprite.TextureRegion.ActualWidth, FallbackValue=0, StringFormat='W: {0:F0}'}"
+                           FontSize="10" Foreground="#888888"/>
+                <TextBlock Text="×" FontSize="10" Foreground="#555555"/>
+                <TextBlock Text="{Binding CurrentSprite.TextureRegion.ActualHeight, FallbackValue=0, StringFormat='H: {0:F0}'}"
+                           FontSize="10" Foreground="#888888"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Viewport 2D / Canvas Container -->
+      <ScrollViewer Grid.Row="1"
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Auto"
+                    Background="#111113">
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
+          <!-- Estado Quando Nenhum Sprite Está Selecionado -->
+          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10"
+                      IsVisible="{Binding CurrentSprite, Converter={x:Static ObjectConverters.IsNull}}">
+            <PathIcon Data="M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19M8.5,13.5L11,16.5L14.5,12L19,18H5M5,5H19V19H5V5Z"
+                      Width="48" Height="48" Foreground="#333338" HorizontalAlignment="Center"/>
+            <TextBlock Text="Selecione um sprite na lista à esquerda para editar"
+                       FontSize="13" Foreground="#666666" HorizontalAlignment="Center"/>
+          </StackPanel>
+
+          <!-- Canvas do Sprite Ativo -->
+          <Border BorderBrush="#333338"
+                  BorderThickness="1"
+                  Background="#1A1A1D"
+                  CornerRadius="2"
+                  BoxShadow="0 4 16 #22000000"
+                  IsVisible="{Binding CurrentSprite, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Grid>
+              <!-- Fundo do Canvas -->
+              <Rectangle Fill="#1E1E22"/>
+
+              <!-- Imagem do Sprite Completa -->
+              <Image Source="{Binding CurrentSprite.Source}"
+                     Stretch="None"
+                     RenderOptions.BitmapInterpolationMode="None"/>
+
+              <!-- Retângulo de Região do Sprite (TextureRegion) -->
+              <Canvas Width="{Binding CurrentSprite.TextureRegion.ImageWidth, FallbackValue=256}"
+                      Height="{Binding CurrentSprite.TextureRegion.ImageHeight, FallbackValue=256}">
+                <!-- Guia de Borda / Seleção 2D -->
+                <Border BorderBrush="#FF007ACC"
+                        BorderThickness="1.5"
+                        Background="#1A007ACC"
+                        Canvas.Left="{Binding CurrentSprite.TextureRegion.ActualLeft, FallbackValue=0}"
+                        Canvas.Top="{Binding CurrentSprite.TextureRegion.ActualTop, FallbackValue=0}"
+                        Width="{Binding CurrentSprite.TextureRegion.ActualWidth, FallbackValue=100}"
+                        Height="{Binding CurrentSprite.TextureRegion.ActualHeight, FallbackValue=100}">
+                  <!-- Indicador de Centro (Crosshair) -->
+                  <Grid Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Rectangle Width="16" Height="1.5" Fill="#FFFF3B30" VerticalAlignment="Center"/>
+                    <Rectangle Width="1.5" Height="16" Fill="#FFFF3B30" HorizontalAlignment="Center"/>
+                  </Grid>
+                </Border>
+              </Canvas>
+            </Grid>
+          </Border>
+        </Grid>
+      </ScrollViewer>
     </Grid>
-    <TextBlock Text="{Binding Asset.Name}" />
-  </DockPanel>
+  </Grid>
 </UserControl>
+

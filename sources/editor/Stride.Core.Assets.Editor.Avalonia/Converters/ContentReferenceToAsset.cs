@@ -19,6 +19,6 @@ public sealed class ContentReferenceToAsset : OneWayValueConverter<ContentRefere
             return null;
 
         var contentReference = value as IReference ?? AttachedReferenceManager.GetAttachedReference(value);
-        return contentReference is not null ? SessionViewModel.Instance.GetAssetById(contentReference.Id) : null;
+        return contentReference is not null ? SessionViewModel.Instance?.GetAssetById(contentReference.Id) : null;
     }
 }

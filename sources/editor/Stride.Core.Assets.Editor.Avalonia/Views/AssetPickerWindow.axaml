@@ -1,0 +1,53 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="using:Stride.Core.Assets.Editor.Avalonia.Views"
+        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
+        x:Class="Stride.Core.Assets.Editor.Avalonia.Views.AssetPickerWindow"
+        x:DataType="views:AssetPickerWindow"
+        Title="Select an asset" Height="768" Width="1024"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+  <Grid RowDefinitions="*,Auto" Margin="16">
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,2*">
+      <Border Grid.Column="0" Background="#1E1E22" BorderBrush="#323238" BorderThickness="1" CornerRadius="4" Padding="4">
+        <TreeView x:Name="DirectoryTreeView"
+                  ItemsSource="{Binding Session.PackageCategories.Values}">
+          <TreeView.ItemTemplate>
+            <TreeDataTemplate ItemsSource="{Binding Content}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="📁" FontSize="14" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
+              </StackPanel>
+            </TreeDataTemplate>
+          </TreeView.ItemTemplate>
+        </TreeView>
+      </Border>
+
+      <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns" Background="Transparent" />
+
+      <Border Grid.Column="2" Background="#1E1E22" BorderBrush="#323238" BorderThickness="1" CornerRadius="4" Padding="4">
+        <views:AssetViewUserControl x:Name="AssetViewControl"
+                                    AssetCollection="{Binding AssetView}"
+                                    CanEditAssets="True"
+                                    CanDeleteAssets="True"
+                                    AssetDoubleClick="{Binding AssetDoubleClickCommand}" />
+      </Border>
+    </Grid>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,16,0,0">
+      <TextBlock Grid.Column="0" Text="{Binding Message}" VerticalAlignment="Center" Foreground="#AAAAAA" TextWrapping="Wrap"/>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+        <Button Content="OK"
+                Width="80"
+                HorizontalContentAlignment="Center"
+                Click="OnOkClick"/>
+        <Button Content="Cancel"
+                Width="80"
+                HorizontalContentAlignment="Center"
+                Click="OnCancelClick"/>
+      </StackPanel>
+    </Grid>
+  </Grid>
+</Window>

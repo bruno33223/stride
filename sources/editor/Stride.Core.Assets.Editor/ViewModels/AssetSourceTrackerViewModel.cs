@@ -1,122 +1,225 @@
 // Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
 
-using Stride.Core.Assets.Tracking;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using Stride.Core.Presentation.ViewModels;
+using Stride.Core.Assets.Editor.Services;
 using Stride.Core.Assets.Presentation.ViewModels;
+using Stride.Core.Assets.Tracking;
+using Stride.Core.Diagnostics;
 using Stride.Core.Extensions;
-using Stride.Core.Presentation.Collections;
 using Stride.Core.IO;
+using Stride.Core.Presentation.Collections;
+using Stride.Core.Presentation.Commands;
+using Stride.Core.Presentation.Services;
+using Stride.Core.Presentation.ViewModels;
 using Stride.Core.Storage;
 
-namespace Stride.Core.Assets.Editor.ViewModels;
-
-public sealed class AssetSourceTrackerViewModel : DispatcherViewModel, IAssetSourceTrackerViewModel
+namespace Stride.Core.Assets.Editor.ViewModels
 {
-    private readonly CancellationTokenSource cts = new();
-    private readonly ObservableSet<AssetViewModel> assetsToUpdate = [];
-
-    public AssetSourceTrackerViewModel(SessionViewModel session)
-        : base(session.ServiceProvider)
+    public class AssetSourceTrackerViewModel : DispatcherViewModel, IAssetSourceTrackerViewModel
     {
-        Session = session;
+        private readonly PackageSession session;
+        private readonly SessionViewModel sessionViewModel;
+        private readonly CancellationTokenSource cancel = new CancellationTokenSource();
+        private readonly ObservableSet<AssetViewModel> assetsToUpdate = new ObservableSet<AssetViewModel>();
 
-        // This task will listen to the AssetSourceTracker for source file change notifications and collect them
-        Dispatcher.InvokeTask(() => PullSourceFileChangesAsync(cts.Token), cts.Token);
-    }
-
-    public SessionViewModel Session { get; }
-
-    /// <inheritdoc/>
-    public override void Destroy()
-    {
-        base.Destroy();
-        cts.Cancel();
-    }
-
-    public ObjectId GetCurrentHash(UFile file)
-    {
-        return Session.PackageSession.SourceTracker.GetCurrentHash(file);
-    }
-
-    public void UpdateAssetStatus(AssetViewModel asset)
-    {
-        if (asset.Sources.NeedUpdateFromSource && !asset.IsDeleted)
-            assetsToUpdate.Add(asset);
-        else
-            assetsToUpdate.Remove(asset);
-
-        // FIXME xplat-editor
-        //UpdateAllAssetsWithModifiedSourceCommand.IsEnabled = assetsToUpdate.Count > 0;
-    }
-
-    private async Task PullSourceFileChangesAsync(CancellationToken token)
-    {
-        var sourceTracker = Session.PackageSession.SourceTracker;
-        var bufferBlock = new BufferBlock<IReadOnlyList<SourceFileChangedData>>();
-        var changedAssets = new HashSet<AssetViewModel>();
-        var sourceFileChanges = new List<SourceFileChangedData>();
-
-        using (sourceTracker.SourceFileChanged.LinkTo(bufferBlock))
+        public AssetSourceTrackerViewModel(IViewModelServiceProvider serviceProvider, PackageSession packageSession, SessionViewModel session)
+            : base(serviceProvider)
         {
-            sourceTracker.EnableTracking = true;
-            while (!IsDestroyed)
+            this.session = packageSession;
+            sessionViewModel = session;
+            UpdateSelectedAssetsFromSourceCommand = new AnonymousTaskCommand(ServiceProvider, UpdateSelectedAssetsFromSource);
+            UpdateAllAssetsWithModifiedSourceCommand = new AnonymousTaskCommand(ServiceProvider, UpdateAllAssetsWithModifiedSource) { IsEnabled = false };
+            // This task will listen to the AssetSourceTracker for source file change notifications and collect them
+            Dispatcher.InvokeTask(PullSourceFileChanges);
+        }
+
+        public AssetSourceTrackerViewModel(SessionViewModel session)
+            : this(session.SafeArgument(nameof(session)).ServiceProvider, session.PackageSession, session)
+        {
+        }
+
+        public SessionViewModel Session => sessionViewModel;
+
+        /// <summary>
+        /// Gets the command that will reimport the pending assets in the <see cref="System.Collections.IEnumerable"/> passed as parameter.
+        /// </summary>
+        public ICommandBase UpdateSelectedAssetsFromSourceCommand { get; }
+
+        /// <summary>
+        /// Gets the command that will reimport all pending assets.
+        /// </summary>
+        public ICommandBase UpdateAllAssetsWithModifiedSourceCommand { get; }
+
+        /// <summary>
+        /// Gets the list of assets that need to be updated.
+        /// </summary>
+        public IReadOnlyObservableCollection<AssetViewModel> AssetsToUpdate => assetsToUpdate;
+
+        /// <summary>
+        /// Gets a broadcast block from which asset source file events are sent.
+        /// </summary>
+        public BroadcastBlock<IReadOnlyList<SourceFileChangedData>> SourceFileChanged => session.SourceTracker.SourceFileChanged;
+
+        /// <inheritdoc/>
+        public override void Destroy()
+        {
+            base.Destroy();
+            cancel.Cancel();
+        }
+
+        public ObjectId GetCurrentHash(UFile file)
+        {
+            return session.SourceTracker.GetCurrentHash(file);
+        }
+
+        public void UpdateAssetStatus(AssetViewModel asset)
+        {
+            if (asset.Sources.NeedUpdateFromSource && !asset.IsDeleted)
+                assetsToUpdate.Add(asset);
+            else
+                assetsToUpdate.Remove(asset);
+
+            UpdateAllAssetsWithModifiedSourceCommand.IsEnabled = assetsToUpdate.Count > 0;
+        }
+
+        private Task UpdateSelectedAssetsFromSource()
+        {
+            return UpdateAssetsFromSource(sessionViewModel.ActiveAssetView.SelectedAssets);
+        }
+
+        private Task UpdateAllAssetsWithModifiedSource()
+        {
+            return UpdateAssetsFromSource(sessionViewModel.AllAssets.Where(x => x.Sources.NeedUpdateFromSource));
+        }
+
+        private async Task UpdateAssetsFromSource(IEnumerable<AssetViewModel> assets)
+        {
+            var logger = new LoggerResult();
+            var workProgress = new WorkProgressViewModel(ServiceProvider, logger)
             {
-                // Await for source file changes
-                await bufferBlock.OutputAvailableAsync(token);
-                if (token.IsCancellationRequested)
-                    return;
+                Title = "Update assets from source",
+                KeepOpen = KeepOpen.OnWarningsOrErrors,
+                IsIndeterminate = true,
+            };
+            workProgress.RegisterProgressStatus(logger);
 
-                // Try as much as possible to process all changes at once
-                if (!bufferBlock.TryReceiveAll(out var changes))
-                    continue;
+            var dialogService = ServiceProvider.TryGet<IEditorDialogService>();
+            dialogService?.ShowProgressWindow(workProgress);
 
-                sourceFileChanges.AddRange(changes.SelectMany(x => x));
-                if (sourceFileChanges.Count == 0)
-                    continue;
-
-                for (var i = 0; i < sourceFileChanges.Count; i++)
+            var undoRedo = ServiceProvider.TryGet<IUndoRedoService>();
+            if (undoRedo != null)
+            {
+                using (var transaction = undoRedo.CreateTransaction())
                 {
-                    var sourceFileChange = sourceFileChanges[i];
-                    // Look first in the assets of the session, then in the list of deleted assets.
-                    var asset = Session.GetAssetById(sourceFileChange.AssetId)
-                                ?? Session.AllPackages.SelectMany(x => x.DeletedAssets).FirstOrDefault(x => x.Id == sourceFileChange.AssetId);
-                    if (asset is null)
+                    var tasks = new List<Task>();
+                    foreach (var asset in assets)
+                    {
+                        logger.Verbose($"Updating {asset.Url}...");
+                        var task = asset.Sources.UpdateAssetFromSource(logger);
+                        // Continuation might swallow exceptions, careful to keep the original task like this
+                        task.ContinueWith(x => logger.Verbose($"{asset.Url} updated")).Forget();
+                        tasks.Add(task);
+                    }
+                    await Task.WhenAll(tasks);
+                    logger.Info("Update completed...");
+                    undoRedo.SetName(transaction, $"Update {tasks.Count} asset(s) from their source(s)");
+                }
+            }
+            else
+            {
+                var tasks = new List<Task>();
+                foreach (var asset in assets)
+                {
+                    logger.Verbose($"Updating {asset.Url}...");
+                    var task = asset.Sources.UpdateAssetFromSource(logger);
+                    task.ContinueWith(x => logger.Verbose($"{asset.Url} updated")).Forget();
+                    tasks.Add(task);
+                }
+                await Task.WhenAll(tasks);
+                logger.Info("Update completed...");
+            }
+
+            await workProgress.NotifyWorkFinished(false, logger.HasErrors);
+        }
+
+        private async Task PullSourceFileChanges()
+        {
+            var sourceTracker = session?.SourceTracker;
+            if (sourceTracker == null)
+                return;
+
+            var bufferBlock = new BufferBlock<IReadOnlyList<SourceFileChangedData>>();
+            var changedAssets = new HashSet<AssetViewModel>();
+            var sourceFileChanges = new List<SourceFileChangedData>();
+
+            using (sourceTracker.SourceFileChanged.LinkTo(bufferBlock))
+            {
+                sourceTracker.EnableTracking = true;
+                while (!IsDestroyed)
+                {
+                    // Await for source file changes
+                    await bufferBlock.OutputAvailableAsync(cancel.Token);
+                    if (cancel.IsCancellationRequested)
+                        return;
+
+                    // Try as much as possible to process all changes at once
+                    if (!bufferBlock.TryReceiveAll(out var changes))
                         continue;
 
-                    // We care only about changes that needs to update
-                    if (sourceFileChange.NeedUpdate)
+                    sourceFileChanges.AddRange(changes.SelectMany(x => x));
+
+                    if (sourceFileChanges.Count == 0)
+                        continue;
+
+                    for (var i = 0; i < sourceFileChanges.Count; i++)
                     {
-                        switch (sourceFileChange.Type)
+                        var sourceFileChange = sourceFileChanges[i];
+                        // Look first in the assets of the session, then in the list of deleted assets.
+                        var asset = sessionViewModel.GetAssetById(sourceFileChange.AssetId)
+                                    ?? sessionViewModel.AllPackages.SelectMany(x => x.DeletedAssets).FirstOrDefault(x => x.Id == sourceFileChange.AssetId);
+
+                        if (asset == null)
+                            continue;
+
+                        // We care only about changes that needs to update
+                        if (sourceFileChange.NeedUpdate)
                         {
-                            case SourceFileChangeType.Asset:
-                                // The asset itself has changed and now references a new source
-                                asset.Sources.UpdateUsedHashes(sourceFileChange.Files);
-                                break;
-                            case SourceFileChangeType.SourceFile:
-                                // A source file referenced by the asset has changed
-                                asset.Sources.ComputeNeedUpdateFromSource();
-                                break;
-                            default:
-                                throw new ArgumentOutOfRangeException();
+                            switch (sourceFileChange.Type)
+                            {
+                                case SourceFileChangeType.Asset:
+                                    // The asset itself has changed and now references a new source
+                                    asset.Sources.UpdateUsedHashes(sourceFileChange.Files);
+                                    break;
+                                case SourceFileChangeType.SourceFile:
+                                    // A source file referenced by the asset has changed
+                                    asset.Sources.ComputeNeedUpdateFromSource();
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
+                        }
+                        // The asset has been updated, remove the change data from the list
+                        sourceFileChanges.RemoveAt(i--);
+
+                        if (!asset.IsDeleted)
+                        {
+                            // We will notify only for undeleted assets
+                            changedAssets.Add(asset);
                         }
                     }
-                    // The asset has been updated, remove the change data from the list
-                    sourceFileChanges.RemoveAt(i--);
 
-                    if (!asset.IsDeleted)
+                    // Notify all changed assets at once.
+                    if (changedAssets.Count > 0)
                     {
-                        // We will notify only for undeleted assets
-                        changedAssets.Add(asset);
+                        sessionViewModel.NotifyAssetPropertiesChangedAsync(changedAssets.ToList()).Forget();
+                        changedAssets.Clear();
                     }
-                }
-
-                // Notify all changed assets at once.
-                if (changedAssets.Count > 0)
-                {
-                    Session.NotifyAssetPropertiesChangedAsync(changedAssets.ToList()).Forget();
-                    changedAssets.Clear();
                 }
             }
         }

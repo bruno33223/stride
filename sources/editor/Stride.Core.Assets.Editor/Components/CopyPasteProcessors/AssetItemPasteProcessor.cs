@@ -1,6 +1,9 @@
 // Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CSharp.RuntimeBinder;
 using Stride.Core.Assets.Analysis;
 using Stride.Core.Assets.Editor.Services;
@@ -34,6 +37,9 @@ public sealed class AssetItemPasteProcessor : PasteProcessorBase
     /// <inheritdoc />
     public override bool ProcessDeserializedData(AssetPropertyGraphContainer graphContainer, object targetRootObject, Type targetMemberType, ref object data, bool isRootDataObjectReference, AssetId? sourceId, YamlAssetMetadata<OverrideType> overrides, YamlAssetPath basePath)
     {
+        if (targetRootObject == null) throw new ArgumentNullException(nameof(targetRootObject));
+        if (data == null) throw new ArgumentNullException(nameof(data));
+
         var collectionDescriptor = (CollectionDescriptor)TypeDescriptorFactory.Default.Find(targetRootObject.GetType());
 
         var collection = data as IList<AssetItem>;
@@ -51,6 +57,9 @@ public sealed class AssetItemPasteProcessor : PasteProcessorBase
             {
                 // Create a derived asset and restore archetype to handle asset-specific cloning process.
                 var clone = AssetCloner.Clone(assetItem.Asset, AssetClonerFlags.GenerateNewIdsForIdentifiableObjects, out var idRemapping);
+                var newAssetId = AssetId.New();
+                idRemapping?.Add((Guid)clone.Id, (Guid)newAssetId);
+                clone.Id = newAssetId;
 
                 var assetType = assetItem.Asset.GetType();
                 if (assetType.HasInterface(typeof(AssetCompositeHierarchy<,>)))
@@ -61,7 +70,11 @@ public sealed class AssetItemPasteProcessor : PasteProcessorBase
                         dynamic assetComposite = clone;
                         // Remap indices of parts in Hierarchy.Part
                         var path = basePath.Clone();
-                        path.PushItemId(CollectionItemIdHelper.GetCollectionItemIds(collection)[i]);
+                        var itemIds = CollectionItemIdHelper.GetCollectionItemIds(collection);
+                        if (itemIds.TryGet(i, out var itemId))
+                        {
+                            path.PushItemId(itemId);
+                        }
                         AssetCloningHelper.RemapIdentifiablePaths(overrides, idRemapping, path);
                         AssetPartsAnalysis.GenerateNewBaseInstanceIds(assetComposite.Hierarchy);
                     }

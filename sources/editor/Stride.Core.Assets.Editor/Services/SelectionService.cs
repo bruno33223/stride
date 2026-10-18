@@ -148,37 +148,54 @@ public class SelectionService
             CurrentState.UnregisterCollection(collection);
     }
 
+    private bool isHandlingChange;
+
     private void CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (stack.RollInProgress)
             return;
 
-        // We create a transaction at the first change, and complete it at the next dispatcher frame with InvokeAsync
-        if (currentTransaction == null)
-        {
-            currentTransaction = stack.CreateTransaction();
-            dispatcher.InvokeAsync(CompleteTransaction);
-        }
+        if (isHandlingChange)
+            return;
 
-        if (e.Action == NotifyCollectionChangedAction.Add)
+        isHandlingChange = true;
+        try
         {
-            PropertySelectionSuppressed = true;
-            try
+            var isNewTransaction = currentTransaction == null;
+            if (isNewTransaction)
             {
-                // When we add a new item to selection, we clear the selection in all other collections
-                foreach (var scope in scopes.Where(x => !x.Collections.Contains(sender)))
+                currentTransaction = stack.CreateTransaction();
+            }
+
+            if (e.Action == NotifyCollectionChangedAction.Add)
+            {
+                PropertySelectionSuppressed = true;
+                try
                 {
-                    foreach (var collection in scope.Collections)
+                    // When we add a new item to selection, we clear the selection in all other collections
+                    foreach (var scope in scopes.Where(x => !x.Collections.Contains(sender)))
                     {
-                        var descriptor = TypeDescriptorFactory.Default.Find(collection.GetType()) as CollectionDescriptor;
-                        descriptor?.Clear(collection);
+                        foreach (var collection in scope.Collections)
+                        {
+                            var descriptor = TypeDescriptorFactory.Default.Find(collection.GetType()) as CollectionDescriptor;
+                            descriptor?.Clear(collection);
+                        }
                     }
                 }
+                finally
+                {
+                    PropertySelectionSuppressed = false;
+                }
             }
-            finally
+
+            if (isNewTransaction)
             {
-                PropertySelectionSuppressed = false;
+                dispatcher.InvokeAsync(CompleteTransaction);
             }
+        }
+        finally
+        {
+            isHandlingChange = false;
         }
     }
 

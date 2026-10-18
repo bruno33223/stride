@@ -5,49 +5,405 @@
              xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
              xmlns:vm="using:Stride.Assets.Editor.ViewModels"
              xmlns:vm2="using:Stride.Assets.Presentation.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:eac="using:Stride.Editor.Avalonia.Controls"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
              x:Class="Stride.Assets.Editor.Avalonia.Views.EntityHierarchyEditorView"
              x:DataType="vm:EntityHierarchyEditorViewModel">
-  <Grid ColumnDefinitions="*, 4, 3*">
-    <DockPanel Grid.Column="0">
+
+  <UserControl.Styles>
+    <!-- Estilo para botões de ferramentas da Viewport -->
+    <Style Selector="Button.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.toolbtn:pointerover">
+      <Setter Property="Background" Value="#35353A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="ToggleButton.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ToggleButton.toolbtn:checked">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Botões compactos de hierarquia -->
+    <Style Selector="Button.treeaction">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="5,3"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#AAAAAA"/>
+    </Style>
+    <Style Selector="Button.treeaction:pointerover">
+      <Setter Property="Background" Value="#333338"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Cabeçalhos das seções dos flyouts -->
+    <Style Selector="TextBlock.flyoutheader">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="#0098FF"/>
+      <Setter Property="Margin" Value="0,4,0,4"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="300, 4, *">
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 0: PAINEL DA HIERARQUIA DE ENTIDADES (SCENE TREE)                  -->
+    <!-- ========================================================================= -->
+    <DockPanel Grid.Column="0" Background="#1E1E22">
+      <!-- Topo: Título e Ações Rápidas -->
+      <Border DockPanel.Dock="Top"
+              Background="#252528"
+              BorderBrush="#2D2D32"
+              BorderThickness="0,0,0,1"
+              Padding="8,6">
+        <Grid ColumnDefinitions="*, Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <PathIcon Data="M3,3H21V5H3V3M3,7H21V9H3V7M3,11H21V13H3V11M3,15H21V17H3V15M3,19H21V21H3V19Z"
+                      Width="13" Height="13" Foreground="#007ACC"/>
+            <TextBlock Text="Hierarchy"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       Foreground="#E0E0E0"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+            <Button Classes="treeaction" ToolTip.Tip="Create Empty Entity">
+              <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="12" Height="12"/>
+            </Button>
+            <Button Classes="treeaction" ToolTip.Tip="Create Folder">
+              <PathIcon Data="M10,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V8C22,6.89 21.1,6 20,6H12L10,4Z" Width="12" Height="12"/>
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Barra de Busca / Filtro de Entidades -->
+      <Border DockPanel.Dock="Top"
+              Background="#1A1A1D"
+              BorderBrush="#2A2A2E"
+              BorderThickness="0,0,0,1"
+              Padding="6,4">
+        <TextBox x:Name="EntityFilterBox"
+                 PlaceholderText="Search entities (filter)..."
+                 FontSize="11"
+                 Background="#252528"
+                 BorderBrush="#38383D"
+                 BorderThickness="1"
+                 CornerRadius="3"
+                 Padding="6,3"
+                 VerticalContentAlignment="Center"/>
+      </Border>
+
+      <!-- Rodapé da Hierarquia: Contador de Entidades -->
+      <Border DockPanel.Dock="Bottom"
+              Background="#1A1A1D"
+              BorderBrush="#2A2A2E"
+              BorderThickness="0,1,0,0"
+              Padding="8,4">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <TextBlock Text="Scene Root Active" FontSize="10" Foreground="#888888"/>
+        </StackPanel>
+      </Border>
+
+      <!-- TreeView Hierárquico de Entidades -->
       <TreeView ItemsSource="{Binding HierarchyRoot, Mode=OneWay, Converter={sd:Yield}}"
                 SelectedItems="{Binding SelectedContent}"
-                SelectionMode="Multiple">
+                SelectionMode="Multiple"
+                Background="Transparent"
+                Margin="2">
+        <TreeView.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Create Empty Entity" />
+            <MenuItem Header="Create Folder" />
+            <Separator />
+            <MenuItem Header="Duplicate" InputGesture="Ctrl+D" />
+            <MenuItem Header="Delete" InputGesture="Del" />
+            <MenuItem Header="Rename" InputGesture="F2" />
+          </ContextMenu>
+        </TreeView.ContextMenu>
+
         <Control.DataTemplates>
-          <!-- Default template -->
+          <!-- Item Base -->
           <TreeDataTemplate DataType="{x:Type vm2:EntityHierarchyItemViewModel}"
                             ItemsSource="{Binding Children}">
-            <TextBlock Text="{Binding Name}" />
+            <TextBlock Text="{Binding Name}" FontSize="12" Foreground="#D0D0D0" VerticalAlignment="Center"/>
           </TreeDataTemplate>
-          <!-- Entity template -->
+
+          <!-- Entidade 3D -->
           <TreeDataTemplate DataType="{x:Type vm2:EntityViewModel}"
                             ItemsSource="{Binding Children}">
-            <StackPanel Orientation="Horizontal">
-              <!-- TODO icon -->
-              <TextBlock Text="{Binding Name}" />
-            </StackPanel>
+            <Grid ColumnDefinitions="Auto, *, Auto" HorizontalAlignment="Stretch" Margin="0,1">
+              <PathIcon Grid.Column="0"
+                        Data="M12,2L1,21H23L12,2M12,6L19.5,19H4.5L12,6M11,10V14H13V10H11M11,16V18H13V16H11Z"
+                        Width="12" Height="12"
+                        Foreground="#70B0FF"
+                        Margin="0,0,6,0"
+                        VerticalAlignment="Center"/>
+              <TextBlock Grid.Column="1"
+                         Text="{Binding Name}"
+                         FontSize="12"
+                         Foreground="#ECECEC"
+                         VerticalAlignment="Center"/>
+            </Grid>
           </TreeDataTemplate>
-          <!-- Scene template -->
+
+          <!-- Scene Root -->
           <TreeDataTemplate DataType="{x:Type vm2:SceneRootViewModel}"
                             ItemsSource="{Binding Children}">
-            <StackPanel Orientation="Horizontal">
-              <!-- TODO icon -->
-              <TextBlock Text="{Binding Name}" />
+            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2">
+              <PathIcon Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"
+                        Width="13" Height="13"
+                        Foreground="#30D158"
+                        VerticalAlignment="Center"/>
+              <TextBlock Text="{Binding Name}"
+                         FontWeight="Bold"
+                         FontSize="12"
+                         Foreground="#FFFFFF"
+                         VerticalAlignment="Center"/>
             </StackPanel>
           </TreeDataTemplate>
         </Control.DataTemplates>
+
         <StyledElement.Styles>
           <Style Selector="TreeViewItem">
             <Setter Property="IsExpanded" Value="True"/>
+            <Setter Property="Padding" Value="4,2"/>
           </Style>
         </StyledElement.Styles>
       </TreeView>
     </DockPanel>
 
-    <GridSplitter Grid.Column="1" ResizeDirection="Auto" />
+    <!-- Divisor ajustável entre hierarquia e viewport -->
+    <GridSplitter Grid.Column="1" Background="#141416" ResizeDirection="Columns"/>
 
-    <DockPanel Grid.Column="2">
-      <TextBlock Text="Scene View" />
-    </DockPanel>
+    <!-- ========================================================================= -->
+    <!-- COLUNA 2: VIEWPORT 3D VULKAN + OVERLAYS PROFISSIONAIS                     -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Column="2" Background="#0C0C0E">
+      <!-- Stride Native Vulkan 3D Scene Viewport Host -->
+      <eac:StrideViewportControl x:Name="SceneViewport"
+                                 HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Stretch" />
+
+      <!-- OVERLAY SUPERIOR: BARRA DE FERRAMENTAS DA VIEWPORT 3D -->
+      <Border HorizontalAlignment="Stretch"
+              VerticalAlignment="Top"
+              Margin="8,8,8,0"
+              Padding="6,4"
+              CornerRadius="5"
+              Background="#E01A1A1E"
+              BorderBrush="#40FFFFFF"
+              BorderThickness="1">
+        <Grid ColumnDefinitions="Auto, Auto, Auto, *, Auto">
+
+          <!-- Bloco 1: Modos de Transformação e Snapping -->
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+            <!-- Modos Gizmo -->
+            <RadioButton Classes="toolbtn" GroupName="GizmoMode" Content="Select" IsChecked="True" ToolTip.Tip="Select Only (Q)"/>
+            <RadioButton Classes="toolbtn" GroupName="GizmoMode" Content="Translate" ToolTip.Tip="Translation Gizmo (W)"/>
+            <RadioButton Classes="toolbtn" GroupName="GizmoMode" Content="Rotate" ToolTip.Tip="Rotation Gizmo (E)"/>
+            <RadioButton Classes="toolbtn" GroupName="GizmoMode" Content="Scale" ToolTip.Tip="Scale Gizmo (R)"/>
+
+            <Border Width="1" Height="18" Background="#3A3A40" Margin="4,0"/>
+
+            <!-- Espaço de Coordenadas -->
+            <ToggleButton Classes="toolbtn" Content="World" ToolTip.Tip="Toggle World / Local Space"/>
+
+            <Border Width="1" Height="18" Background="#3A3A40" Margin="4,0"/>
+
+            <!-- Snapping Rápido -->
+            <ToggleButton Classes="toolbtn" Content="Snap (1.0m)" ToolTip.Tip="Toggle Translation Snapping"/>
+            <ToggleButton Classes="toolbtn" Content="22.5°" ToolTip.Tip="Toggle Rotation Snapping"/>
+          </StackPanel>
+
+          <!-- Bloco 2: Separador -->
+          <Border Grid.Column="1" Width="1" Height="18" Background="#3A3A40" Margin="8,0"/>
+
+          <!-- Bloco 3: Menus Suspensos de Opções 3D (Camera, Grid, Gizmos, Lighting) -->
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+
+            <!-- Menu da Câmera -->
+            <Button Classes="toolbtn" Content="Camera ▾" ToolTip.Tip="Camera Projection, Speed and Views">
+              <Button.Flyout>
+                <Flyout Placement="BottomEdgeAlignedLeft">
+                  <StackPanel Width="220" Spacing="8">
+                    <TextBlock Classes="flyoutheader" Text="Camera Projection"/>
+                    <RadioButton GroupName="CamProj" Content="Perspective" IsChecked="True"/>
+                    <RadioButton GroupName="CamProj" Content="Orthographic"/>
+
+                    <Border Height="1" Background="#333338" Margin="0,2"/>
+                    <TextBlock Classes="flyoutheader" Text="Camera Settings"/>
+                    <DockPanel>
+                      <TextBlock Text="FOV:" DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="11" Width="50"/>
+                      <Slider Minimum="30" Maximum="120" Value="45"/>
+                    </DockPanel>
+                    <DockPanel>
+                      <TextBlock Text="Speed:" DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="11" Width="50"/>
+                      <Slider Minimum="0.5" Maximum="20" Value="3.0"/>
+                    </DockPanel>
+
+                    <Border Height="1" Background="#333338" Margin="0,2"/>
+                    <TextBlock Classes="flyoutheader" Text="Preset Views"/>
+                    <UniformGrid Columns="3">
+                      <Button Classes="toolbtn" Content="Top" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2"/>
+                      <Button Classes="toolbtn" Content="Front" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2"/>
+                      <Button Classes="toolbtn" Content="Right" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2"/>
+                      <Button Classes="toolbtn" Content="Bottom" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2"/>
+                      <Button Classes="toolbtn" Content="Back" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2"/>
+                      <Button Classes="toolbtn" Content="Left" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2"/>
+                    </UniformGrid>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+
+            <!-- Menu do Grid -->
+            <Button Classes="toolbtn" Content="Grid ▾" ToolTip.Tip="3D Floor Grid Settings">
+              <Button.Flyout>
+                <Flyout Placement="BottomEdgeAlignedLeft">
+                  <StackPanel Width="180" Spacing="8">
+                    <TextBlock Classes="flyoutheader" Text="Grid Display"/>
+                    <CheckBox Content="Show Grid" IsChecked="True"/>
+                    <TextBlock Classes="flyoutheader" Text="Grid Axis"/>
+                    <RadioButton GroupName="GridAxis" Content="Y Axis (Ground XZ)" IsChecked="True"/>
+                    <RadioButton GroupName="GridAxis" Content="X Axis (YZ Plane)"/>
+                    <RadioButton GroupName="GridAxis" Content="Z Axis (XY Plane)"/>
+                    <DockPanel Margin="0,4,0,0">
+                      <TextBlock Text="Opacity:" DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="11" Width="50"/>
+                      <Slider Minimum="0.1" Maximum="1.0" Value="0.35"/>
+                    </DockPanel>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+
+            <!-- Menu de Gizmos -->
+            <Button Classes="toolbtn" Content="Gizmos ▾" ToolTip.Tip="Gizmo Options and Component Visibility">
+              <Button.Flyout>
+                <Flyout Placement="BottomEdgeAlignedLeft">
+                  <StackPanel Width="200" Spacing="8">
+                    <TextBlock Classes="flyoutheader" Text="Gizmo Scales"/>
+                    <DockPanel>
+                      <TextBlock Text="Transform:" DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="11" Width="70"/>
+                      <Slider Minimum="0.2" Maximum="3.0" Value="1.0"/>
+                    </DockPanel>
+                    <DockPanel>
+                      <TextBlock Text="Components:" DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="11" Width="70"/>
+                      <Slider Minimum="0.2" Maximum="3.0" Value="1.0"/>
+                    </DockPanel>
+                    <CheckBox Content="Fixed Screen Size" IsChecked="False"/>
+                    <CheckBox Content="Show Camera Frustum" IsChecked="True"/>
+                    <CheckBox Content="Show Light Probe Volumes" IsChecked="False"/>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+
+            <!-- Menu de Iluminação / Light Probes -->
+            <Button Classes="toolbtn" Content="Lighting ▾" ToolTip.Tip="Light Probes and Cubemaps">
+              <Button.Flyout>
+                <Flyout Placement="BottomEdgeAlignedLeft">
+                  <StackPanel Width="200" Spacing="8">
+                    <TextBlock Classes="flyoutheader" Text="Light Probes"/>
+                    <DockPanel>
+                      <TextBlock Text="Bounces:" DockPanel.Dock="Left" VerticalAlignment="Center" FontSize="11" Width="60"/>
+                      <NumericUpDown Minimum="1" Maximum="8" Value="1" FormatString="0"/>
+                    </DockPanel>
+                    <UniformGrid Columns="2" Margin="0,4,0,0">
+                      <Button Classes="toolbtn" Content="Compute" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2"/>
+                      <Button Classes="toolbtn" Content="Reset" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Margin="2"/>
+                    </UniformGrid>
+                    <Border Height="1" Background="#333338" Margin="0,4"/>
+                    <TextBlock Classes="flyoutheader" Text="Cubemap"/>
+                    <Button Classes="toolbtn" Content="Capture Cubemap" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+
+            <!-- Modo de Renderização -->
+            <ComboBox Classes="toolbtn" SelectedIndex="0" Width="100">
+              <ComboBoxItem Content="Lighting"/>
+              <ComboBoxItem Content="SingleStream"/>
+              <ComboBoxItem Content="Wireframe"/>
+            </ComboBox>
+          </StackPanel>
+
+          <!-- Bloco 4: Indicador de Pipeline Vulkan Nativo (Extrema Direita) -->
+          <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Border Background="#E5107C41"
+                    CornerRadius="3"
+                    Padding="6,2">
+              <TextBlock Text="Vulkan 1.4"
+                         FontSize="10"
+                         FontWeight="Bold"
+                         Foreground="White"
+                         VerticalAlignment="Center" />
+            </Border>
+            <Border Background="#25252A"
+                    BorderBrush="#3D3D45"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="6,2">
+              <TextBlock Text="Linux Native RADV"
+                         FontSize="10"
+                         Foreground="#A0C8FF"
+                         VerticalAlignment="Center" />
+            </Border>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- OVERLAY INFERIOR: BARRA DE STATUS DA VIEWPORT -->
+      <Border HorizontalAlignment="Stretch"
+              VerticalAlignment="Bottom"
+              Margin="8,0,8,8"
+              Padding="8,4"
+              CornerRadius="4"
+              Background="#D018181C"
+              BorderBrush="#25FFFFFF"
+              BorderThickness="1"
+              IsHitTestVisible="False">
+        <Grid ColumnDefinitions="Auto, *, Auto">
+          <!-- Esquerda: Informações da Câmera -->
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="Camera: (4.0, 2.0, 4.0)" FontSize="10" Foreground="#A0A0A0"/>
+            <TextBlock Text="Pitch: -15.0°  Yaw: 45.0°" FontSize="10" Foreground="#888888"/>
+            <TextBlock Text="FOV: 45°" FontSize="10" Foreground="#888888"/>
+          </StackPanel>
+
+          <!-- Direita: Status de Seleção e Renderer -->
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="Selected: 0 entities" FontSize="10" Foreground="#A0A0A0"/>
+            <TextBlock Text="• Viewport Active" FontSize="10" Foreground="#30D158"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+
   </Grid>
 </UserControl>

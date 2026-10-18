@@ -1,0 +1,119 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+             xmlns:caec="using:Stride.Core.Assets.Editor.Avalonia.Converters"
+             xmlns:anp="using:Stride.Core.Assets.Editor.Quantum.NodePresenters.Commands"
+             xmlns:local="using:Stride.Assets.Editor.Avalonia.Views"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
+             x:Class="Stride.Assets.Editor.Avalonia.Views.AddEntityComponentUserControl"
+             x:Name="Root">
+
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Views/ImageResources.axaml"/>
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="ListBox ListBoxItem">
+      <Setter Property="Padding" Value="4,3"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid x:Name="LayoutRoot">
+    <ToggleButton x:Name="ToggleButton"
+                  HorizontalAlignment="Stretch"
+                  Padding="4">
+      <DockPanel Margin="4">
+        <Image DockPanel.Dock="Left" Source="{StaticResource ImageAdd}" Width="16" Height="16" Margin="4,0"/>
+        <TextBlock Text="{sd:LocalizeString Add component}" Margin="4,0" VerticalAlignment="Center"/>
+      </DockPanel>
+    </ToggleButton>
+
+    <Popup x:Name="Popup"
+           PlacementTarget="{Binding ElementName=ToggleButton}"
+           Placement="Bottom"
+           IsLightDismissEnabled="True"
+           IsOpen="{Binding IsChecked, ElementName=ToggleButton, Mode=TwoWay}">
+      <Border x:Name="PopupRoot"
+              Background="#252528"
+              BorderBrush="#38383D"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="6"
+              MinWidth="460"
+              MaxHeight="380"
+              x:DataType="local:AddEntityComponentUserControl">
+        <Grid RowDefinitions="Auto, *">
+          <!-- Campo de busca no topo -->
+          <TextBox x:Name="SearchTextBox"
+                   Grid.Row="0"
+                   Margin="0,0,0,6"
+                   PlaceholderText="{sd:LocalizeString Search}"
+                   Text="{Binding SearchToken, Mode=TwoWay}"/>
+
+          <!-- Duas colunas: Grupos (esquerda) e Componentes (direita) -->
+          <Grid Grid.Row="1" ColumnDefinitions="190, 1, 260">
+            <!-- Esquerda: Grupos -->
+            <ListBox x:Name="GroupListBox"
+                     Grid.Column="0"
+                     ItemsSource="{Binding AvailableComponentTypeGroups}"
+                     SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
+                     Background="#1E1E22"
+                     BorderThickness="0"
+                     CornerRadius="3"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="anp:AbstractNodeTypeGroup">
+                  <DockPanel Margin="4,2">
+                    <PathIcon DockPanel.Dock="Right"
+                              Data="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"
+                              Width="10" Height="10"
+                              Foreground="#888888"
+                              VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayValue}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"/>
+                  </DockPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- Separador -->
+            <Border Grid.Column="1" Background="#38383D" Margin="4,0"/>
+
+            <!-- Direita: Componentes -->
+            <ListBox x:Name="ComponentListBox"
+                     Grid.Column="2"
+                     ItemsSource="{Binding ComponentTypes}"
+                     Background="#1E1E22"
+                     BorderThickness="0"
+                     CornerRadius="3"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="anp:AbstractNodeType">
+                  <DockPanel Margin="4,3">
+                    <Image DockPanel.Dock="Left"
+                           Source="{Binding Type, Converter={caec:TypeToResource}}"
+                           Width="16" Height="16"
+                           Margin="0,0,6,0"
+                           VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding DisplayValue}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"/>
+                  </DockPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Grid>
+      </Border>
+    </Popup>
+  </Grid>
+</UserControl>

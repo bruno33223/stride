@@ -1,0 +1,296 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+             xmlns:vm="using:Stride.Assets.Editor.ViewModels"
+             xmlns:eac="using:Stride.Editor.Avalonia.Controls"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="720"
+             x:Class="Stride.Assets.Editor.Avalonia.Views.ModelEditorView"
+             x:DataType="vm:ModelEditorViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.toolbtn:pointerover">
+      <Setter Property="Background" Value="#35353A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="ToggleButton.toolbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ToggleButton.toolbtn:checked">
+      <Setter Property="Background" Value="#0E5A8A"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <Style Selector="Border.sectionheader">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+    <Style Selector="TextBlock.sectiontitle">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="#E0E0E0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="ListBox.slotlist">
+      <Setter Property="Background" Value="#1A1A1D"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="2"/>
+    </Style>
+    <Style Selector="ListBox.slotlist ListBoxItem">
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="Margin" Value="2,1"/>
+      <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+    <Style Selector="ListBox.slotlist ListBoxItem:selected">
+      <Setter Property="Background" Value="#094771"/>
+    </Style>
+    <Style Selector="ListBox.slotlist ListBoxItem:pointerover">
+      <Setter Property="Background" Value="#2A2D32"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid ColumnDefinitions="*, 4, 380">
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 0: VIEWPORT 3D / PREVIEW DO MODELO                                 -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Column="0" Background="#0C0C0E">
+      <!-- Stride Native 3D Viewport Control -->
+      <eac:StrideViewportControl x:Name="ModelViewport"
+                                 HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Stretch" />
+
+      <!-- OVERLAY SUPERIOR: BARRA DE FERRAMENTAS DO VIEWPORT 3D -->
+      <Border HorizontalAlignment="Stretch"
+              VerticalAlignment="Top"
+              Margin="10,10,10,0"
+              Padding="8,5"
+              CornerRadius="5"
+              Background="#E01A1A1E"
+              BorderBrush="#40FFFFFF"
+              BorderThickness="1">
+        <Grid ColumnDefinitions="Auto, *, Auto">
+          <!-- Título do Modelo e Estatísticas -->
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <PathIcon Data="M12,2L1,21H23L12,2M12,6L19.5,19H4.5L12,6M11,10V14H13V10H11M11,16V18H13V16H11Z"
+                      Width="14" Height="14" Foreground="#0098FF"/>
+            <TextBlock Text="{Binding Asset.Name, StringFormat='Model: {0}'}"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       Foreground="#FFFFFF"
+                       VerticalAlignment="Center"/>
+            <Border Background="#2D2D32" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding MaterialCount, StringFormat='Materials: {0}'}" FontSize="10" Foreground="#AAAAAA"/>
+            </Border>
+            <Border Background="#2D2D32" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+              <TextBlock Text="{Binding NodeCount, StringFormat='Nodes: {0}'}" FontSize="10" Foreground="#AAAAAA"/>
+            </Border>
+          </StackPanel>
+
+          <!-- Ferramentas de Visualização 3D -->
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+            <ToggleButton Classes="toolbtn" IsChecked="{Binding IsWireframe, Mode=TwoWay}" ToolTip.Tip="Toggle Wireframe">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <PathIcon Data="M2,2H22V22H2V2M4,4V20H20V4H4M6,6H18V18H6V6Z" Width="11" Height="11"/>
+                <TextBlock Text="Wireframe" FontSize="11"/>
+              </StackPanel>
+            </ToggleButton>
+
+            <ToggleButton Classes="toolbtn" IsChecked="{Binding ShowGrid, Mode=TwoWay}" ToolTip.Tip="Toggle Grid">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <PathIcon Data="M20,2H4A2,2 0 0,0 2,4V20A2,2 0 0,0 4,22H20A2,2 0 0,0 22,20V4A2,2 0 0,0 20,2M8,20H4V16H8V20M8,14H4V10H8V14M8,8H4V4H8V8M14,20H10V16H14V20M14,14H10V10H14V14M14,8H10V4H14V8M20,20H16V16H20V20M20,14H16V10H20V14M20,8H16V4H20V8Z" Width="11" Height="11"/>
+                <TextBlock Text="Grid" FontSize="11"/>
+              </StackPanel>
+            </ToggleButton>
+
+            <ToggleButton Classes="toolbtn" IsChecked="{Binding ShowNormals, Mode=TwoWay}" ToolTip.Tip="Show Surface Normals">
+              <TextBlock Text="Normals" FontSize="11"/>
+            </ToggleButton>
+
+            <Border Width="1" Height="16" Background="#3A3A40" Margin="4,0"/>
+
+            <Button Classes="toolbtn" Command="{Binding ResetCameraCommand}" ToolTip.Tip="Reset Viewport Camera">
+              <PathIcon Data="M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12H4A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4Z" Width="11" Height="11"/>
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- OVERLAY INFERIOR: DETALHES DE IMPORTAÇÃO DO MODELO -->
+      <Border HorizontalAlignment="Stretch"
+              VerticalAlignment="Bottom"
+              Margin="10,0,10,10"
+              Padding="8,4"
+              CornerRadius="4"
+              Background="#D0151518"
+              BorderBrush="#25FFFFFF"
+              BorderThickness="1">
+        <Grid ColumnDefinitions="Auto, *, Auto">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+            <TextBlock Text="{Binding SourceFile, StringFormat='Source: {0}'}" FontSize="11" Foreground="#888888"/>
+            <TextBlock Text="{Binding ScaleImport, StringFormat='Scale: {0:F2}'}" FontSize="11" Foreground="#888888"/>
+          </StackPanel>
+          <TextBlock Grid.Column="2"
+                     Text="{Binding MergeMeshes, StringFormat='Merged Meshes: {0}'}"
+                     FontSize="11"
+                     Foreground="#70B0FF"/>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- DIVISOR AJUSTÁVEL -->
+    <GridSplitter Grid.Column="1" Background="#141416" ResizeDirection="Columns"/>
+
+    <!-- ========================================================================= -->
+    <!-- COLUNA 2: PAINEL DE SLOTS DE MATERIAIS E NÓS DE SUBMALHA / ESQUELETO       -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Column="2" RowDefinitions="*, 4, *" Background="#1E1E22">
+
+      <!-- PAINEL SUPERIOR: SLOTS DE MATERIAIS -->
+      <DockPanel Grid.Row="0">
+        <!-- Cabeçalho -->
+        <Border Classes="sectionheader" DockPanel.Dock="Top">
+          <Grid ColumnDefinitions="*, Auto">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <PathIcon Data="M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A9,9 0 0,0 21,12A9,9 0 0,0 12,3M12,5A7,7 0 0,1 19,12A7,7 0 0,1 12,19A7,7 0 0,1 5,12A7,7 0 0,1 12,5M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7Z"
+                        Width="13" Height="13" Foreground="#FF9F0A"/>
+              <TextBlock Classes="sectiontitle" Text="Material Slots"/>
+              <Border Background="#2D2D32" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding MaterialSlots.Count}" FontSize="10" Foreground="#AAAAAA"/>
+              </Border>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Lista de Slots de Materiais -->
+        <ListBox Classes="slotlist"
+                 ItemsSource="{Binding MaterialSlots}"
+                 SelectedItem="{Binding SelectedMaterial, Mode=TwoWay}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:ModelMaterialSlotViewModel">
+              <Grid ColumnDefinitions="Auto, *, Auto" Margin="2,2">
+                <!-- Índice do Slot -->
+                <Border Grid.Column="0"
+                        Background="#2A2A2E"
+                        CornerRadius="3"
+                        Padding="5,2"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Index, StringFormat='[{0}]'}"
+                             FontSize="10"
+                             FontWeight="Bold"
+                             Foreground="#0098FF"/>
+                </Border>
+
+                <!-- Nome do Slot e Referência do Material -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                  <TextBlock Text="{Binding Name}"
+                             FontSize="12"
+                             FontWeight="SemiBold"
+                             Foreground="#ECECEC"/>
+                  <TextBlock Text="{Binding MaterialReferenceName, StringFormat='Material: {0}'}"
+                             FontSize="10"
+                             Foreground="#888888"/>
+                </StackPanel>
+
+                <!-- Indicador de Status do Slot -->
+                <PathIcon Grid.Column="2"
+                          Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                          Width="8" Height="8"
+                          Foreground="#30D158"
+                          VerticalAlignment="Center"
+                          Margin="4,0,0,0"/>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+      <!-- DIVISOR HORIZONTAL ENTRE MATERIAIS E NÓS -->
+      <GridSplitter Grid.Row="1" Background="#141416" ResizeDirection="Rows"/>
+
+      <!-- PAINEL INFERIOR: HIERARQUIA DE NÓS DE SUBMALHA / ESQUELETO -->
+      <DockPanel Grid.Row="2">
+        <!-- Cabeçalho -->
+        <Border Classes="sectionheader" DockPanel.Dock="Top">
+          <Grid ColumnDefinitions="*, Auto">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+              <PathIcon Data="M10.59,13.41C11,13.8 11,14.44 10.59,14.83C10.2,15.22 9.56,15.22 9.17,14.83L6.34,12L9.17,9.17C9.56,8.78 10.2,8.78 10.59,9.17C11,9.56 11,10.2 10.59,10.59L8.76,12.41L10.59,13.41M13.41,10.59C13,10.2 13,9.56 13.41,9.17C13.8,8.78 14.44,8.78 14.83,9.17L17.66,12L14.83,14.83C14.44,15.22 13.8,15.22 13.41,14.83C13,14.44 13,13.8 13.41,13.41L15.24,11.59L13.41,10.59Z"
+                        Width="13" Height="13" Foreground="#A371F7"/>
+              <TextBlock Classes="sectiontitle" Text="Submesh &amp; Skeleton Nodes"/>
+              <Border Background="#2D2D32" CornerRadius="8" Padding="6,1" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Nodes.Count}" FontSize="10" Foreground="#AAAAAA"/>
+              </Border>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Lista de Nós / Esqueleto -->
+        <ListBox Classes="slotlist"
+                 ItemsSource="{Binding Nodes}"
+                 SelectedItem="{Binding SelectedNode, Mode=TwoWay}">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:ModelNodeItemViewModel">
+              <Grid ColumnDefinitions="Auto, *, Auto" Margin="2,2">
+                <!-- Ícone do Nó -->
+                <PathIcon Grid.Column="0"
+                          Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"
+                          Width="11" Height="11"
+                          Foreground="#A371F7"
+                          Margin="0,0,6,0"
+                          VerticalAlignment="Center"/>
+
+                <!-- Nome do Nó e Transformação -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                  <TextBlock Text="{Binding Name}"
+                             FontSize="12"
+                             Foreground="#E0E0E0"/>
+                  <TextBlock Text="{Binding TransformSummary}"
+                             FontSize="9"
+                             Foreground="#777777"/>
+                </StackPanel>
+
+                <!-- Flags do Nó -->
+                <Border Grid.Column="2"
+                        Background="#252528"
+                        CornerRadius="3"
+                        Padding="4,1"
+                        VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Flags}"
+                             FontSize="9"
+                             Foreground="#888888"/>
+                </Border>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+
+    </Grid>
+
+  </Grid>
+</UserControl>

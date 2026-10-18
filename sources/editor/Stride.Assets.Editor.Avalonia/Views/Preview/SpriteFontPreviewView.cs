@@ -7,6 +7,7 @@ using Stride.Editor.Avalonia.Preview.Views;
 
 namespace Stride.Assets.Editor.Avalonia.Views.Preview;
 
+[AssetPreviewView<PrecompiledSpriteFontPreview>]
 [AssetPreviewView<SpriteFontPreview>]
 public class SpriteFontPreviewView : StridePreviewView
 {

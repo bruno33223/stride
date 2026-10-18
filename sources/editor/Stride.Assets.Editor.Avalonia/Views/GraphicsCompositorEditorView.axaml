@@ -1,0 +1,492 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+             xmlns:vm="using:Stride.Assets.Editor.ViewModels"
+             xmlns:gcvm="using:Stride.Assets.Editor.AssetEditors.GraphicsCompositorEditor.ViewModels"
+             xmlns:anp="using:Stride.Core.Assets.Editor.Quantum.NodePresenters.Commands"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+             x:Class="Stride.Assets.Editor.Avalonia.Views.GraphicsCompositorEditorView"
+             x:DataType="vm:GraphicsCompositorEditorViewModel">
+
+  <UserControl.Styles>
+    <!-- Estilo comum para botões de ação compactos -->
+    <Style Selector="Button.actionbtn">
+      <Setter Property="Background" Value="#2A2A2E"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#38383D"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="Foreground" Value="#CCCCCC"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.actionbtn:pointerover">
+      <Setter Property="Background" Value="#383840"/>
+      <Setter Property="BorderBrush" Value="#007ACC"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Botões de cabeçalho da lista (+ / - / ▲ / ▼) -->
+    <Style Selector="Button.iconbtn">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="CornerRadius" Value="3"/>
+      <Setter Property="Padding" Value="5,3"/>
+      <Setter Property="Foreground" Value="#AAAAAA"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.iconbtn:pointerover">
+      <Setter Property="Background" Value="#333338"/>
+      <Setter Property="Foreground" Value="#FFFFFF"/>
+    </Style>
+
+    <!-- Cabeçalhos das seções -->
+    <Style Selector="Border.sectionheader">
+      <Setter Property="Background" Value="#252528"/>
+      <Setter Property="BorderBrush" Value="#2D2D32"/>
+      <Setter Property="BorderThickness" Value="0,0,0,1"/>
+      <Setter Property="Padding" Value="8,6"/>
+    </Style>
+    <Style Selector="TextBlock.sectiontitle">
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="Foreground" Value="#E0E0E0"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ListBox estilizado com tema dark -->
+    <Style Selector="ListBox.darklist">
+      <Setter Property="Background" Value="#1E1E22"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Padding" Value="4"/>
+    </Style>
+    <Style Selector="ListBox.darklist ListBoxItem">
+      <Setter Property="Padding" Value="6,4"/>
+      <Setter Property="Margin" Value="0,1"/>
+      <Setter Property="CornerRadius" Value="3"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto, *">
+
+    <!-- ========================================================================= -->
+    <!-- BARRA SUPERIOR: CABEÇALHO DO EDITOR & AÇÕES RÁPIDAS -->
+    <!-- ========================================================================= -->
+    <Border Grid.Row="0"
+            Background="#222226"
+            BorderBrush="#2D2D32"
+            BorderThickness="0,0,0,1"
+            Padding="12,8">
+      <Grid ColumnDefinitions="Auto, *, Auto">
+        <!-- Título e Nome do Compositor -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Border Background="#007ACC" CornerRadius="4" Padding="6,3">
+            <TextBlock Text="COMPOSITOR" FontSize="10" FontWeight="Bold" Foreground="White"/>
+          </Border>
+          <TextBlock Text="Graphics Compositor Editor"
+                     FontWeight="Bold"
+                     FontSize="13"
+                     Foreground="#FFFFFF"
+                     VerticalAlignment="Center"/>
+          <TextBlock Text="—" Foreground="#666666" VerticalAlignment="Center"/>
+          <TextBlock Text="{Binding Asset.Name}"
+                     Foreground="#4EC9B0"
+                     FontWeight="SemiBold"
+                     FontSize="13"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Ações Globais Rápidas -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <Button Classes="actionbtn"
+                  Command="{Binding AddForwardRendererCommand}"
+                  ToolTip.Tip="Add Forward Scene Renderer to shared pipeline">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="10" Height="10" Foreground="#30D158"/>
+              <TextBlock Text="Forward Renderer" FontSize="11"/>
+            </StackPanel>
+          </Button>
+          <Button Classes="actionbtn"
+                  Command="{Binding AddPostProcessingEffectsCommand}"
+                  ToolTip.Tip="Add Post-Processing Effects to shared pipeline">
+            <StackPanel Orientation="Horizontal" Spacing="5">
+              <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="10" Height="10" Foreground="#0098FF"/>
+              <TextBlock Text="Post-Processing" FontSize="11"/>
+            </StackPanel>
+          </Button>
+          <Border Width="1" Height="16" Background="#3A3A40" Margin="2,0"/>
+          <Button Classes="actionbtn"
+                  Command="{Binding DeleteSelectionCommand}"
+                  ToolTip.Tip="Delete selected stage, feature, or renderer">
+            <PathIcon Data="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
+                      Width="11" Height="11" Foreground="#FF6B6B"/>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ========================================================================= -->
+    <!-- ÁREA PRINCIPAL: DIVIDIDA EM CONFIGURAÇÕES DE PIPELINE (ESQ) E RENDERERS (DIR) -->
+    <!-- ========================================================================= -->
+    <Grid Grid.Row="1" ColumnDefinitions="360, 4, *">
+
+      <!-- ======================================================================= -->
+      <!-- COLUNA ESQUERDA: RENDER STAGES, RENDER FEATURES E CAMERA SLOTS -->
+      <!-- ======================================================================= -->
+      <Grid Grid.Column="0" RowDefinitions="*, 4, *, 4, 180" Background="#1A1A1D">
+
+        
+        <!-- SEÇÃO 1: RENDER STAGES -->
+        
+        <DockPanel Grid.Row="0">
+          <Border Classes="sectionheader" DockPanel.Dock="Top">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <PathIcon Data="M3,3H21V5H3V3M3,7H21V9H3V7M3,11H21V13H3V11M3,15H21V17H3V15M3,19H21V21H3V19Z"
+                          Width="12" Height="12" Foreground="#007ACC"/>
+                <TextBlock Classes="sectiontitle" Text="Render Stages"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                <Button Classes="iconbtn" Command="{Binding AddNewRenderStageCommand}" ToolTip.Tip="Add new Render Stage">
+                  <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding RemoveSelectedRenderStagesCommand}" ToolTip.Tip="Remove selected Render Stage">
+                  <PathIcon Data="M19,13H5V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding MoveUpRenderStageCommand}" ToolTip.Tip="Move Stage Up">
+                  <PathIcon Data="M7,14L12,9L17,14H7Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding MoveDownRenderStageCommand}" ToolTip.Tip="Move Stage Down">
+                  <PathIcon Data="M7,10L12,15L17,10H7Z" Width="11" Height="11"/>
+                </Button>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <!-- Lista de RenderStages -->
+          <ListBox Classes="darklist"
+                   ItemsSource="{Binding RenderStages}"
+                   SelectedItem="{Binding SelectedRenderStage, Mode=TwoWay}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="gcvm:RenderStageViewModel">
+                <Grid ColumnDefinitions="*, Auto" Margin="2,0">
+                  <TextBox Grid.Column="0"
+                           Text="{Binding Name, Mode=TwoWay}"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Background="Transparent"
+                           BorderThickness="0"
+                           Padding="0"
+                           VerticalAlignment="Center"/>
+                  <Border Grid.Column="1"
+                          Background="#2A2A30"
+                          CornerRadius="3"
+                          Padding="5,1"
+                          Margin="4,0,0,0"
+                          VerticalAlignment="Center">
+                    <TextBlock Text="{Binding EffectSlotName}"
+                               FontSize="10"
+                               Foreground="#888888"/>
+                  </Border>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+
+        <!-- Divisor ajustável entre Stages e Features -->
+        <GridSplitter Grid.Row="1" Background="#141416" ResizeDirection="Rows"/>
+
+        
+        <!-- SEÇÃO 2: RENDER FEATURES -->
+        
+        <DockPanel Grid.Row="2">
+          <Border Classes="sectionheader" DockPanel.Dock="Top">
+            <Grid ColumnDefinitions="Auto, *, Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <PathIcon Data="M12,2L2,7L12,12L22,7L12,2M2,17L12,22L22,17L12,12L2,17M2,12L12,17L22,12L12,7L2,12Z"
+                          Width="12" Height="12" Foreground="#30D158"/>
+                <TextBlock Classes="sectiontitle" Text="Render Features"/>
+              </StackPanel>
+
+              <!-- Seletor de Tipo e Ações -->
+              <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                <ComboBox x:Name="RenderFeatureComboBox"
+                          ItemsSource="{Binding RenderFeatureTypes}"
+                          SelectedIndex="0"
+                          Width="120"
+                          FontSize="10"
+                          Padding="4,2"
+                          VerticalAlignment="Center">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="anp:AbstractNodeType">
+                      <TextBlock Text="{Binding DisplayValue}" FontSize="10"/>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Classes="iconbtn"
+                        Command="{Binding AddNewRenderFeatureCommand}"
+                        CommandParameter="{Binding #RenderFeatureComboBox.SelectedItem}"
+                        ToolTip.Tip="Add selected Render Feature">
+                  <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding RemoveSelectedRenderFeaturesCommand}" ToolTip.Tip="Remove selected Render Feature">
+                  <PathIcon Data="M19,13H5V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding MoveUpRenderFeatureCommand}" ToolTip.Tip="Move Feature Up">
+                  <PathIcon Data="M7,14L12,9L17,14H7Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding MoveDownRenderFeatureCommand}" ToolTip.Tip="Move Feature Down">
+                  <PathIcon Data="M7,10L12,15L17,10H7Z" Width="11" Height="11"/>
+                </Button>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <!-- Lista de RenderFeatures -->
+          <ListBox Classes="darklist"
+                   ItemsSource="{Binding RenderFeatures}"
+                   SelectedItem="{Binding SelectedRenderFeature, Mode=TwoWay}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="gcvm:RenderFeatureViewModel">
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="2,0">
+                  <PathIcon Data="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4Z"
+                            Width="10" Height="10" Foreground="#4EC9B0" VerticalAlignment="Center"/>
+                  <TextBlock Text="{Binding Title}"
+                             FontSize="12"
+                             Foreground="#E0E0E0"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+
+        <!-- Divisor ajustável entre Features e Cameras -->
+        <GridSplitter Grid.Row="3" Background="#141416" ResizeDirection="Rows"/>
+
+        
+        <!-- SEÇÃO 3: CAMERA SLOTS -->
+        
+        <DockPanel Grid.Row="4">
+          <Border Classes="sectionheader" DockPanel.Dock="Top">
+            <Grid ColumnDefinitions="*, Auto">
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <PathIcon Data="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"
+                          Width="12" Height="12" Foreground="#DCDCAA"/>
+                <TextBlock Classes="sectiontitle" Text="Camera Slots"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                <Button Classes="iconbtn" Command="{Binding AddNewCameraSlotCommand}" ToolTip.Tip="Add Camera Slot">
+                  <PathIcon Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding RemoveSelectedCameraSlotsCommand}" ToolTip.Tip="Remove Camera Slot">
+                  <PathIcon Data="M19,13H5V11H19V13Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding MoveUpCameraSlotCommand}" ToolTip.Tip="Move Slot Up">
+                  <PathIcon Data="M7,14L12,9L17,14H7Z" Width="11" Height="11"/>
+                </Button>
+                <Button Classes="iconbtn" Command="{Binding MoveDownCameraSlotCommand}" ToolTip.Tip="Move Slot Down">
+                  <PathIcon Data="M7,10L12,15L17,10H7Z" Width="11" Height="11"/>
+                </Button>
+              </StackPanel>
+            </Grid>
+          </Border>
+
+          <!-- Lista de CameraSlots -->
+          <ListBox Classes="darklist"
+                   ItemsSource="{Binding CameraSlots}"
+                   SelectedItem="{Binding SelectedCameraSlot, Mode=TwoWay}">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="gcvm:GraphicsCompositorCameraSlotsViewModel">
+                <Grid ColumnDefinitions="Auto, *" Margin="2,0">
+                  <PathIcon Grid.Column="0"
+                            Data="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z"
+                            Width="11" Height="11"
+                            Foreground="#C586C0"
+                            Margin="0,0,6,0"
+                            VerticalAlignment="Center"/>
+                  <TextBox Grid.Column="1"
+                           Text="{Binding Name, Mode=TwoWay}"
+                           FontSize="12"
+                           Background="Transparent"
+                           BorderThickness="0"
+                           Padding="0"
+                           VerticalAlignment="Center"/>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </DockPanel>
+
+      </Grid>
+
+      <!-- Divisor ajustável entre painel esquerdo e direito -->
+      <GridSplitter Grid.Column="1" Background="#141416" ResizeDirection="Columns"/>
+
+      <!-- ======================================================================= -->
+      <!-- COLUNA DIREITA: SHARED RENDERER SETTINGS & PIPELINE BLOCKS -->
+      <!-- ======================================================================= -->
+      <Grid Grid.Column="2" RowDefinitions="Auto, *, Auto, 220" Background="#18181B">
+
+        <!-- Cabeçalho da Seção de Shared Renderers -->
+        <Border Grid.Row="0" Classes="sectionheader">
+          <Grid ColumnDefinitions="Auto, *, Auto">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <PathIcon Data="M2,4H8V10H2V4M10,4H16V10H10V4M18,4H24V10H18V4M2,12H8V18H2V12M10,12H16V18H10V12M18,12H24V18H18V12"
+                        Width="13" Height="13" Foreground="#0098FF"/>
+              <TextBlock Classes="sectiontitle" Text="Shared Renderer Settings"/>
+            </StackPanel>
+
+            <!-- Ações e Gerador de Instâncias -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+              <!-- Menu Flyout para criar renderers registrados -->
+              <Button Classes="actionbtn" Content="Add Renderer ▾">
+                <Button.Flyout>
+                  <Flyout Placement="BottomEdgeAlignedRight">
+                    <StackPanel Width="220" Spacing="4">
+                      <TextBlock Text="Available Shared Renderers"
+                                 FontWeight="SemiBold"
+                                 FontSize="11"
+                                 Foreground="#0098FF"
+                                 Margin="4,2"/>
+                      <Border Height="1" Background="#333338" Margin="0,2"/>
+                      <ItemsControl ItemsSource="{Binding SharedRendererFactories}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="gcvm:SharedRendererFactoryViewModel">
+                            <Button Background="Transparent"
+                                    BorderThickness="0"
+                                    Padding="6,4"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{Binding CreateCommand}">
+                              <TextBlock Text="{Binding Name}" FontSize="11" Foreground="#CCCCCC"/>
+                            </Button>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </StackPanel>
+                  </Flyout>
+                </Button.Flyout>
+              </Button>
+
+              <Button Classes="iconbtn" Command="{Binding RemoveSelectedSharedRenderersCommand}" ToolTip.Tip="Remove selected Renderer">
+                <PathIcon Data="M19,13H5V11H19V13Z" Width="11" Height="11"/>
+              </Button>
+              <Button Classes="iconbtn" Command="{Binding MoveUpSharedRendererCommand}" ToolTip.Tip="Move Renderer Up">
+                <PathIcon Data="M7,14L12,9L17,14H7Z" Width="11" Height="11"/>
+              </Button>
+              <Button Classes="iconbtn" Command="{Binding MoveDownSharedRendererCommand}" ToolTip.Tip="Move Renderer Down">
+                <PathIcon Data="M7,10L12,15L17,10H7Z" Width="11" Height="11"/>
+              </Button>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Lista Principal de Pipeline Blocks / Shared Renderers -->
+        <ListBox Grid.Row="1"
+                 Classes="darklist"
+                 ItemsSource="{Binding Blocks}"
+                 SelectedItem="{Binding SelectedBlock, Mode=TwoWay}"
+                 Margin="8">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="gcvm:IGraphicsCompositorBlockViewModel">
+              <Border Background="#222226"
+                      BorderBrush="#333338"
+                      BorderThickness="1"
+                      CornerRadius="5"
+                      Padding="10,8"
+                      Margin="0,3">
+                <Grid ColumnDefinitions="Auto, *, Auto">
+                  <!-- Ícone do Bloco -->
+                  <Border Grid.Column="0"
+                          Background="#103855"
+                          BorderBrush="#007ACC"
+                          BorderThickness="1"
+                          CornerRadius="4"
+                          Padding="6,4"
+                          Margin="0,0,10,0"
+                          VerticalAlignment="Center">
+                    <PathIcon Data="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19Z"
+                              Width="14" Height="14" Foreground="#4EC9B0"/>
+                  </Border>
+
+                  <!-- Informações do Bloco -->
+                  <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                    <TextBlock Text="{Binding Title}"
+                               FontWeight="Bold"
+                               FontSize="12"
+                               Foreground="#FFFFFF"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="Shared Pipeline Block"
+                                 FontSize="10"
+                                 Foreground="#888888"/>
+                    </StackPanel>
+                  </StackPanel>
+
+                  <!-- Slots de Entrada e Saída -->
+                  <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <Border Background="#252528" CornerRadius="3" Padding="6,2">
+                      <TextBlock Text="{Binding InputSlots.Count, StringFormat='In: {0}'}"
+                                 FontSize="10" Foreground="#A0A0A0"/>
+                    </Border>
+                    <Border Background="#252528" CornerRadius="3" Padding="6,2">
+                      <TextBlock Text="{Binding OutputSlots.Count, StringFormat='Out: {0}'}"
+                                 FontSize="10" Foreground="#30D158"/>
+                    </Border>
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- Divisor ajustável para detalhes do Shared Renderer -->
+        <GridSplitter Grid.Row="2" Background="#141416" ResizeDirection="Rows" Height="4"/>
+
+        <!-- Painel de Detalhes / Configurações do Bloco Selecionado -->
+        <Border Grid.Row="3"
+                Background="#1E1E22"
+                BorderBrush="#2D2D32"
+                BorderThickness="0,1,0,0"
+                Padding="12,10">
+          <Grid RowDefinitions="Auto, *">
+            <TextBlock Grid.Row="0"
+                       Text="Renderer Settings &amp; Slot Configuration"
+                       FontWeight="SemiBold"
+                       FontSize="11"
+                       Foreground="#0098FF"
+                       Margin="0,0,0,6"/>
+
+            <!-- Exibição de propriedades do bloco atualmente selecionado -->
+            <Border Grid.Row="1"
+                    Background="#18181A"
+                    BorderBrush="#2A2A2E"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="10">
+              <StackPanel Spacing="6" VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="Selected:" FontSize="11" Foreground="#888888"/>
+                  <TextBlock Text="{Binding SelectedBlock.Title, FallbackValue='(None selected)'}"
+                             FontWeight="SemiBold"
+                             FontSize="11"
+                             Foreground="#4EC9B0"/>
+                </StackPanel>
+                <TextBlock Text="Detailed component properties and bindings are synchronised via the Property Grid."
+                           FontSize="10"
+                           Foreground="#666666"
+                           TextWrapping="Wrap"/>
+              </StackPanel>
+            </Border>
+          </Grid>
+        </Border>
+
+      </Grid>
+
+    </Grid>
+
+  </Grid>
+</UserControl>

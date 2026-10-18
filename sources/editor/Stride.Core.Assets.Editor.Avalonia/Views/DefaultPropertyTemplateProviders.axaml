@@ -677,10 +677,27 @@
                              Background="{DynamicResource ControlBackgroundBrush}" Margin="10">
                     <TextBlock DockPanel.Dock="Left" Margin="8,0,0,0" VerticalAlignment="Center"
                                Text="{sd:LocalizeString Key name:}"/>
-                    <!-- TODO validation commands -->
+                    <Button DockPanel.Dock="Right"
+                            Theme="{StaticResource ImageButtonTheme}"
+                            Margin="4,0,8,0" VerticalAlignment="Center"
+                            ToolTip.Tip="{sd:LocalizeString Add, Context=ToolTip}"
+                            Command="{Binding [AddPrimitiveKey]}"
+                            CommandParameter="{Binding #TextBox1.Text}">
+                      <Image Source="{StaticResource ImageAdd}" Width="16" Height="16"/>
+                      <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="Click">
+                          <ChangePropertyAction TargetObject="ToggleButton" PropertyName="IsChecked" Value="{x:False}"/>
+                        </EventTriggerBehavior>
+                      </Interaction.Behaviors>
+                    </Button>
                     <TextBox x:Name="TextBox1"
                              Text="0"
-                             Margin="8" Width="160"/>
+                             Margin="8" Width="160">
+                      <Interaction.Behaviors>
+                        <sd:TextBoxKeyUpCommandBehavior Command="{Binding [AddPrimitiveKey]}"
+                                                        CloseTarget="{Binding #ToggleButton}"/>
+                      </Interaction.Behaviors>
+                    </TextBox>
                   </DockPanel>
                 </Popup>
                 <Interaction.Behaviors>
@@ -735,10 +752,27 @@
                              Background="{DynamicResource ControlBackgroundBrush}" Margin="10">
                     <TextBlock DockPanel.Dock="Left" Margin="8,0,0,0" VerticalAlignment="Center"
                                Text="{sd:LocalizeString Key name:}"/>
-                    <!-- TODO validation commands -->
+                    <Button DockPanel.Dock="Right"
+                            Theme="{StaticResource ImageButtonTheme}"
+                            Margin="4,0,8,0" VerticalAlignment="Center"
+                            ToolTip.Tip="{sd:LocalizeString Add, Context=ToolTip}"
+                            Command="{Binding [AddPrimitiveKey]}"
+                            CommandParameter="{Binding #TextBox2.Text}">
+                      <Image Source="{StaticResource ImageAdd}" Width="16" Height="16"/>
+                      <Interaction.Behaviors>
+                        <EventTriggerBehavior EventName="Click">
+                          <ChangePropertyAction TargetObject="ToggleButton" PropertyName="IsChecked" Value="{x:False}"/>
+                        </EventTriggerBehavior>
+                      </Interaction.Behaviors>
+                    </Button>
                     <TextBox x:Name="TextBox2"
                              Text="{sd:LocalizeString New key}"
-                             Margin="8" Width="160"/>
+                             Margin="8" Width="160">
+                      <Interaction.Behaviors>
+                        <sd:TextBoxKeyUpCommandBehavior Command="{Binding [AddPrimitiveKey]}"
+                                                        CloseTarget="{Binding #ToggleButton}"/>
+                      </Interaction.Behaviors>
+                    </TextBox>
                   </DockPanel>
                 </Popup>
                 <Interaction.Behaviors>
@@ -750,7 +784,7 @@
                     <ChangePropertyAction TargetObject="TextBox2" PropertyName="Text" Value=""/>
                   </DataTriggerBehavior>
                   <DataTriggerBehavior Binding="{Binding #PART_Popup.IsOpen}" Value="{sd:True}">
-                    <ChangePropertyAction TargetObject="TextBox2" PropertyName="Text" Value="0"/>
+                    <ChangePropertyAction TargetObject="TextBox2" PropertyName="Text" Value="{sd:LocalizeString New key}"/>
                   </DataTriggerBehavior>
                 </Interaction.Behaviors>
               </Grid>
@@ -1436,7 +1470,8 @@
                     ToolTip.Tip="{sd:LocalizeString Select the referenced asset, Context=ToolTip}">
               <Image x:Name="ThumbnailImage"
                      Width="64" Height="64"
-                     DataContext="{Binding ((capvm:AssetViewModel)NodeValue), Converter={caec:ContentReferenceToAsset}}"
+                     DataContext="{Binding NodeValue, Converter={caec:ContentReferenceToAsset}}"
+                     x:DataType="capvm:AssetViewModel"
                      Source="{Binding ThumbnailData?.Presenter, Mode=OneWay}"/>
               <Interaction.Behaviors>
                 <!-- FIXME only on pointer down -->
@@ -1446,7 +1481,8 @@
               </Interaction.Behaviors>
             </Border>
             <ProgressBar Width="16" Height="4" IsIndeterminate="True"
-                         DataContext="{Binding ((capvm:AssetViewModel)NodeValue), Converter={caec:ContentReferenceToAsset}}"
+                         DataContext="{Binding NodeValue, Converter={caec:ContentReferenceToAsset}}"
+                         x:DataType="capvm:AssetViewModel"
                          IsVisible="{Binding ThumbnailData, Converter={sd:Chained {sd:ObjectToBool}, {sd:InvertBool}}, FallbackValue={sd:False}}"/>
             <Border Width="64" Height="64"
                     Background="Transparent"
