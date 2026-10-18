@@ -11,7 +11,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
-using Microsoft.Build.Locator;
+using Stride.Core.Assets;
 using Stride.Core.Diagnostics;
 using Stride.Crash;
 using Stride.Crash.ViewModels;
@@ -33,7 +33,7 @@ internal sealed class Program
 
         try
         {
-            MSBuildLocator.RegisterDefaults();
+            PackageSessionPublicHelper.FindAndSetMSBuildVersion();
             Thread.CurrentThread.Name = "Main thread";
 
             // Listen to logger for crash report

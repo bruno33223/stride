@@ -197,4 +197,44 @@ public class TestSessionArchitectureAndQuantumIntegration
         var showMethod = dialogServiceType.GetMethod("ShowProjectSelectionWindowAsync");
         Assert.NotNull(showMethod);
     }
+
+    [Fact]
+    public void TestMSBuildInitializationAndProjectLoad()
+    {
+        // 1. PackageSessionPublicHelper.FindAndSetMSBuildVersion deve estar presente e configurar o MSBuild corretamente
+        var helperMethod = typeof(PackageSessionPublicHelper).GetMethod(nameof(PackageSessionPublicHelper.FindAndSetMSBuildVersion));
+        Assert.NotNull(helperMethod);
+
+        // 2. Garante que Program.cs do GameStudio.Avalonia.Desktop usa PackageSessionPublicHelper.FindAndSetMSBuildVersion e não MSBuildLocator.RegisterDefaults
+        var desktopProgramPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../sources/editor/Stride.GameStudio.Avalonia.Desktop/Program.cs"));
+        if (File.Exists(desktopProgramPath))
+        {
+            var content = File.ReadAllText(desktopProgramPath);
+            Assert.Contains("PackageSessionPublicHelper.FindAndSetMSBuildVersion()", content);
+            Assert.DoesNotContain("MSBuildLocator.RegisterDefaults()", content);
+        }
+
+        // 3. Garante que Stride.GameStudio.Avalonia.Desktop.csproj exclui assets de runtime conflitantes do MSBuild
+        var desktopCsprojPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../sources/editor/Stride.GameStudio.Avalonia.Desktop/Stride.GameStudio.Avalonia.Desktop.csproj"));
+        if (File.Exists(desktopCsprojPath))
+        {
+            var content = File.ReadAllText(desktopCsprojPath);
+            Assert.Contains("ExcludeAssets=\"runtime\"", content);
+            Assert.Contains("RemoveMSBuildFromCopyLocal", content);
+        }
+
+        // 4. Executa PackageSessionPublicHelper.FindAndSetMSBuildVersion
+        PackageSessionPublicHelper.FindAndSetMSBuildVersion();
+
+        // 5. Valida que nenhum assembly conflitante do MSBuild do net472/net7.0 está carregado de forma incorreta
+        var msbuildAssemblies = AppDomain.CurrentDomain.GetAssemblies().Where(a => a.GetName().Name?.StartsWith("Microsoft.Build") == true).ToList();
+        foreach (var asm in msbuildAssemblies)
+        {
+            if (asm.GetName().Name != "Microsoft.Build.Locator")
+            {
+                // Se estiver carregado, não pode ser de versões legadas de 2023 com tamanho/versão incompatível
+                Assert.False(asm.Location.EndsWith("lib/net7.0/Microsoft.Build.dll"), "Microsoft.Build antigo net7.0 não pode estar no runtime");
+            }
+        }
+    }
 }

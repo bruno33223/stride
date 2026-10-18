@@ -22,7 +22,8 @@ public static class PackageSessionPublicHelper
         "Microsoft.Build",
         "Microsoft.Build.Framework",
         "Microsoft.Build.Tasks.Core",
-        "Microsoft.Build.Utilities.Core"
+        "Microsoft.Build.Utilities.Core",
+        "Microsoft.NET.StringTools"
     ];
 
     private static int MSBuildLocatorCount = 0;
