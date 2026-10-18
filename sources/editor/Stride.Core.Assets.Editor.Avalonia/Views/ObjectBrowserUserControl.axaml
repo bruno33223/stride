@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="using:Stride.Core.Assets.Editor.Avalonia.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Stride.Core.Assets.Editor.Avalonia.Views.ObjectBrowserUserControl"
+             x:Name="ObjectBrowser">
+
+  <Grid ColumnDefinitions="*,Auto,3*,Auto,240">
+    <Border Grid.Column="0" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="0,0,1,0">
+      <TreeView x:Name="HierarchyTreeView"
+                SelectionMode="Single"
+                ItemsSource="{Binding HierarchyItemsSource, ElementName=ObjectBrowser}"
+                SelectedItem="{Binding SelectedHierarchyItem, ElementName=ObjectBrowser, Mode=TwoWay}"
+                ItemTemplate="{Binding HierarchyItemTemplate, ElementName=ObjectBrowser}"/>
+    </Border>
+
+    <GridSplitter Grid.Column="1" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Width="4" Background="Transparent"/>
+
+    <Border Grid.Column="2" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="0,0,1,0">
+      <ListBox x:Name="ObjectListBox"
+               ItemsSource="{Binding ObjectItemsSource, ElementName=ObjectBrowser}"
+               SelectedItem="{Binding SelectedObjectItem, ElementName=ObjectBrowser, Mode=TwoWay}"
+               ItemTemplate="{Binding ObjectItemTemplate, ElementName=ObjectBrowser}"
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+    </Border>
+
+    <GridSplitter Grid.Column="3" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Width="4" Background="Transparent"/>
+
+    <DockPanel Grid.Column="4" Background="{DynamicResource ThemeControlMidBrush}">
+      <ScrollViewer x:Name="DescriptionScrollViewer" VerticalScrollBarVisibility="Auto">
+        <ContentControl Content="{Binding SelectedObjectItem, ElementName=ObjectBrowser}"
+                        ContentTemplate="{Binding ObjectDescriptionTemplate, ElementName=ObjectBrowser}"/>
+      </ScrollViewer>
+    </DockPanel>
+  </Grid>
+</UserControl>

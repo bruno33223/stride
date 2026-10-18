@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:views="using:Stride.Assets.Editor.Avalonia.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="Stride.Assets.Editor.Avalonia.Views.DebugEntityHierarchyEditorUserControl"
+             x:DataType="views:DebugEntityHierarchyEditorUserControl+DebugEntityHierarchyEditorViewModel">
+
+  <DockPanel>
+    <!-- Barra superior de ferramentas -->
+    <Border DockPanel.Dock="Top" Background="#252528" BorderBrush="#38383D" BorderThickness="0,0,0,1" Padding="6,4">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Content="Refresh" Command="{Binding RefreshCommand}" Padding="8,4"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Visualização de URLs de carregamento e ativos carregados -->
+    <Grid ColumnDefinitions="*, 5, *">
+      <!-- Loading time URLs -->
+      <DockPanel Grid.Column="0" Margin="8">
+        <Border DockPanel.Dock="Top" Background="#1E1E22" Padding="6,4" Margin="0,0,0,4">
+          <TextBlock Margin="8,4" FontWeight="SemiBold" Text="Loading time URLs:" Foreground="#E0E0E0"/>
+        </Border>
+        <ListBox ItemsSource="{Binding LoadingTimeUrls}"/>
+      </DockPanel>
+
+      <!-- Divisor ajustável -->
+      <GridSplitter Grid.Column="1" Background="#141416"/>
+
+      <!-- Actually loaded assets -->
+      <DockPanel Grid.Column="2" Margin="8">
+        <Border DockPanel.Dock="Top" Background="#1E1E22" Padding="6,4" Margin="0,0,0,4">
+          <TextBlock Margin="8,4" FontWeight="SemiBold" Text="Actually loaded assets:" Foreground="#E0E0E0"/>
+        </Border>
+        <ListBox ItemsSource="{Binding LoadedAssets}"/>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</UserControl>

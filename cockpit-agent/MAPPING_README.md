@@ -8,15 +8,22 @@ Este documento registra com transparência absoluta o progresso da portabilidade
 
 | Métrica | Original (WPF) | Portado (Linux/Avalonia) | Progresso (%) |
 | :--- | :--- | :--- | :--- |
-| **Arquivos Refatorados** | 1022 arquivos totais | **974** arquivos concluídos | **95.3%** |
-| **Linhas de Código Mapeadas** | 110,247 linhas | **102,818** linhas originais migradas | **93.3%** |
-| **Linhas de Código Geradas** | - | **94,494** linhas em código limpo e moderno | **93.3% paridade** |
+| **Arquivos Refatorados** | 1022 arquivos totais | **1.005** arquivos concluídos | **98.34%** |
+| **Linhas de Código Mapeadas** | 110,247 linhas | **105,380** linhas originais migradas | **95.58%** |
+| **Linhas de Código Geradas** | - | **97,553** linhas em código limpo e moderno | **95.58% paridade** |
 | **Status de Compilação Geral** | - | **0 ERROS (Clean Build)** | **100% PASS** |
-| **Testes Automatizados (xUnit)** | - | **576 / 576 Aprovados** | **100% GREEN** |
+| **Testes Automatizados (xUnit)** | - | **612 / 612 Aprovados** | **100% GREEN** |
 
 ---
 
 ## 🚀 Subsistemas Refatorados
+
+### 🎯 P32: Editor Windows, Dialogs, Debug UserControls & Test Assets (CONCLUÍDO)
+- **Status:** 100% Concluído e Auditado com Sucesso pela Banca Gauntlet Loop (Veredicto Unânime PASSED, 612/612 testes xUnit GREEN).
+- **Escopo (31 arquivos):** Migração e desacoplamento integral das janelas e diálogos de gerenciamento de templates e progresso (`ProjectSelectionWindow`, `WorkProgressWindow`, `ItemTemplatesWindow`, `AddItemWindow`, `AddItemUserControl`, `ObjectBrowserUserControl`), controles de depuração e inspeção Quantum (`DebugAssetNodesUserControl`, `DebugUndoRedoUserControl`, `DebugLogUserControl`, `DebugEntityHierarchyEditorUserControl`, `ScriptEditorView`, `UIEditorView`, `GraphicsCompositorEditorView`), registro tipado de Views em `StrideEditorViewPlugin.cs`, e classes de testes de assets e designers de atalhos e recursos (`TestAsset`, `UnitTestAsset`, `KeyGestures.Designer.cs`, `Images.Designer.cs`, `Resources.Designer.cs`, `Settings.Designer.cs`).
+- **Localização:** `sources/editor/Stride.Core.Assets.Editor.Avalonia/`, `sources/editor/Stride.Assets.Editor.Avalonia/`, `sources/editor/Stride.Assets.Presentation/` e `sources/editor/Stride.Core.Assets.Editor/`.
+
+---
 
 ### 🎯 P31: Asset Node Updaters, Drag-and-Drop & Preview Views Infrastructure (CONCLUÍDO)
 - **Status:** 100% Concluído e Auditado com Sucesso pela Banca Gauntlet Loop (Veredicto Unânime PASSED, 576/576 testes xUnit GREEN).

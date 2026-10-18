@@ -1,0 +1,63 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sd="using:Stride.Core.Presentation.Avalonia.Controls"
+        xmlns:views="using:Stride.Core.Assets.Editor.Avalonia.Views"
+        xmlns:progress="using:Stride.Core.Assets.Editor.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="640" d:DesignHeight="480"
+        x:Class="Stride.Core.Assets.Editor.Avalonia.Views.WorkProgressWindow"
+        x:Name="RootWorkProgressWindow"
+        x:DataType="views:WorkProgressWindow"
+        Title="{Binding WorkProgress.Title, FallbackValue='Work in progress...'}"
+        Height="480" Width="640"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16"
+        DataContext="{Binding #RootWorkProgressWindow.WorkProgress}"
+        x:DataType="progress:WorkProgressViewModel">
+    <!-- Linha 0: Mensagem de progresso e ProgressBar -->
+    <DockPanel Grid.Row="0" Margin="0,0,0,16">
+      <TextBlock DockPanel.Dock="Top"
+                 Text="{Binding ProgressMessage}"
+                 Margin="0,0,0,10"
+                 IsVisible="{Binding !WorkDone}"/>
+
+      <TextBlock DockPanel.Dock="Top"
+                 Text="Operation completed."
+                 Margin="0,0,0,10"
+                 IsVisible="{Binding WorkDone}"/>
+
+      <ProgressBar Height="24"
+                   Minimum="{Binding Minimum}"
+                   Maximum="{Binding Maximum}"
+                   Value="{Binding ProgressValue}"
+                   IsIndeterminate="{Binding IsIndeterminate}"/>
+    </DockPanel>
+
+    <!-- Linha 1: Visualizador de logs -->
+    <Border Grid.Row="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="1" CornerRadius="4">
+      <sd:TextLogViewer x:Name="LogViewer"
+                        LogMessages="{Binding Log.Messages}"
+                        CanClearLog="False"/>
+    </Border>
+
+    <!-- Linha 2: Botões de ação -->
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,16,0,0">
+      <Button Content="Close"
+              Width="80"
+              HorizontalContentAlignment="Center"
+              IsEnabled="{Binding WorkDone}"
+              Click="OnCloseClick"/>
+
+      <Button Content="Cancel"
+              Width="80"
+              HorizontalContentAlignment="Center"
+              Command="{Binding CancelCommand}"
+              IsVisible="{Binding IsCancellable}"
+              IsEnabled="{Binding !WorkDone}"
+              Click="OnCancelClick"/>
+    </StackPanel>
+  </Grid>
+</Window>

@@ -1,0 +1,118 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="using:Stride.Core.Assets.Editor.Avalonia.Views"
+        xmlns:converters="using:Stride.Core.Presentation.Avalonia.Converters"
+        xmlns:viewModels="using:Stride.Core.Assets.Editor.Components.TemplateDescriptions.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
+        x:Class="Stride.Core.Assets.Editor.Avalonia.Views.ProjectSelectionWindow"
+        x:Name="RootProjectSelectionWindow"
+        Height="768" Width="1024"
+        WindowStartupLocation="CenterScreen"
+        ShowInTaskbar="True">
+
+  <DockPanel Margin="16">
+    <Grid DockPanel.Dock="Bottom" Margin="0,16,0,0">
+      <DockPanel>
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+          <Button DockPanel.Dock="Left"
+                  Content="Browse for existing project"
+                  Command="{Binding Templates.BrowseForExistingProjectCommand, ElementName=RootProjectSelectionWindow}"
+                  Padding="16,6"/>
+
+          <CheckBox IsChecked="{Binding Templates.AutoReloadSession, ElementName=RootProjectSelectionWindow}"
+                    Content="Reload last session automatically at startup"
+                    VerticalAlignment="Center"
+                    Margin="12,0,0,0"/>
+
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+            <Button Content="Select"
+                    Padding="20,6"
+                    IsEnabled="{Binding Templates.SelectedTemplate, ElementName=RootProjectSelectionWindow, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Click="OnSelectClick"/>
+            <Button Content="Cancel"
+                    Padding="20,6"
+                    Click="OnCancelClick"/>
+          </StackPanel>
+        </DockPanel>
+
+        <!-- Detalhes do Template / Projeto -->
+        <Grid ColumnDefinitions="Auto,2*,*" RowDefinitions="Auto,Auto,Auto,Auto"
+              IsVisible="{Binding Templates.SelectedTemplate, ElementName=RootProjectSelectionWindow, Converter={x:Static ObjectConverters.IsNotNull}}">
+
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Margin="0,4,16,4" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="0" Grid.Column="1" Margin="0,2"
+                   Text="{Binding Templates.Name, ElementName=RootProjectSelectionWindow, Mode=TwoWay}"/>
+
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Location:" Margin="0,4,16,4" VerticalAlignment="Center"/>
+          <DockPanel Grid.Row="1" Grid.Column="1" Margin="0,2">
+            <Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="6,4"
+                    Command="{Binding Templates.BrowseDirectoryCommand, ElementName=RootProjectSelectionWindow}"
+                    CommandParameter="Location"
+                    ToolTip.Tip="Browse directory">
+              <TextBlock Text="📁" FontSize="12"/>
+            </Button>
+            <TextBox Text="{Binding Templates.Location, ElementName=RootProjectSelectionWindow, Converter={converters:UDirectoryToString}, Mode=TwoWay}"/>
+          </DockPanel>
+
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Solution name:" Margin="0,4,16,4" VerticalAlignment="Center"/>
+          <TextBox Grid.Row="2" Grid.Column="1" Margin="0,2"
+                   PlaceholderText="(Auto-generate solution name)"
+                   Text="{Binding Templates.SolutionName, ElementName=RootProjectSelectionWindow, Mode=TwoWay}"/>
+
+          <TextBlock Grid.Row="3" Grid.Column="0" Text="Solution location:" Margin="0,4,16,4" VerticalAlignment="Center"/>
+          <DockPanel Grid.Row="3" Grid.Column="1" Margin="0,2">
+            <Button DockPanel.Dock="Right" Margin="4,0,0,0" Padding="6,4"
+                    Command="{Binding Templates.BrowseDirectoryCommand, ElementName=RootProjectSelectionWindow}"
+                    CommandParameter="SolutionLocation"
+                    ToolTip.Tip="Browse directory">
+              <TextBlock Text="📁" FontSize="12"/>
+            </Button>
+            <TextBox PlaceholderText="(Same location)"
+                     Text="{Binding Templates.SolutionLocation, ElementName=RootProjectSelectionWindow, Converter={converters:UDirectoryToString}, Mode=TwoWay}"/>
+          </DockPanel>
+        </Grid>
+      </DockPanel>
+    </Grid>
+
+    <!-- Centro: Navegador de Templates usando ObjectBrowserUserControl -->
+    <views:ObjectBrowserUserControl x:Name="ObjectBrowser"
+                                    HierarchyItemsSource="{Binding Templates.RootGroups, ElementName=RootProjectSelectionWindow}"
+                                    SelectedHierarchyItem="{Binding Templates.SelectedGroup, ElementName=RootProjectSelectionWindow, Mode=TwoWay}"
+                                    ObjectItemsSource="{Binding Templates.Templates, ElementName=RootProjectSelectionWindow}"
+                                    SelectedObjectItem="{Binding Templates.SelectedTemplate, ElementName=RootProjectSelectionWindow, Mode=TwoWay}">
+      <views:ObjectBrowserUserControl.HierarchyItemTemplate>
+        <TreeDataTemplate x:DataType="viewModels:TemplateDescriptionGroupViewModel" ItemsSource="{Binding SubGroups}">
+          <TextBlock Text="{Binding Name}" Margin="4,2"/>
+        </TreeDataTemplate>
+      </views:ObjectBrowserUserControl.HierarchyItemTemplate>
+      <views:ObjectBrowserUserControl.ObjectItemTemplate>
+        <DataTemplate x:DataType="viewModels:ITemplateDescriptionViewModel">
+          <DockPanel Height="56" Margin="4">
+            <Image Source="{Binding Icon}" DockPanel.Dock="Left" Width="48" Height="48" Margin="2"/>
+            <DockPanel Margin="12,0" VerticalAlignment="Center">
+              <TextBlock DockPanel.Dock="Top" FontSize="15" FontWeight="SemiBold" Text="{Binding Name}"/>
+              <TextBlock Text="{Binding Description}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" Opacity="0.8"/>
+            </DockPanel>
+          </DockPanel>
+        </DataTemplate>
+      </views:ObjectBrowserUserControl.ObjectItemTemplate>
+      <views:ObjectBrowserUserControl.ObjectDescriptionTemplate>
+        <DataTemplate x:DataType="viewModels:ITemplateDescriptionViewModel">
+          <StackPanel Margin="12">
+            <TextBlock FontWeight="Bold" FontSize="16" Text="{Binding Name}" Margin="0,0,0,8"/>
+            <TextBlock Text="{Binding FullDescription}" TextWrapping="Wrap" Opacity="0.85" Margin="0,0,0,12"/>
+            <ItemsControl ItemsSource="{Binding Screenshots}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Image Margin="0,4" Source="{Binding}" MaxWidth="200" Stretch="Uniform"/>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </DataTemplate>
+      </views:ObjectBrowserUserControl.ObjectDescriptionTemplate>
+    </views:ObjectBrowserUserControl>
+  </DockPanel>
+</Window>

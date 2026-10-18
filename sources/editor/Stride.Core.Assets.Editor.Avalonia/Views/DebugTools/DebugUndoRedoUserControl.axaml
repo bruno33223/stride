@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ur="using:Stride.Core.Assets.Editor.Components.DebugTools.UndoRedo"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="Stride.Core.Assets.Editor.Avalonia.Views.DebugTools.DebugUndoRedoUserControl"
+             x:DataType="ur:DebugUndoRedoViewModel">
+
+  <UserControl.DataTemplates>
+    <TreeDataTemplate DataType="ur:OperationViewModel" ItemsSource="{Binding Children}">
+      <TextBlock Margin="0,0,10,0" VerticalAlignment="Center">
+        <Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold" Foreground="#DCDCAA"/>
+        <Run Text=" (" Foreground="#888888"/>
+        <Run Text="{Binding Type, Mode=OneWay}" Foreground="#4EC9B0"/>
+        <Run Text=")" Foreground="#888888"/>
+      </TextBlock>
+    </TreeDataTemplate>
+  </UserControl.DataTemplates>
+
+  <DockPanel>
+    <!-- Barra superior de ferramentas -->
+    <Border DockPanel.Dock="Top" Background="#252528" BorderBrush="#38383D" BorderThickness="0,0,0,1" Padding="6,4">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Content="Clear discarded items" Command="{Binding ClearDiscardedItemsCommand}" Padding="8,4"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Visualização de transações de Undo/Redo -->
+    <Grid ColumnDefinitions="*, 5, *">
+      <!-- Transações correntes -->
+      <DockPanel Grid.Column="0" Margin="4">
+        <Border DockPanel.Dock="Top" Background="#1E1E22" Padding="6,4" Margin="0,0,0,4">
+          <TextBlock HorizontalAlignment="Center" FontWeight="SemiBold" Text="Current action items" Foreground="#E0E0E0"/>
+        </Border>
+        <TreeView ItemsSource="{Binding Transactions}"/>
+      </DockPanel>
+
+      <!-- Divisor -->
+      <GridSplitter Grid.Column="1" Background="#141416"/>
+
+      <!-- Transações descartadas -->
+      <DockPanel Grid.Column="2" Margin="4">
+        <Border DockPanel.Dock="Top" Background="#1E1E22" Padding="6,4" Margin="0,0,0,4">
+          <TextBlock HorizontalAlignment="Center" FontWeight="SemiBold" Text="Discarded action items" Foreground="#888888"/>
+        </Border>
+        <TreeView ItemsSource="{Binding DiscardedTransactions}"/>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</UserControl>

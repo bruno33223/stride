@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:caevm="using:Stride.Core.Assets.Editor.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="Stride.Core.Assets.Editor.Avalonia.Views.DebugTools.DebugAssetNodesUserControl"
+             x:DataType="caevm:DebugAssetNodeCollectionViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button.breakbtn">
+      <Setter Property="Content" Value="Break here..." />
+      <Setter Property="Margin" Value="4,0" />
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="ToolTip.Tip" Value="Break on this node with the debugger (if attached)" />
+    </Style>
+  </UserControl.Styles>
+
+  <UserControl.DataTemplates>
+    <!-- Root Node Template -->
+    <TreeDataTemplate DataType="caevm:DebugAssetRootNodeViewModel" ItemsSource="{Binding Children}">
+      <DockPanel LastChildFill="True">
+        <Button Classes="breakbtn" DockPanel.Dock="Right" Command="{Binding BreakCommand}" />
+        <TextBlock VerticalAlignment="Center">
+          <Run Text="[" Foreground="#888888"/>
+          <Run Text="{Binding AssetType.Name, Mode=OneWay}" Foreground="#569CD6"/>
+          <Run Text="] " Foreground="#888888"/>
+          <Run Text="{Binding AssetName, Mode=OneWay}" FontWeight="Bold" Foreground="#DCDCAA"/>
+        </TextBlock>
+      </DockPanel>
+    </TreeDataTemplate>
+
+    <!-- Base Node Template -->
+    <DataTemplate DataType="caevm:DebugAssetBaseNodeViewModel">
+      <DockPanel LastChildFill="True">
+        <Button Classes="breakbtn" DockPanel.Dock="Right" Command="{Binding BreakCommand}" />
+        <TextBlock VerticalAlignment="Center" FontStyle="Italic">
+          <Run Text="--- " Foreground="#666666"/>
+          <Run Text="Base: " FontWeight="Bold" Foreground="#C586C0"/>
+          <Run Text="{Binding Name, Mode=OneWay}" FontWeight="Bold" Foreground="#DCDCAA"/>
+          <Run Text=" = " Foreground="#888888"/>
+          <Run Text="{Binding Value, Mode=OneWay}" FontWeight="Bold" Foreground="#4EC9B0"/>
+          <Run Text=" from " Foreground="#888888"/>
+          <Run Text="{Binding Asset.Url, Mode=OneWay}" Foreground="#CE9178"/>
+        </TextBlock>
+      </DockPanel>
+    </DataTemplate>
+
+    <!-- Child Node Template -->
+    <TreeDataTemplate DataType="caevm:DebugAssetChildNodeViewModel" ItemsSource="{Binding Children}">
+      <DockPanel LastChildFill="True">
+        <Button Classes="breakbtn" DockPanel.Dock="Right" Command="{Binding BreakCommand}" />
+        <TextBlock VerticalAlignment="Center">
+          <Run Text="[" Foreground="#888888"/>
+          <Run Text="{Binding LinkFromParent, Mode=OneWay}" Foreground="#9CDCFE"/>
+          <Run Text="/" Foreground="#888888"/>
+          <Run Text="{Binding ContentType, Mode=OneWay}" Foreground="#4EC9B0"/>
+          <Run Text="] " Foreground="#888888"/>
+          <Run Text="{Binding Index, Mode=OneWay}" Foreground="#B5CEA8"/>
+          <Run Text=" "/>
+          <Run Text="{Binding ItemId, Mode=OneWay}" Foreground="#4FC1FF"/>
+          <Run Text=" "/>
+          <Run Text="{Binding Name, Mode=OneWay}" FontWeight="Bold" Foreground="#DCDCAA"/>
+          <Run Text=" = " Foreground="#888888"/>
+          <Run Text="{Binding Value, Mode=OneWay}" FontWeight="Bold" Foreground="#CE9178"/>
+          <Run Text=" (" Foreground="#888888"/>
+          <Run Text="{Binding Type.Name, Mode=OneWay}" Foreground="#569CD6"/>
+          <Run Text=")" Foreground="#888888"/>
+        </TextBlock>
+      </DockPanel>
+    </TreeDataTemplate>
+  </UserControl.DataTemplates>
+
+  <DockPanel>
+    <!-- Barra superior de ações -->
+    <Border DockPanel.Dock="Top" Background="#252528" BorderBrush="#38383D" BorderThickness="0,0,0,1" Padding="6,4">
+      <StackPanel Orientation="Horizontal" Spacing="6">
+        <Button Content="Refresh" Command="{Binding RefreshQuantumNodesCommand}" Padding="8,4"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Árvore de nós Quantum -->
+    <TreeView ItemsSource="{Binding AssetNodes}" SelectedItem="{Binding SelectedNode, Mode=TwoWay}" SelectionMode="Single" Margin="4"/>
+  </DockPanel>
+</UserControl>

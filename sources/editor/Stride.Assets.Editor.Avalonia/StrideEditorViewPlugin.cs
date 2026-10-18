@@ -61,6 +61,7 @@ public sealed class StrideEditorViewPlugin : AssetsEditorPlugin
         assetEditorViewTypes.TryAdd(typeof(MaterialEditorViewModel), typeof(MaterialEditorView));
         assetEditorViewTypes.TryAdd(typeof(SoundEditorViewModel), typeof(SoundEditorView));
         assetEditorViewTypes.TryAdd(typeof(VideoEditorViewModel), typeof(VideoEditorView));
+        assetEditorViewTypes.TryAdd(typeof(Stride.Assets.Editor.AssetEditors.ScriptEditor.ScriptEditorViewModel), typeof(Stride.Assets.Editor.Avalonia.AssetEditors.ScriptEditor.ScriptEditorView));
     }
 
     public override void RegisterAssetPreviewViewModelTypes(IDictionary<Type, Type> assetPreviewViewModelTypes)

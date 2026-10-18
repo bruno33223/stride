@@ -43,9 +43,9 @@ public abstract class AssetsEditorPlugin : AssetsPlugin
         foreach (var type in pluginAssembly.GetTypes())
         {
             if (typeof(IAssetEditorView).IsAssignableFrom(type) &&
-                type.GetCustomAttribute<AssetEditorViewAttribute>() is { } attribute)
+                type.GetCustomAttribute<AssetEditorViewAttribute>(inherit: false) is { } attribute)
             {
-                assetEditorViewTypes.Add(attribute.EditorViewModelType, type);
+                assetEditorViewTypes.TryAdd(attribute.EditorViewModelType, type);
             }
         }
     }
