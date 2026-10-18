@@ -1,0 +1,12 @@
+<!--
+// Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
+// Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
+//
+// ExpressionDark is the default/fallback theme.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="ExpressionDark/TableflowView.ExpressionDark.normalcolor.axaml" />
+  </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

@@ -31,6 +31,14 @@ namespace Stride.Core.Assets.Editor.Avalonia.Controls
         private DataGridEx? logGridView;
 
         /// <summary>
+        /// Identifies the <see cref="FilteredLogMessages"/> direct property.
+        /// </summary>
+        public static readonly DirectProperty<GridLogViewer, ObservableList<ILogMessage>> FilteredLogMessagesProperty =
+            AvaloniaProperty.RegisterDirect<GridLogViewer, ObservableList<ILogMessage>>(
+                nameof(FilteredLogMessages),
+                o => o.FilteredLogMessages);
+
+        /// <summary>
         /// Identifies the <see cref="LogMessages"/> styled property.
         /// </summary>
         public static readonly StyledProperty<ObservableList<ILogMessage>?> LogMessagesProperty =

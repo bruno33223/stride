@@ -1,0 +1,43 @@
+<!--
+// Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
+// Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
+//
+// Based on Extended WPF Toolkit (C) 2007-2013 Xceed Software Inc., under Ms-PL.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="Resources/Common.Resources.axaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <!-- TreeViewItem Theme to avoid displaying Expander and avoid selection and click -->
+  <ControlTheme x:Key="hierarchicalGroupByControlTreeViewItemStyle"
+                TargetType="TreeViewItem">
+    <Setter Property="IsExpanded" Value="True" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Template">
+      <ControlTemplate TargetType="TreeViewItem">
+        <Grid ColumnDefinitions="19,Auto,*" RowDefinitions="Auto,*">
+          <Border Name="treeViewItemBorder"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  Padding="{TemplateBinding Padding}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  Background="{TemplateBinding Background}"
+                  Grid.Column="1">
+            <ContentPresenter Name="PART_Header"
+                              Content="{TemplateBinding Header}"
+                              ContentTemplate="{TemplateBinding HeaderTemplate}"
+                              HorizontalAlignment="Stretch" />
+          </Border>
+
+          <ItemsPresenter Name="PART_ItemsPresenter"
+                          Grid.Column="1"
+                          Grid.Row="1"
+                          Grid.ColumnSpan="2" />
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
+</ResourceDictionary>

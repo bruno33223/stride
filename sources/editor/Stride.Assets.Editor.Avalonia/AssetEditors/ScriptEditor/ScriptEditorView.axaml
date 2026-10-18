@@ -2,10 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:Stride.Assets.Editor.AssetEditors.ScriptEditor"
+             xmlns:vm="clr-namespace:Stride.Assets.Editor.AssetEditors.ScriptEditor;assembly=Stride.Assets.Editor"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="Stride.Assets.Editor.Avalonia.AssetEditors.ScriptEditor.ScriptEditorView"
-             x:DataType="vm:ScriptEditorViewModel">
+             x:DataType="vm:ScriptEditorViewModel"
+             x:CompileBindings="False">
   <Grid RowDefinitions="Auto, *">
     <!-- Header com nome do script e status -->
     <Border Grid.Row="0" Background="#252528" BorderBrush="#38383D" BorderThickness="0,0,0,1" Padding="8,4">

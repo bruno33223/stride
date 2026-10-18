@@ -1,0 +1,89 @@
+<!--
+// Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
+// Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:Stride.Core.Assets.Editor.Avalonia.Controls"
+                    xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+                    xmlns:diagnostics="using:Stride.Core.Assets.Diagnostics">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="ThemeSelector.axaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <ControlTheme x:Key="{x:Type controls:GridLogViewer}" TargetType="controls:GridLogViewer">
+    <Setter Property="Template">
+      <ControlTemplate TargetType="controls:GridLogViewer">
+        <DockPanel x:Name="PART_GridLogViewerCollectionSourceContainer">
+          <sd:ToolBarTray DockPanel.Dock="Top"
+                          IsVisible="{TemplateBinding IsToolBarVisible}">
+            <sd:ToolBar>
+              <TextBlock Text="Filters:" VerticalAlignment="Center" Margin="0,0,4,0"/>
+              <ToggleButton IsChecked="{TemplateBinding ShowDebugMessages, Mode=TwoWay}"
+                            ToolTip.Tip="{sd:LocalizeString Toggle Debug, Context=ToolTip}">
+                <Path Width="12" Height="12" Stretch="Uniform" Fill="{DynamicResource TextLogDebugBrush}" Data="{DynamicResource GeometryDebugMessage}" />
+              </ToggleButton>
+              <ToggleButton IsChecked="{TemplateBinding ShowVerboseMessages, Mode=TwoWay}"
+                            ToolTip.Tip="{sd:LocalizeString Toggle Verbose, Context=ToolTip}">
+                <Path Width="12" Height="12" Stretch="Uniform" Fill="{DynamicResource TextLogVerboseBrush}" Data="{DynamicResource GeometryVerboseMessage}" />
+              </ToggleButton>
+              <ToggleButton IsChecked="{TemplateBinding ShowInfoMessages, Mode=TwoWay}"
+                            ToolTip.Tip="{sd:LocalizeString Toggle Info, Context=ToolTip}">
+                <Path Width="12" Height="12" Stretch="Uniform" Fill="{DynamicResource TextLogInfoBrush}" Data="{DynamicResource GeometryInfoMessage}" />
+              </ToggleButton>
+              <ToggleButton IsChecked="{TemplateBinding ShowWarningMessages, Mode=TwoWay}"
+                            ToolTip.Tip="{sd:LocalizeString Toggle Warning, Context=ToolTip}">
+                <Path Width="12" Height="12" Stretch="Uniform" Fill="{DynamicResource TextLogWarningBrush}" Data="{DynamicResource GeometryWarningMessage}" />
+              </ToggleButton>
+              <ToggleButton IsChecked="{TemplateBinding ShowErrorMessages, Mode=TwoWay}"
+                            ToolTip.Tip="{sd:LocalizeString Toggle Error, Context=ToolTip}">
+                <Path Width="12" Height="12" Stretch="Uniform" Fill="{DynamicResource TextLogErrorBrush}" Data="{DynamicResource GeometryErrorMessage}" />
+              </ToggleButton>
+              <ToggleButton IsChecked="{TemplateBinding ShowFatalMessages, Mode=TwoWay}"
+                            ToolTip.Tip="{sd:LocalizeString Toggle Fatal, Context=ToolTip}">
+                <Path Width="12" Height="12" Stretch="Uniform" Fill="{DynamicResource TextLogFatalBrush}" Data="{DynamicResource GeometryFatalMessage}" />
+              </ToggleButton>
+              <ToggleButton IsChecked="{TemplateBinding ShowStacktrace, Mode=TwoWay}"
+                            ToolTip.Tip="{sd:LocalizeString Toggle Exception Stack Trace, Context=ToolTip}">
+                <TextBlock Text="(...)" Width="16" Height="12" FontSize="10" TextAlignment="Center" />
+              </ToggleButton>
+            </sd:ToolBar>
+          </sd:ToolBarTray>
+          <controls:DataGridEx x:Name="PART_LogGridView"
+                               ItemsSource="{TemplateBinding FilteredLogMessages}"
+                               AutoGenerateColumns="False"
+                               CanUserResizeColumns="True"
+                               CanUserReorderColumns="False"
+                               RowHeaderWidth="0"
+                               IsReadOnly="True">
+            <controls:DataGridEx.Columns>
+              <DataGridTemplateColumn Header="" Width="24">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="diagnostics:AssetSerializableLogMessage">
+                    <Path Width="12" Height="12" Stretch="Uniform" Fill="{DynamicResource TextBrush}" Data="{DynamicResource GeometryInfoMessage}" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTemplateColumn Header="Message" Width="*">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="diagnostics:AssetSerializableLogMessage">
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTemplateColumn Header="Asset" Width="200">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="diagnostics:AssetSerializableLogMessage">
+                    <TextBlock Text="{Binding AssetUrl}" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+            </controls:DataGridEx.Columns>
+          </controls:DataGridEx>
+        </DockPanel>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
+</ResourceDictionary>

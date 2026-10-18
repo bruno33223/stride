@@ -1,0 +1,25 @@
+<!-- Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp) -->
+<!-- Distributed under the MIT license. See the LICENSE.md file in the project root for more information. -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+                    xmlns:views="using:Stride.Assets.Editor.Avalonia.Views"
+                    xmlns:caev="using:Stride.Core.Assets.Editor.Avalonia.Views"
+                    xmlns:cpqvm="using:Stride.Core.Presentation.Quantum.ViewModels"
+                    xmlns:scriptEditor="using:Stride.Assets.Editor.Avalonia.AssetEditors.ScriptEditor">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Views/DefaultPropertyTemplateProviders.axaml"/>
+    <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Views/ImageResources.axaml"/>
+  </ResourceDictionary.MergedDictionaries>
+
+  <views:ScriptTextEditorTemplateProvider x:Key="ScriptTextEditorTemplateProvider" OverrideRule="All" caev:PropertyViewHelper.TemplateCategory="PropertyHeader">
+    <DataTemplate DataType="cpqvm:NodeViewModel" x:CompileBindings="False">
+      <TextBox VerticalAlignment="Stretch" Text="{Binding NodeValue, Mode=TwoWay}" MinHeight="280" AcceptsReturn="True" FontFamily="Consolas,Menlo,Monospace">
+        <Interaction.Behaviors>
+          <scriptEditor:BindScriptTextEditorWorkspaceProjectIdBehavior Package="{Binding Root.OwnerAsset.Directory.Package}"/>
+        </Interaction.Behaviors>
+      </TextBox>
+    </DataTemplate>
+  </views:ScriptTextEditorTemplateProvider>
+</ResourceDictionary>

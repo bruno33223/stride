@@ -1,0 +1,90 @@
+<!-- Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp) -->
+<!-- Distributed under the MIT license. See the LICENSE.md file in the project root for more information. -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+                    xmlns:codeActions="using:Microsoft.CodeAnalysis.CodeActions"
+                    xmlns:codeAnalysis="using:Microsoft.CodeAnalysis">
+
+  <!-- Dicionários mesclados: Ícones do editor de script (Bulb) -->
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://Stride.Assets.Editor.Avalonia/AssetEditors/ScriptEditor/Resources/Icons.axaml"/>
+  </ResourceDictionary.MergedDictionaries>
+
+  <!-- Cores e Pincéis do Editor de Script -->
+  <SolidColorBrush x:Key="DropDownButtonActiveBorder" Color="#FF333333"/>
+  <SolidColorBrush x:Key="DropDownButtonActiveBackground" Color="#FF9D9D9D"/>
+  <SolidColorBrush x:Key="CodeEditorBackgroundBrush" Color="#FF1E1E1E"/>
+  <SolidColorBrush x:Key="CodeEditorForegroundBrush" Color="#FFD4D4D4"/>
+  <SolidColorBrush x:Key="BackgroundBrush" Color="#FF252528"/>
+  <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#FF2D2D30"/>
+  <SolidColorBrush x:Key="TextBrush" Color="#FFF1F1F1"/>
+  <SolidColorBrush x:Key="BlueBrush" Color="#FF007ACC"/>
+  <SolidColorBrush x:Key="NormalBorderBrush" Color="#FF3F3F46"/>
+
+  <!-- Templates de dados para Roslyn CodeAction e Diagnostic -->
+  <DataTemplate x:Key="CodeActionDataTemplate" DataType="codeActions:CodeAction" x:CompileBindings="False">
+    <DockPanel Margin="2">
+      <Image Source="{StaticResource Bulb}" Width="16" Height="16" Margin="0,0,6,0" VerticalAlignment="Center"/>
+      <TextBlock Text="{Binding Title, Mode=OneTime}" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+    </DockPanel>
+  </DataTemplate>
+
+  <DataTemplate x:Key="DiagnosticDataTemplate" DataType="codeAnalysis:Diagnostic" x:CompileBindings="False">
+    <DockPanel Margin="2">
+      <TextBlock Text="{Binding Descriptor.Title, Mode=OneTime}" VerticalAlignment="Center" Foreground="{DynamicResource TextBrush}"/>
+    </DockPanel>
+  </DataTemplate>
+
+  <!-- Template do painel de pesquisa e substituição (SearchReplacePanel) -->
+  <ControlTheme x:Key="SearchReplacePanelTheme" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource BlueBrush}"/>
+    <Setter Property="BorderThickness" Value="0,0,0,3"/>
+    <Setter Property="HorizontalAlignment" Value="Right"/>
+    <Setter Property="VerticalAlignment" Value="Top"/>
+    <Setter Property="Padding" Value="4"/>
+  </ControlTheme>
+
+  <!-- Estilo para Itens da Lista de Autocompletion -->
+  <ControlTheme x:Key="CompletionListBoxItemTheme" TargetType="ListBoxItem">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Padding" Value="4,2"/>
+    <Setter Property="Template">
+      <ControlTemplate TargetType="ListBoxItem">
+        <Border Name="Bd"
+                Background="{TemplateBinding Background}"
+                BorderBrush="{TemplateBinding BorderBrush}"
+                BorderThickness="{TemplateBinding BorderThickness}"
+                Padding="{TemplateBinding Padding}"
+                CornerRadius="2">
+          <ContentPresenter Name="PART_ContentPresenter"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+        </Border>
+      </ControlTemplate>
+    </Setter>
+  </ControlTheme>
+
+  <!-- Template para Lista de Autocompletar / Sugestões -->
+  <DataTemplate x:Key="CompletionItemTemplate" x:CompileBindings="False">
+    <StackPanel Orientation="Horizontal" Spacing="6" Margin="2,1">
+      <Image Source="{Binding Image}" Width="16" Height="16" VerticalAlignment="Center"/>
+      <ContentPresenter Content="{Binding Content}" VerticalAlignment="Center"/>
+    </StackPanel>
+  </DataTemplate>
+
+  <!-- Tema padrão para SimpleCodeTextEditor / TextBox de código -->
+  <ControlTheme x:Key="CodeEditorTextBoxTheme" TargetType="TextBox">
+    <Setter Property="FontFamily" Value="Consolas, Menlo, Monaco, DejaVu Sans Mono, monospace"/>
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Foreground" Value="{DynamicResource CodeEditorForegroundBrush}"/>
+    <Setter Property="Background" Value="{DynamicResource CodeEditorBackgroundBrush}"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="AcceptsReturn" Value="True"/>
+    <Setter Property="AcceptsTab" Value="True"/>
+  </ControlTheme>
+
+</ResourceDictionary>

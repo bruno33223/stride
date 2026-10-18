@@ -1,0 +1,304 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                    xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+                    xmlns:controls="using:Stride.Core.Assets.Editor.Avalonia.Controls"
+                    xmlns:view="using:Stride.Core.Assets.Editor.Avalonia.Controls"
+                    xmlns:viewModel="using:Stride.Core.Assets.Presentation.ViewModels"
+                    xmlns:behaviors="using:Stride.Core.Assets.Editor.Avalonia.Behaviors"
+                    mc:Ignorable="d"
+                    x:CompileBindings="False">
+
+  <ResourceDictionary.MergedDictionaries>
+    <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Views/ImageDictionary.axaml" />
+  </ResourceDictionary.MergedDictionaries>
+
+  <ControlTheme x:Key="{x:Type controls:DataGridEx}" TargetType="controls:DataGridEx">
+    <Setter Property="Background" Value="{DynamicResource NormalBrush}" />
+  </ControlTheme>
+  <ControlTheme x:Key="{x:Type DataGridRow}" TargetType="DataGridRow">
+    <Setter Property="Background" Value="{DynamicResource NormalBrush}" />
+  </ControlTheme>
+  <ControlTheme x:Key="{x:Type DataGridCell}" TargetType="DataGridCell">
+    <Setter Property="Background" Value="{DynamicResource NormalBrush}" />
+  </ControlTheme>
+  <ControlTheme x:Key="{x:Type DataGridColumnHeader}" TargetType="DataGridColumnHeader">
+    <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrush}" />
+  </ControlTheme>
+
+  <!-- Core Common Color Brushes -->
+  <SolidColorBrush x:Key="EmphasisColorBrush" Color="#316B8F"/>
+  <SolidColorBrush x:Key="NormalBrush" Color="#2D2D30"/>
+  <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#1E1E1E"/>
+  <SolidColorBrush x:Key="BackgroundBrush" Color="#252526"/>
+  <SolidColorBrush x:Key="NormalBorderBrush" Color="#3F3F46"/>
+  <SolidColorBrush x:Key="ToolBarToggleButtonHoverBackground" Color="#3E3E40"/>
+  <SolidColorBrush x:Key="GlyphBrush" Color="#C8C8C8"/>
+  <SolidColorBrush x:Key="MenuBackgroundBrush" Color="#1B1B1C"/>
+  <SolidColorBrush x:Key="MenuBorderBrush" Color="#333337"/>
+  <SolidColorBrush x:Key="TextBrush" Color="#F1F1F1"/>
+
+  <!-- STYLE USED FOR TOOLBAR BUTTONS -->
+  <ControlTheme x:Key="ToolBarIconMenuItemStyle" TargetType="MenuItem">
+    <Setter Property="MinWidth" Value="20"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Margin" Value="2,0"/>
+    <Setter Property="Padding" Value="2"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="MenuItem">
+          <Border x:Name="Border" BorderThickness="{TemplateBinding BorderThickness}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="17" Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Border Grid.Column="0" Grid.ColumnSpan="2" Background="{DynamicResource ToolBarToggleButtonHoverBackground}" Opacity="0" x:Name="HoverBorder"/>
+              <ContentPresenter Grid.Column="0" Margin="{TemplateBinding Padding}"
+                                Width="16"
+                                Height="16"
+                                Content="{TemplateBinding Icon}"
+                                x:Name="Icon" VerticalAlignment="Center" />
+              <ContentPresenter Grid.Column="1" x:Name="HeaderHost"
+                                Content="{TemplateBinding Header}"
+                                Margin="2,1" VerticalAlignment="Center" HorizontalAlignment="Stretch" />
+              <Popup Grid.Column="0" Grid.ColumnSpan="2"
+                     IsOpen="{TemplateBinding IsSubMenuOpen}"
+                     Placement="Bottom" x:Name="SubMenuPopup">
+                <Grid x:Name="SubMenu">
+                  <Border x:Name="SubMenuBorder"
+                          Background="{DynamicResource MenuBackgroundBrush}"
+                          BorderBrush="{DynamicResource MenuBorderBrush}"
+                          BorderThickness="1"/>
+                  <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
+                </Grid>
+              </Popup>
+            </Grid>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </ControlTheme>
+
+  <ControlTheme x:Key="ToolBarDropDownMenuItemStyle" TargetType="MenuItem">
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="Padding" Value="2,0"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="MenuItem">
+          <Border x:Name="Border" BorderThickness="{TemplateBinding BorderThickness}">
+            <Grid>
+              <Border Background="{DynamicResource ToolBarToggleButtonHoverBackground}" Opacity="0" x:Name="HoverBorder"/>
+              <Path x:Name="Path" Margin="{TemplateBinding Padding}"
+                    HorizontalAlignment="Stretch" Width="6" Height="4"
+                    Fill="{DynamicResource GlyphBrush}" Stretch="Fill"
+                    Stroke="{DynamicResource GlyphBrush}" StrokeThickness="1"
+                    Data="M5.2422477,11.132184 L11.5544,11.132184 8.6412958,4.4969033 z"
+                    RenderTransformOrigin="50%,50%">
+                <Path.RenderTransform>
+                  <RotateTransform Angle="180"/>
+                </Path.RenderTransform>
+              </Path>
+              <Popup IsOpen="{TemplateBinding IsSubMenuOpen}" Placement="Bottom" x:Name="SubMenuPopup">
+                <Grid x:Name="SubMenu">
+                  <Border x:Name="SubMenuBorder"
+                          Background="{DynamicResource MenuBackgroundBrush}"
+                          BorderBrush="{DynamicResource MenuBorderBrush}"
+                          BorderThickness="1"/>
+                  <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
+                </Grid>
+              </Popup>
+            </Grid>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </ControlTheme>
+
+  <DataTemplate x:Key="DragVisualTemplate" DataType="behaviors:DragContainer">
+    <Border Background="{DynamicResource BackgroundBrush}"
+            BorderBrush="{DynamicResource NormalBorderBrush}"
+            BorderThickness="1" Padding="4">
+      <StackPanel>
+        <ItemsControl ItemsSource="{Binding PreviewItems}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal">
+                <Image Source="{StaticResource ImageFolder}" Margin="0,0,5,0" Width="16" Height="16"/>
+                <TextBlock Text="{Binding DisplayName, FallbackValue={Binding Name}}"/>
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel Orientation="Horizontal">
+          <Image Source="{StaticResource ImageAcceptingDrop}" Margin="0,0,5,0" Width="16" Height="16" IsVisible="{Binding IsAccepted}"/>
+          <Image Source="{StaticResource ImageRejectingDrop}" Margin="0,0,5,0" Width="16" Height="16" IsVisible="{Binding IsRejected}"/>
+          <TextBlock Text="{Binding Message}"/>
+        </StackPanel>
+      </StackPanel>
+    </Border>
+  </DataTemplate>
+
+  <ControlTheme x:Key="ImageButtonStyle" TargetType="Button">
+    <Setter Property="Margin" Value="2,0"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Width" Value="16"/>
+    <Setter Property="Height" Value="16"/>
+  </ControlTheme>
+
+  <ControlTheme x:Key="MenuGroupSeparatorStyle" TargetType="MenuItem">
+    <Setter Property="Margin" Value="0"/>
+    <Setter Property="IsEnabled" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="MenuItem">
+          <Grid Background="{DynamicResource BackgroundBrush}" MinHeight="20">
+            <ContentPresenter Content="{TemplateBinding Header}" Margin="8,2" FontWeight="Bold" VerticalAlignment="Center"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </ControlTheme>
+
+  <ControlTheme x:Key="MenuGroupWithItemsStyle" TargetType="MenuItem">
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="MenuItem">
+          <StackPanel>
+            <Grid Background="{DynamicResource BackgroundBrush}" MinHeight="20">
+              <ContentPresenter Content="{TemplateBinding Header}" Margin="8,2" FontWeight="Bold" VerticalAlignment="Center"/>
+            </Grid>
+            <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" />
+          </StackPanel>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </ControlTheme>
+
+  <controls:TreeViewTemplateSelector x:Key="SolutionTreeViewTemplate">
+    <controls:TreeViewTemplateSelector.PackageTemplate>
+      <TreeDataTemplate ItemsSource="{Binding Content}" DataType="viewModel:PackageViewModel">
+        <StackPanel Orientation="Horizontal" ToolTip.Tip="{Binding PackagePath}">
+          <Image Source="{StaticResource ImagePackage}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBlock x:Name="PackageText">
+            <Run Text="{Binding Name, Mode=OneWay}"/>
+            <Run Text="{Binding IsDirty, Mode=OneWay, Converter={sd:BoolToParam}, ConverterParameter=*}"/>
+            <Run Text="{Binding IsLoaded, Mode=OneWay, Converter={sd:Chained {sd:InvertBool}, {sd:BoolToParam}, Parameter2=(Errors)}}"/>
+          </TextBlock>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.PackageTemplate>
+    <controls:TreeViewTemplateSelector.AssetMountPointTemplate>
+      <TreeDataTemplate ItemsSource="{Binding SubDirectories}" DataType="viewModel:AssetMountPointViewModel">
+        <StackPanel Orientation="Horizontal">
+          <Image x:Name="DirectoryImage" Source="{StaticResource ImageRootFolder}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBlock>
+            <Run Text="{Binding Name, Mode=OneWay}"/>
+            <Run Text="{Binding IsDirty, Mode=OneWay, Converter={sd:BoolToParam}, ConverterParameter=*}"/>
+          </TextBlock>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.AssetMountPointTemplate>
+    <controls:TreeViewTemplateSelector.DirectoryTemplate>
+      <TreeDataTemplate ItemsSource="{Binding SubDirectories}" DataType="viewModel:DirectoryViewModel">
+        <StackPanel Orientation="Horizontal">
+          <Image x:Name="DirectoryImage" Source="{StaticResource ImageFolder}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBlock>
+            <Run Text="{Binding Name, Mode=OneWay}"/>
+            <Run Text="{Binding IsDirty, Mode=OneWay, Converter={sd:BoolToParam}, ConverterParameter=*}"/>
+          </TextBlock>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.DirectoryTemplate>
+    <controls:TreeViewTemplateSelector.DependencyCategoryTemplate>
+      <TreeDataTemplate ItemsSource="{Binding Content}" DataType="viewModel:ICategoryViewModel">
+        <StackPanel Orientation="Horizontal">
+          <Image Source="{StaticResource ImageDepsRoot}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBlock>
+            <Run Text="{Binding Name, Mode=OneWay}"/>
+            <Run Text="{Binding IsDirty, Mode=OneWay, Converter={sd:BoolToParam}, ConverterParameter=*}"/>
+          </TextBlock>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.DependencyCategoryTemplate>
+    <controls:TreeViewTemplateSelector.ProjectTemplate>
+      <TreeDataTemplate ItemsSource="{Binding Content}" DataType="viewModel:ProjectViewModel">
+        <StackPanel Orientation="Horizontal">
+          <Image Width="16" Height="16" Source="{Binding GenericType, Converter={sd:StaticResourceConverter}}" Margin="0,0,5,0"/>
+          <TextBlock x:Name="ProjectText">
+            <Run Text="{Binding Name, Mode=OneWay}"/>
+            <Run Text="{Binding IsDirty, Mode=OneWay, Converter={sd:BoolToParam}, ConverterParameter=*}"/>
+          </TextBlock>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.ProjectTemplate>
+    <controls:TreeViewTemplateSelector.ProjectCodeTemplate>
+      <TreeDataTemplate ItemsSource="{Binding SubDirectories}" DataType="viewModel:ProjectCodeViewModel">
+        <StackPanel Orientation="Horizontal">
+          <Image x:Name="DirectoryImage" Source="{StaticResource ImageRootFolder}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBlock>
+            <Run Text="{Binding Name, Mode=OneWay}"/>
+            <Run Text="{Binding IsDirty, Mode=OneWay, Converter={sd:BoolToParam}, ConverterParameter=*}"/>
+          </TextBlock>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.ProjectCodeTemplate>
+    <controls:TreeViewTemplateSelector.PackageReferenceTemplate>
+      <DataTemplate DataType="viewModel:PackageReferenceViewModel">
+        <StackPanel Orientation="Horizontal">
+          <Image Source="{StaticResource ImagePackageReference}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBlock Text="{Binding Name, Mode=OneWay}"/>
+        </StackPanel>
+      </DataTemplate>
+    </controls:TreeViewTemplateSelector.PackageReferenceTemplate>
+  </controls:TreeViewTemplateSelector>
+
+  <controls:TreeViewTemplateSelector x:Key="SolutionTreeViewEditTemplate">
+    <controls:TreeViewTemplateSelector.PackageTemplate>
+      <TreeDataTemplate ItemsSource="{Binding AssetMountPoint.SubDirectories}" DataType="viewModel:PackageViewModel">
+        <StackPanel Orientation="Horizontal" Margin="0,2">
+          <Image Source="{StaticResource ImagePackage}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBox Text="{Binding Name}"/>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.PackageTemplate>
+    <controls:TreeViewTemplateSelector.AssetMountPointTemplate>
+      <TreeDataTemplate ItemsSource="{Binding SubDirectories}" DataType="viewModel:AssetMountPointViewModel">
+        <StackPanel Orientation="Horizontal" Margin="0,2">
+          <Image Source="{StaticResource ImageRootFolder}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBox Text="{Binding Name}"/>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.AssetMountPointTemplate>
+    <controls:TreeViewTemplateSelector.DirectoryTemplate>
+      <TreeDataTemplate ItemsSource="{Binding SubDirectories}" DataType="viewModel:DirectoryViewModel">
+        <StackPanel Orientation="Horizontal" Margin="0,2">
+          <Image Source="{StaticResource ImageFolder}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBox Text="{Binding Name}"/>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.DirectoryTemplate>
+    <controls:TreeViewTemplateSelector.DependencyCategoryTemplate>
+      <TreeDataTemplate ItemsSource="{Binding Content}" DataType="viewModel:ICategoryViewModel">
+        <StackPanel Orientation="Horizontal" Margin="0,2">
+          <Image Source="{StaticResource ImageDepsRoot}" Margin="0,0,5,0" Width="16" Height="16"/>
+          <TextBox Text="{Binding Name}"/>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.DependencyCategoryTemplate>
+    <controls:TreeViewTemplateSelector.ProjectTemplate>
+      <TreeDataTemplate ItemsSource="{Binding SubDirectories}" DataType="viewModel:ProjectViewModel">
+        <StackPanel Orientation="Horizontal" Margin="0,2">
+          <Image Width="16" Height="16" Source="{Binding GenericType, Converter={sd:StaticResourceConverter}}" Margin="0,0,5,0"/>
+          <TextBox Text="{Binding Name}"/>
+        </StackPanel>
+      </TreeDataTemplate>
+    </controls:TreeViewTemplateSelector.ProjectTemplate>
+  </controls:TreeViewTemplateSelector>
+
+</ResourceDictionary>

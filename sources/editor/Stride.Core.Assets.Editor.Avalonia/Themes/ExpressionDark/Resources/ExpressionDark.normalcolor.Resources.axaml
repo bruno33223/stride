@@ -1,0 +1,31 @@
+<!--
+// Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
+// Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
+//
+// Based on Extended WPF Toolkit (C) 2007-2013 Xceed Software Inc., under Ms-PL.
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <SolidColorBrush x:Key="gridLineBrush"
+                   Color="Gray" />
+
+  <LinearGradientBrush x:Key="errorBackgroundBrush"
+                       StartPoint="50%,0%"
+                       EndPoint="50%,100%">
+    <GradientStop Color="Red" Offset="0" />
+    <GradientStop Color="#FFF69898" Offset="1" />
+  </LinearGradientBrush>
+
+  <SolidColorBrush x:Key="errorForegroundBrush"
+                   Color="White" />
+
+  <SolidColorBrush x:Key="dropMarkBrush"
+                   Color="#FFC4E5F6" />
+
+  <!-- Pen that is used to draw the drop mark when a ColumnHeader is dragged over another one. -->
+  <Pen x:Key="dropMarkPen"
+       Brush="{StaticResource dropMarkBrush}"
+       Thickness="7" />
+
+</ResourceDictionary>
