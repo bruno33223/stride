@@ -2,7 +2,10 @@
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
 
 using System.Diagnostics;
+using Stride.Core.Assets.Editor.Components.TemplateDescriptions;
 using Stride.Core.Assets.Editor.Services;
+using Stride.Core.Assets.Templates;
+using Stride.Core.Diagnostics;
 using Stride.Core.IO;
 using Stride.Core.Presentation.Commands;
 using Stride.Core.Presentation.Services;
@@ -34,6 +37,63 @@ partial class SessionViewModel
                 semaphore.Release();
             }
         }
+    }
+
+    public const string SolutionExtension = ".sln";
+
+    public static async Task<SessionViewModel?> CreateNewSession(IMainViewModel main, IViewModelServiceProvider serviceProvider, NewSessionParameters newSessionParameters, CancellationToken token = default)
+    {
+        var loggerResult = new LoggerResult();
+        var session = new PackageSession();
+
+        var workProgress = new WorkProgressViewModel(serviceProvider, loggerResult)
+        {
+            Title = Tr._p("Title", "Creating session..."),
+            KeepOpen = KeepOpen.OnWarningsOrErrors,
+            IsIndeterminate = true
+        };
+        workProgress.RegisterProgressStatus(loggerResult);
+        serviceProvider.Get<IEditorDialogService>().ShowProgressWindow(workProgress);
+
+        // Solution dir is either the given solution location, or Output/Name
+        var hasSolutionlocation = !string.IsNullOrWhiteSpace(newSessionParameters.SolutionLocation);
+        var baseOutputDir = UPath.Combine<UDirectory>(newSessionParameters.OutputDirectory, newSessionParameters.OutputName);
+
+        var solutionDir = hasSolutionlocation ? newSessionParameters.SolutionLocation : baseOutputDir;
+        var outputDir = baseOutputDir;
+
+        var parameters = new SessionTemplateGeneratorParameters
+        {
+            Name = newSessionParameters.OutputName,
+            OutputDirectory = outputDir,
+            Description = newSessionParameters.TemplateDescription,
+            Session = session,
+            Logger = loggerResult,
+        };
+
+        var generator = TemplateManager.FindTemplateGenerator(parameters);
+        if (generator == null)
+        {
+            await serviceProvider.Get<IDialogService>().MessageBoxAsync(Tr._p("Message", "Unable to retrieve template generator for the selected template. Aborting."), MessageBoxButton.OK, MessageBoxImage.Error);
+            return null;
+        }
+
+        var solutionName = !string.IsNullOrWhiteSpace(newSessionParameters.SolutionName) ? newSessionParameters.SolutionName : newSessionParameters.OutputName;
+        solutionName = solutionName.EndsWith(SolutionExtension, StringComparison.OrdinalIgnoreCase) ? solutionName : solutionName + SolutionExtension;
+        session.SolutionPath = UPath.Combine<UFile>(solutionDir, solutionName);
+        session.VisualStudioVersion = PackageSession.DefaultVisualStudioVersion;
+
+        if (!await TemplateGeneratorHelper.RunTemplateGeneratorSafe(generator, parameters, workProgress))
+        {
+            await workProgress.NotifyWorkFinished(true, loggerResult.HasErrors);
+            return null;
+        }
+
+        await workProgress.NotifyWorkFinished(false, loggerResult.HasErrors);
+
+        // Open newly created session
+        var sessionResult = new PackageSessionResult();
+        return await OpenSessionAsync(session.SolutionPath, sessionResult, main, serviceProvider, token);
     }
 
     public static async Task<SessionViewModel?> OpenSessionAsync(UFile path, PackageSessionResult sessionResult, IMainViewModel main, IViewModelServiceProvider serviceProvider, CancellationToken token = default)

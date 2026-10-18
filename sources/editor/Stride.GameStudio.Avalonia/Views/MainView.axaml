@@ -34,6 +34,9 @@
           VerticalAlignment="Top">
       <!-- File menu -->
       <MenuItem Header="{sd:LocalizeString _File, Context=Menu}">
+        <MenuItem Header="{sd:LocalizeString _New..., Context=Menu}"
+                  Command="{Binding NewCommand}"
+                  HotKey="Ctrl+N" InputGesture="{Binding $self.HotKey, Mode=OneTime}"/>
         <MenuItem Header="{sd:LocalizeString _Open..., Context=Menu}"
                   Command="{Binding OpenCommand}"
                   HotKey="Ctrl+O" InputGesture="{Binding $self.HotKey, Mode=OneTime}"/>

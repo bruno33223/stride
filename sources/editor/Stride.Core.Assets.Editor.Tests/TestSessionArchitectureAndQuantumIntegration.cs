@@ -163,4 +163,38 @@ public class TestSessionArchitectureAndQuantumIntegration
         var initialDir = new UDirectory("/test/path");
         Assert.Equal(initialDir, providerWithNullSession.GetInitialDirectory(initialDir));
     }
+
+    [Fact]
+    public void TestCreateNewSessionMethodContract()
+    {
+        var sessionType = typeof(SessionViewModel);
+        var createNewSessionMethod = sessionType.GetMethod("CreateNewSession", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+        Assert.NotNull(createNewSessionMethod);
+    }
+
+    [Fact]
+    public void TestGameStudioNewCommandAndProjectSelectionContracts()
+    {
+        var asmPath = typeof(SessionViewModel).Assembly.Location;
+        var dir = Path.GetDirectoryName(asmPath)!;
+        var gameStudioAsmPath = Path.Combine(dir, "Stride.GameStudio.Avalonia.dll");
+        if (!File.Exists(gameStudioAsmPath))
+        {
+            gameStudioAsmPath = "/media/bruno/SteamGames/apps/stride-source/stride/sources/editor/Stride.GameStudio.Avalonia/bin/Debug/net10.0/Stride.GameStudio.Avalonia.dll";
+        }
+        Assert.True(File.Exists(gameStudioAsmPath), $"Stride.GameStudio.Avalonia.dll must exist at {gameStudioAsmPath}");
+        var asm = Assembly.LoadFrom(gameStudioAsmPath);
+
+        var mainVmType = asm.GetType("Stride.GameStudio.Avalonia.ViewModels.MainViewModel");
+        Assert.NotNull(mainVmType);
+
+        var newCommandProp = mainVmType.GetProperty("NewCommand");
+        Assert.NotNull(newCommandProp);
+
+        var dialogServiceType = asm.GetType("Stride.GameStudio.Avalonia.Services.EditorDialogService");
+        Assert.NotNull(dialogServiceType);
+
+        var showMethod = dialogServiceType.GetMethod("ShowProjectSelectionWindowAsync");
+        Assert.NotNull(showMethod);
+    }
 }

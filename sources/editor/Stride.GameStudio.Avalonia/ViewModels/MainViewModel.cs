@@ -42,6 +42,7 @@ internal sealed class MainViewModel : ViewModelBase, IMainViewModel
         CrashCommand = DisabledCommand.Instance;
 #endif
         ExitCommand = new AnonymousCommand(serviceProvider, OnExit, () => DialogService.HasMainWindow);
+        NewCommand = new AnonymousTaskCommand(serviceProvider, OnNew);
         OpenCommand = new AnonymousTaskCommand<UFile?>(serviceProvider, OnOpen);
         OpenDebugWindowCommand = new AnonymousTaskCommand(serviceProvider, OnOpenDebugWindow, () => DialogService.HasMainWindow);
         OpenSettingsWindowCommand = new AnonymousTaskCommand(serviceProvider, OnOpenSettingsWindow, () => DialogService.HasMainWindow);
@@ -72,6 +73,8 @@ internal sealed class MainViewModel : ViewModelBase, IMainViewModel
     public ICommandBase CrashCommand { get; }
 
     public ICommandBase ExitCommand { get; }
+
+    public ICommandBase NewCommand { get; }
 
     public ICommandBase OpenCommand { get; }
 
@@ -125,6 +128,51 @@ internal sealed class MainViewModel : ViewModelBase, IMainViewModel
         Title = $"{baseTitle} - {Session?.SolutionPath?.GetFileNameWithoutExtension()}";
         DefaultSceneHelper.OpenDefaultScene(loadedSession);
         return true;
+    }
+
+    public async Task<bool?> NewSession()
+    {
+        var selection = await DialogService.ShowProjectSelectionWindowAsync();
+        if (selection is null) return false;
+
+        var (newParams, existingPath) = selection.Value;
+        if (newParams is not null)
+        {
+            return await CreateNewSession(newParams);
+        }
+        if (existingPath is not null)
+        {
+            return await OpenSession(existingPath);
+        }
+        return false;
+    }
+
+    public async Task<bool?> CreateNewSession(NewSessionParameters newSessionParameters, CancellationToken token = default)
+    {
+        ArgumentNullException.ThrowIfNull(newSessionParameters);
+
+        // We have a session, let's restart cleanly
+        if (session is not null)
+        {
+            session = null;
+            (Application.Current as App)?.Restart();
+        }
+
+        var newSession = await SessionViewModel.CreateNewSession(this, ServiceProvider, newSessionParameters, token);
+        if (newSession is null)
+        {
+            return false;
+        }
+
+        Session = newSession;
+        Title = $"{baseTitle} - {Session?.SolutionPath?.GetFileNameWithoutExtension()}";
+        DefaultSceneHelper.OpenDefaultScene(newSession);
+        return true;
+    }
+
+    private async Task OnNew()
+    {
+        await NewSession();
     }
 
     private async Task OnAbout()

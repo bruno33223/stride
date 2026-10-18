@@ -107,16 +107,25 @@ public partial class App : Application
     {
         InitializeMarkdownViewer();
 
+        UFile? initialPath = null;
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow();
+            if (desktop.Args is { Length: > 0 })
+            {
+                var candidate = desktop.Args[0];
+                if (!candidate.StartsWith('/') && !candidate.StartsWith('-') && File.Exists(candidate))
+                {
+                    initialPath = candidate;
+                }
+            }
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             singleViewPlatform.MainView = new MainView();
         }
 
-        Restart();
+        Restart(initialPath);
     }
 
     public void Restart(UFile? initialPath = null)

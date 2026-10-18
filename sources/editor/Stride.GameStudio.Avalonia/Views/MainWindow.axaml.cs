@@ -10,6 +10,7 @@ using Stride.Core.Assets.Editor.Settings;
 using Stride.Core.Extensions;
 using Stride.Core.Presentation.Avalonia.Extensions;
 using Stride.GameStudio.Avalonia.Settings;
+using Stride.GameStudio.Avalonia.ViewModels;
 
 namespace Stride.GameStudio.Avalonia.Views;
 
@@ -55,7 +56,7 @@ public partial class MainWindow : Window
         }
     }
 
-    protected override void OnLoaded(RoutedEventArgs _)
+    protected override void OnLoaded(RoutedEventArgs e)
     {
         // Notify the launcher that Game Studio is ready (no-op when not launched from the launcher).
         App.LauncherNotifier?.Invoke();
@@ -63,6 +64,15 @@ public partial class MainWindow : Window
 
         // Size the window to best fit the current screen size
         InitializeWindowSize();
+
+        // If opened without an active session, show the Project Selection / Welcome Window
+        if (DataContext is MainViewModel { Session: null } mainVm)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var task = mainVm.NewSession();
+            });
+        }
         return;
 
         void InitializeWindowSize()

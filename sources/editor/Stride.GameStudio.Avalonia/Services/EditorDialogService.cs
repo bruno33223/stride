@@ -11,6 +11,8 @@ using Stride.Core.Presentation.Commands;
 using Stride.Core.Presentation.Services;
 using Stride.Core.Presentation.ViewModels;
 using Stride.Core.Assets.Editor.Avalonia.Views;
+using Stride.Core.Assets.Editor.Components.TemplateDescriptions.ViewModels;
+using Stride.Core.IO;
 using Stride.GameStudio.Avalonia.ViewModels;
 using Stride.GameStudio.Avalonia.Views;
 
@@ -217,7 +219,7 @@ internal class EditorDialogService : DialogService, IEditorDialogService
     {
         ArgumentNullException.ThrowIfNull(session);
 
-        var viewModel = new NewProjectTemplateCollectionViewModel(session.ServiceProvider, session);
+        var viewModel = new Stride.Core.Assets.Editor.Components.TemplateDescriptions.ViewModels.NewProjectTemplateCollectionViewModel(session.ServiceProvider, session);
         var window = new NewProjectWindow
         {
             DataContext = viewModel
@@ -238,6 +240,26 @@ internal class EditorDialogService : DialogService, IEditorDialogService
     {
         ArgumentNullException.ThrowIfNull(session);
         return new PackagePickerWindow(session);
+    }
+
+    public async Task<(NewSessionParameters? newParams, UFile? existingPath)?> ShowProjectSelectionWindowAsync()
+    {
+        return await global::Avalonia.Threading.Dispatcher.UIThread.InvokeAsync<(NewSessionParameters?, UFile?)?>(async () =>
+        {
+            var window = new ProjectSelectionWindow
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            };
+            var viewModel = new Stride.Core.Assets.Editor.Components.TemplateDescriptions.ViewModels.NewOrOpenSessionTemplateCollectionViewModel(serviceProvider, window);
+            window.Templates = viewModel;
+
+            var result = await window.ShowModal();
+            if (result == Stride.Core.Presentation.Services.DialogResult.Ok)
+            {
+                return (window.NewSessionParameters, window.ExistingSessionPath);
+            }
+            return null;
+        });
     }
 }
 
