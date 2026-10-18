@@ -95,8 +95,8 @@
             ColumnDefinitions="2*, 2, *">
         <!-- Editors -->
         <gsvw:EditorCollectionView Grid.Column="0"
-                                 BorderThickness="2"
-                                 BorderBrush="Red"
+                                 BorderThickness="1"
+                                 BorderBrush="#3A3A3C"
                                  Padding="2"
                                  DataContext="{Binding Session?.EditorCollection}"/>
         <GridSplitter Grid.Column="1" ResizeDirection="Auto"/>
@@ -113,8 +113,8 @@
           </StackPanel>
           <!-- Property Grid -->
           <gsvw:PropertyGridView Grid.Row="1"
-                               BorderThickness="2"
-                               BorderBrush="Orange"
+                               BorderThickness="1"
+                               BorderBrush="#3A3A3C"
                                Padding="2"
                                DataContext="{Binding Session?.ActiveProperties}"/>
         </Grid>
@@ -124,16 +124,16 @@
             ColumnDefinitions="*, 2, 2*, 2, *">
         <!-- Solution Explorer -->
         <gsvw:SolutionExplorerView Grid.Column="0"
-                                 BorderThickness="2"
-                                 BorderBrush="Black"
+                                 BorderThickness="1"
+                                 BorderBrush="#3A3A3C"
                                  Padding="2"
                                  DataContext="{Binding Session}"/>
         <GridSplitter Grid.Column="1" ResizeDirection="Auto"/>
         <!-- Asset view and logs -->
         <TabControl Grid.Column="2">
           <TabItem Header="Asset view">
-            <gsvw:AssetExplorerView BorderThickness="2"
-                                  BorderBrush="Blue"
+            <gsvw:AssetExplorerView BorderThickness="1"
+                                  BorderBrush="#3A3A3C"
                                   Padding="2"
                                   DataContext="{Binding Session?.AssetCollection}"/>
           </TabItem>
@@ -149,8 +149,8 @@
         <!-- Asset preview, history and references -->
         <TabControl Grid.Column="4">
           <TabItem Header="Asset preview">
-            <gsvw:AssetPreviewView BorderThickness="2"
-                                 BorderBrush="Cyan"
+            <gsvw:AssetPreviewView BorderThickness="1"
+                                 BorderBrush="#3A3A3C"
                                  Padding="2"/>
           </TabItem>
           <TabItem Header="Edit history">

@@ -31,7 +31,16 @@ public class TemplateProviderSelector : IDataTemplate
         ArgumentNullException.ThrowIfNull(templateProvider);
 
         if (!templateProviderNames.Add(templateProvider.Name))
-            throw new InvalidOperationException("A template provider with the same name has already been registered in this template selector.");
+        {
+            var existing = templateProviders.FirstOrDefault(x => x.Name == templateProvider.Name);
+            if (existing != null)
+            {
+                if (ReferenceEquals(existing, templateProvider))
+                    return;
+
+                templateProviders.Remove(existing);
+            }
+        }
 
         InsertTemplateProvider(templateProviders, templateProvider, []);
     }

@@ -1,0 +1,206 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+        xmlns:vm="using:Stride.GameStudio.Avalonia.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="550"
+        x:Class="Stride.GameStudio.Avalonia.Views.FixAssetReferencesWindow"
+        x:DataType="vm:FixAssetReferencesViewModel"
+        Icon="/Assets/GameStudio.ico"
+        Title="{sd:LocalizeString Fix asset references, Context=Title}"
+        Width="900" Height="580"
+        MinWidth="700" MinHeight="450"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True"
+        ShowInTaskbar="False">
+
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Views/ImageResources.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+
+  <Grid RowDefinitions="Auto,*,Auto" Margin="16" Background="Transparent">
+
+    <!-- Header -->
+    <Border Grid.Row="0" Margin="0,0,0,14" Padding="14,12" Background="#242428" BorderBrush="#38383E" BorderThickness="1" CornerRadius="6">
+      <Grid RowDefinitions="Auto,Auto">
+        <DockPanel Grid.Row="0">
+          <Border Width="32" Height="32" CornerRadius="16" Background="#2A3D52" Margin="0,0,12,0" VerticalAlignment="Center">
+            <TextBlock Text="🔗" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="{sd:LocalizeString Resolving broken asset references, Context=Title}"
+                       FontSize="15" FontWeight="SemiBold" Foreground="#F0F0F0" />
+            <TextBlock Text="{sd:LocalizeString The following references could not be resolved. Choose a replacement asset or mark as ignored., Context=Help}"
+                       FontSize="12" Foreground="#9E9EA6" TextWrapping="Wrap" Margin="0,2,0,0" />
+          </StackPanel>
+        </DockPanel>
+
+        <!-- Quick actions / Single replacement bar -->
+        <Border Grid.Row="1" Margin="0,12,0,0" Padding="10,8" Background="#1E1E22" CornerRadius="4" BorderBrush="#323238" BorderThickness="1">
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+            <CheckBox Grid.Column="0"
+                      IsChecked="{Binding UseSingleReplace}"
+                      Content="{sd:LocalizeString Replace all with single asset:, Context=Label}"
+                      VerticalAlignment="Center"
+                      Margin="0,0,10,0" />
+
+            <TextBox Grid.Column="1"
+                     Text="{Binding SingleReplacement, Mode=TwoWay}"
+                     IsEnabled="{Binding UseSingleReplace}"
+                     PlaceholderText="{sd:LocalizeString Select an asset path, Context=Watermark}"
+                     VerticalAlignment="Center"
+                     Height="28"
+                     Padding="8,4"
+                     Margin="0,0,6,0" />
+
+            <Button Grid.Column="2"
+                    Command="{Binding BrowseSingleReplacementCommand}"
+                    IsEnabled="{Binding UseSingleReplace}"
+                    Background="Transparent"
+                    BorderBrush="#3E3E44"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="6,4"
+                    VerticalAlignment="Center"
+                    ToolTip.Tip="{sd:LocalizeString Browse asset..., Context=ToolTip}">
+              <Image Source="{StaticResource ImagePickup}" Width="16" Height="16" />
+            </Button>
+
+            <Button Grid.Column="3"
+                    Command="{Binding IgnoreAllCommand}"
+                    Content="{sd:LocalizeString Ignore all, Context=Button}"
+                    Padding="10,4"
+                    Margin="10,0,4,0"
+                    Background="Transparent"
+                    BorderBrush="#3E3E44"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    VerticalAlignment="Center" />
+
+            <Button Grid.Column="4"
+                    Command="{Binding ClearAllCommand}"
+                    Content="{sd:LocalizeString Clear all, Context=Button}"
+                    Padding="10,4"
+                    Margin="4,0,0,0"
+                    Background="Transparent"
+                    BorderBrush="#3E3E44"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    VerticalAlignment="Center" />
+          </Grid>
+        </Border>
+      </Grid>
+    </Border>
+
+    <!-- Main List of Items -->
+    <Border Grid.Row="1" Background="#1E1E22" BorderBrush="#323238" BorderThickness="1" CornerRadius="6" ClipToBounds="True">
+      <Grid RowDefinitions="Auto,*">
+        <!-- Table Column Headers -->
+        <Border Grid.Row="0" Background="#28282D" BorderBrush="#383840" BorderThickness="0,0,0,1" Padding="12,8">
+          <Grid ColumnDefinitions="2*,2.5*,3*,Auto">
+            <TextBlock Grid.Column="0" Text="{sd:LocalizeString Source asset, Context=Header}" FontWeight="SemiBold" FontSize="12" Foreground="#C8C8D0" />
+            <TextBlock Grid.Column="1" Text="{sd:LocalizeString Original path, Context=Header}" FontWeight="SemiBold" FontSize="12" Foreground="#C8C8D0" Margin="8,0" />
+            <TextBlock Grid.Column="2" Text="{sd:LocalizeString Replacement asset, Context=Header}" FontWeight="SemiBold" FontSize="12" Foreground="#C8C8D0" Margin="8,0" />
+            <TextBlock Grid.Column="3" Text="{sd:LocalizeString Ignore, Context=Header}" FontWeight="SemiBold" FontSize="12" Foreground="#C8C8D0" Width="60" TextAlignment="Center" />
+          </Grid>
+        </Border>
+
+        <!-- Scrollable list of items -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{Binding Items}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:FixAssetReferenceItemViewModel}">
+                <Border BorderBrush="#2C2C32" BorderThickness="0,0,0,1" Padding="12,7" Background="Transparent">
+                  <Grid ColumnDefinitions="2*,2.5*,3*,Auto" VerticalAlignment="Center">
+                    <!-- Source asset -->
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding SourceAssetName}"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="#E0E0E0"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               ToolTip.Tip="{Binding SourceAssetName}" />
+
+                    <!-- Original path -->
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding OriginalPath}"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="#F08080"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               Margin="8,0"
+                               ToolTip.Tip="{Binding OriginalPath}" />
+
+                    <!-- Replacement asset selection -->
+                    <Grid Grid.Column="2" ColumnDefinitions="*,Auto" Margin="8,0" IsEnabled="{Binding !Ignore}">
+                      <TextBox Grid.Column="0"
+                               Text="{Binding TargetReference, Mode=TwoWay}"
+                               PlaceholderText="{sd:LocalizeString Select or enter asset path, Context=Watermark}"
+                               Height="28"
+                               Padding="6,3"
+                               FontSize="12"
+                               VerticalAlignment="Center" />
+                      <Button Grid.Column="1"
+                              Command="{Binding BrowseCommand}"
+                              Background="Transparent"
+                              BorderBrush="#3E3E44"
+                              BorderThickness="1"
+                              CornerRadius="4"
+                              Padding="6,4"
+                              Margin="4,0,0,0"
+                              VerticalAlignment="Center"
+                              ToolTip.Tip="{sd:LocalizeString Select replacement asset, Context=ToolTip}">
+                        <Image Source="{StaticResource ImagePickup}" Width="16" Height="16" />
+                      </Button>
+                    </Grid>
+
+                    <!-- Ignore checkbox -->
+                    <CheckBox Grid.Column="3"
+                              IsChecked="{Binding Ignore, Mode=TwoWay}"
+                              Width="60"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Grid>
+    </Border>
+
+    <!-- Footer -->
+    <DockPanel Grid.Row="2" Margin="0,14,0,0" LastChildFill="False">
+      <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+        <TextBlock Text="{Binding Items.Count}" FontWeight="SemiBold" Foreground="#4EC9B0" FontSize="12" />
+        <TextBlock Text="{sd:LocalizeString reference(s) to process, Context=Footer}" Foreground="#9E9EA6" FontSize="12" />
+      </StackPanel>
+
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10">
+        <Button Content="{sd:LocalizeString Cancel, Context=Button}"
+                IsCancel="True"
+                Padding="16,6"
+                CornerRadius="4"
+                Background="Transparent"
+                BorderBrush="#3E3E44"
+                BorderThickness="1"
+                Click="OnClick_Cancel" />
+
+        <Button Content="{sd:LocalizeString OK, Context=Button}"
+                IsDefault="True"
+                Padding="22,6"
+                CornerRadius="4"
+                Background="#007ACC"
+                Foreground="White"
+                FontWeight="SemiBold"
+                Click="OnClick_Ok" />
+      </StackPanel>
+    </DockPanel>
+
+  </Grid>
+</Window>

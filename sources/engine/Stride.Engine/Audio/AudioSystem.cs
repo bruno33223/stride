@@ -76,8 +76,11 @@ namespace Stride.Audio
                 System.Diagnostics.Debug.WriteLine($"[AudioSystem] Initialization failed, audio disabled: {ex.Message}");
             }
 
-            Game.Activated += OnActivated;
-            Game.Deactivated += OnDeactivated;
+            if (Game != null)
+            {
+                Game.Activated += OnActivated;
+                Game.Deactivated += OnDeactivated;
+            }
         }
 
         /// <summary>
@@ -114,8 +117,11 @@ namespace Stride.Audio
         // called on dispose
         protected override void Destroy()
         {
-            Game.Activated -= OnActivated;
-            Game.Deactivated -= OnDeactivated;
+            if (Game != null)
+            {
+                Game.Activated -= OnActivated;
+                Game.Deactivated -= OnDeactivated;
+            }
 
             base.Destroy();
 

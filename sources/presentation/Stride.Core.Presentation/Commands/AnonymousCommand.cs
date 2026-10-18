@@ -20,6 +20,16 @@ public class AnonymousCommand : CommandBase
     /// <param name="serviceProvider">A service provider that can provide a <see cref="Services.IDispatcherService"/> to use for this view model.</param>
     /// <param name="action">An anonymous method that will be called each time the command is executed.</param>
     /// <param name="canExecute">An anonymous method that will be called each time the command <see cref="CommandBase.CanExecute(object)"/> method is invoked.</param>
+    public AnonymousCommand(Action action)
+        : this(null!, action)
+    {
+    }
+
+    public AnonymousCommand(Action<object?> action)
+        : this(null!, action)
+    {
+    }
+
     public AnonymousCommand(IViewModelServiceProvider serviceProvider, Action action, Func<bool>? canExecute = null)
         : base(serviceProvider)
     {
@@ -42,6 +52,26 @@ public class AnonymousCommand : CommandBase
 
         this.action = action;
         this.canExecute = canExecute;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnonymousCommand"/> class with a default service provider.
+    /// </summary>
+    /// <param name="action">An anonymous method that will be called each time the command is executed.</param>
+    /// <param name="canExecute">An anonymous method that will be called each time the command <see cref="CommandBase.CanExecute(object)"/> method is invoked.</param>
+    public AnonymousCommand(Action action, Func<bool>? canExecute = null)
+        : this(new ViewModelServiceProvider(), action, canExecute)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AnonymousCommand"/> class with a default service provider.
+    /// </summary>
+    /// <param name="action">An anonymous method that will be called each time the command is executed.</param>
+    /// <param name="canExecute">An anonymous method that will be called each time the command <see cref="CommandBase.CanExecute(object)"/> method is invoked.</param>
+    public AnonymousCommand(Action<object?> action, Func<bool>? canExecute = null)
+        : this(new ViewModelServiceProvider(), action, canExecute)
+    {
     }
 
     /// <summary>
@@ -136,7 +166,7 @@ public class AnonymousCommand<T> : CommandBase
     {
         parameter ??= default(T);
         if ((typeof(T).IsValueType || parameter != null) && parameter is not T)
-            throw new ArgumentException("Unexpected parameter type in the command.", nameof(parameter));
+            return false;
 
         var result = base.CanExecute(parameter);
         return result && canExecute != null ? canExecute((T)parameter!) : result;

@@ -106,6 +106,21 @@ namespace Stride.Animations
                     Linear(ref leftValue, ref rightValue, lerpValue, out result);
                     break;
 
+                case AnimationKeyTangentType.Flat:
+                    // Curva com derivada zero nos pontos extremos (Hermite smoothstep cúbico: 3t^2 - 2t^3)
+                    var sFlat = lerpValue * lerpValue * (3.0f - 2.0f * lerpValue);
+                    Linear(ref leftValue, ref rightValue, sFlat, out result);
+                    break;
+
+                case AnimationKeyTangentType.Smooth:
+                    // Curva suave contínua Catmull-Rom cúbica usando pontos vizinhos
+                    var p0 = leftIndex > 0 ? sortedKeys[leftIndex - 1].Value : leftValue;
+                    var p1 = leftValue;
+                    var p2 = rightValue;
+                    var p3 = rightIndex < sortedKeys.Count - 1 ? sortedKeys[rightIndex + 1].Value : rightValue;
+                    Cubic(ref p0, ref p1, ref p2, ref p3, lerpValue, out result);
+                    break;
+
                 default:
                     result = leftValue;
                     break;

@@ -42,6 +42,8 @@ public abstract class MountPointViewModel : DirectoryBaseViewModel
     /// <inheritdoc/>
     public override string TypeDisplayName => "Mount Point";
 
+    public virtual bool AcceptAssetType(Type assetType) => true;
+
     /// <inheritdoc/>
     protected override void UpdateIsDeletedStatus()
     {

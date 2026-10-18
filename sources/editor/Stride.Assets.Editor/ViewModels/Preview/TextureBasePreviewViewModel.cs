@@ -5,12 +5,13 @@ using Stride.Core.Presentation.Collections;
 using Stride.Core.Presentation.Commands;
 using Stride.Editor.Preview;
 using Stride.Core.Assets.Editor.ViewModels;
-using Stride.Assets.Editor.Preview;
+using Stride.Editor.Preview.ViewModels;
+using ITextureBasePreview = Stride.Assets.Editor.Preview.ITextureBasePreview;
 
 namespace Stride.Assets.Editor.ViewModels.Preview;
 
 public abstract class TextureBasePreviewViewModel<TPreview> : AssetPreviewViewModel<TPreview>
-    where TPreview : IAssetPreview, ITextureBasePreview
+    where TPreview : Stride.Editor.Preview.IAssetPreview, ITextureBasePreview
 {
     private ITextureBasePreview textureBasePreview;
     private string previewSelectedMipMap;
@@ -54,7 +55,7 @@ public abstract class TextureBasePreviewViewModel<TPreview> : AssetPreviewViewMo
 
     public ICommandBase PreviewScaleToRealSizeCommand { get; }
 
-    protected void AttachPreviewTexture(IAssetPreview preview)
+    protected void AttachPreviewTexture(Stride.Editor.Preview.IAssetPreview preview)
     {
         textureBasePreview = (ITextureBasePreview)preview;
         var availableMipMaps = textureBasePreview.GetAvailableMipMaps();

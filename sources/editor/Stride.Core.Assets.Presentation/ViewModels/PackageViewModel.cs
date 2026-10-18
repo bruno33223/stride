@@ -78,6 +78,11 @@ public class PackageViewModel : SessionObjectViewModel, IComparable<PackageViewM
     public PackageContainer PackageContainer { get; }
 
     /// <summary>
+    /// Gets the list of loaded assemblies for this package.
+    /// </summary>
+    public IReadOnlyList<PackageLoadedAssembly> LoadedAssemblies => Package.LoadedAssemblies;
+
+    /// <summary>
     /// Gets or sets the path of this package.
     /// </summary>
     /// <remarks>Modifying this property also modify the <see cref="Name"/> property.</remarks>
@@ -135,7 +140,7 @@ public class PackageViewModel : SessionObjectViewModel, IComparable<PackageViewM
             {
                 directory = GetOrCreateAssetDirectory(url.GetFullDirectory());
             }
-            var assetViewModel = CreateAsset(asset, directory);
+            var assetViewModel = CreateAsset(directory, asset);
             directory.AddAsset(assetViewModel);
 
             progress++;
@@ -195,8 +200,11 @@ public class PackageViewModel : SessionObjectViewModel, IComparable<PackageViewM
         throw new InvalidOperationException("Unable to sort the given items for the Content collection of PackageViewModel");
     }
 
-    private AssetViewModel CreateAsset(AssetItem assetItem, DirectoryBaseViewModel directory, ILogger? logger = null)
+    public AssetViewModel CreateAsset(DirectoryBaseViewModel directory, AssetItem assetItem, bool canUndoRedoCreation = false, ILogger? logger = null)
     {
+        if (directory == null) throw new ArgumentNullException(nameof(directory));
+        if (assetItem == null) throw new ArgumentNullException(nameof(assetItem));
+
         AssetCollectionItemIdHelper.GenerateMissingItemIds(assetItem.Asset);
         Session.GraphContainer.InitializeAsset(assetItem, logger);
         var assetViewModelType = Session.GetAssetViewModelType(assetItem);
@@ -204,7 +212,9 @@ public class PackageViewModel : SessionObjectViewModel, IComparable<PackageViewM
         {
             assetViewModelType = assetViewModelType.MakeGenericType(assetItem.Asset.GetType());
         }
-        return (AssetViewModel)Activator.CreateInstance(assetViewModelType, new ConstructorParameters(assetItem, directory, false))!;
+        var asset = (AssetViewModel)Activator.CreateInstance(assetViewModelType, new ConstructorParameters(assetItem, directory, canUndoRedoCreation))!;
+        asset.Initialize();
+        return asset;
     }
 
     private void FillRootAssetCollection()
@@ -226,5 +236,9 @@ public class PackageViewModel : SessionObjectViewModel, IComparable<PackageViewM
     string IChildViewModel.GetName()
     {
         return Name;
+    }
+
+    public virtual void CheckConsistency()
+    {
     }
 }

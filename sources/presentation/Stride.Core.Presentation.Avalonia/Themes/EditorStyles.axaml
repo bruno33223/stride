@@ -92,6 +92,7 @@
   </Style>
 
   <!-- Style for Color editor -->
+  <!-- Style for Color editor -->
   <Style Selector="sd|ColorEditor">
     <Setter Property="Focusable" Value="False"/>
     <Setter Property="Template">
@@ -102,9 +103,9 @@
                         Margin="2" Width="22" Height="22" VerticalAlignment="Center">
             <ToggleButton.Template>
               <ControlTemplate TargetType="ToggleButton">
-                <Rectangle Stroke="Black" StrokeThickness="1"
-                           Width="20" Height="20" VerticalAlignment="Center"
-                           Fill="{Binding $parent[sd:ColorEditor].Value, Converter={sd:ColorConverter}, Mode=OneWay, FallbackValue={x:Static Brushes.Black}}"/>
+                <Border CornerRadius="3" BorderBrush="#555555" BorderThickness="1"
+                        Width="20" Height="20" VerticalAlignment="Center"
+                        Background="{Binding $parent[sd:ColorEditor].Value, Converter={sd:ColorConverter}, Mode=OneWay, FallbackValue={x:Static Brushes.Black}}"/>
               </ControlTemplate>
             </ToggleButton.Template>
           </ToggleButton>
@@ -114,35 +115,85 @@
                    PlaceholderText="{TemplateBinding PlaceholderText}"/>
           <Popup Grid.Column="0"
                  IsOpen="{Binding #PickerToggleButton.IsChecked, Mode=TwoWay}" IsLightDismissEnabled="True">
-            <Grid MinWidth="200" MinHeight="200"
-                  MaxWidth="400" MaxHeight="400">
-              <TabControl>
-                <TabItem Header="{sd:LocalizeString Color picker, Context=Header}">
-                  <TextBlock Text="Color picker placeholder"/>
-                </TabItem>
-                <TabItem Header="{sd:LocalizeString Palette, Context=Header}">
-                  <ListBox ItemsSource="{TemplateBinding Palette}"
-                           SelectedItem="{TemplateBinding SelectedPaletteColor, Mode=TwoWay}"
-                           SelectedValue="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
-                           SelectedValueBinding="{ReflectionBinding Value}">
-                    <ListBox.ItemTemplate>
-                      <DataTemplate>
-                        <DataTemplate.DataType>
-                          <x:Type TypeName="scg:KeyValuePair" x:TypeArguments="s:String,math:Color4"/>
-                        </DataTemplate.DataType>
-                        <DockPanel>
-                          <Rectangle DockPanel.Dock="Left"
-                                     Stroke="Black" StrokeThickness="1"
-                                     Margin="6,2" Width="28" Height="20"
-                                     Fill="{Binding Value, Converter={sd:ColorConverter}, Mode=OneWay}"/>
-                          <TextBlock Text="{Binding Key, Mode=OneWay}" VerticalAlignment="Center"/>
-                        </DockPanel>
-                      </DataTemplate>
-                    </ListBox.ItemTemplate>
-                  </ListBox>
-                </TabItem>
-              </TabControl>
-            </Grid>
+            <Border Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="6" Margin="4">
+              <Grid MinWidth="260">
+                <TabControl>
+                  <TabItem Header="{sd:LocalizeString Color picker, Context=Header}">
+                    <StackPanel Spacing="6" Margin="4">
+                      <Border Height="28" CornerRadius="3" BorderThickness="1" BorderBrush="#555555"
+                              Background="{Binding Value, Converter={sd:ColorConverter}, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      <Grid ColumnDefinitions="16,*,60">
+                        <TextBlock Grid.Column="0" Text="R" FontWeight="Bold" Foreground="#E57373" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Red, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Red, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                      <Grid ColumnDefinitions="16,*,60">
+                        <TextBlock Grid.Column="0" Text="G" FontWeight="Bold" Foreground="#81C784" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Green, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Green, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                      <Grid ColumnDefinitions="16,*,60">
+                        <TextBlock Grid.Column="0" Text="B" FontWeight="Bold" Foreground="#64B5F6" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Blue, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Blue, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                      <Grid ColumnDefinitions="16,*,60"
+                            IsVisible="{Binding HasAlpha, RelativeSource={RelativeSource TemplatedParent}}">
+                        <TextBlock Grid.Column="0" Text="A" FontWeight="Bold" Foreground="#E0E0E0" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Alpha, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Alpha, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                    </StackPanel>
+                  </TabItem>
+                  <TabItem Header="{sd:LocalizeString Palette, Context=Header}">
+                    <ListBox ItemsSource="{TemplateBinding Palette}"
+                             SelectedItem="{TemplateBinding SelectedPaletteColor, Mode=TwoWay}"
+                             SelectedValue="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
+                             SelectedValueBinding="{ReflectionBinding Value}">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <DataTemplate.DataType>
+                            <x:Type TypeName="scg:KeyValuePair" x:TypeArguments="s:String,math:Color4"/>
+                          </DataTemplate.DataType>
+                          <DockPanel>
+                            <Rectangle DockPanel.Dock="Left"
+                                       Stroke="Black" StrokeThickness="1"
+                                       Margin="6,2" Width="28" Height="20"
+                                       Fill="{Binding Value, Converter={sd:ColorConverter}, Mode=OneWay}"/>
+                            <TextBlock Text="{Binding Key, Mode=OneWay}" VerticalAlignment="Center"/>
+                          </DockPanel>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                  </TabItem>
+                </TabControl>
+              </Grid>
+            </Border>
           </Popup>
         </Grid>
       </ControlTemplate>
@@ -160,9 +211,9 @@
                         Margin="2" Width="22" Height="22" VerticalAlignment="Center">
             <ToggleButton.Template>
               <ControlTemplate TargetType="ToggleButton">
-                <Rectangle Stroke="Black" StrokeThickness="1"
-                           Width="20" Height="20" VerticalAlignment="Center"
-                           Fill="{Binding $parent[sd:Color3Editor].Value, Converter={sd:ColorConverter}, Mode=OneWay, FallbackValue={x:Static Brushes.Black}}"/>
+                <Border CornerRadius="3" BorderBrush="#555555" BorderThickness="1"
+                        Width="20" Height="20" VerticalAlignment="Center"
+                        Background="{Binding $parent[sd:Color3Editor].Value, Converter={sd:ColorConverter}, Mode=OneWay, FallbackValue={x:Static Brushes.Black}}"/>
               </ControlTemplate>
             </ToggleButton.Template>
           </ToggleButton>
@@ -172,35 +223,73 @@
                    PlaceholderText="{TemplateBinding PlaceholderText}"/>
           <Popup Grid.Column="0"
                  IsOpen="{Binding #PickerToggleButton.IsChecked, Mode=TwoWay}" IsLightDismissEnabled="True">
-            <Grid MinWidth="200" MinHeight="200"
-                  MaxWidth="400" MaxHeight="400">
-              <TabControl>
-                <TabItem Header="{sd:LocalizeString Color picker, Context=Header}">
-                  <TextBlock Text="Color picker placeholder"/>
-                </TabItem>
-                <TabItem Header="{sd:LocalizeString Palette, Context=Header}">
-                  <ListBox ItemsSource="{TemplateBinding Palette}"
-                           SelectedItem="{TemplateBinding SelectedPaletteColor, Mode=TwoWay}"
-                           SelectedValue="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
-                           SelectedValueBinding="{ReflectionBinding Value}">
-                    <ListBox.ItemTemplate>
-                      <DataTemplate>
-                        <DataTemplate.DataType>
-                          <x:Type TypeName="scg:KeyValuePair" x:TypeArguments="s:String,math:Color4"/>
-                        </DataTemplate.DataType>
-                        <DockPanel>
-                          <Rectangle DockPanel.Dock="Left"
-                                     Stroke="Black" StrokeThickness="1"
-                                     Margin="6,2" Width="28" Height="20"
-                                     Fill="{Binding Value, Converter={sd:ColorConverter}, Mode=OneWay}"/>
-                          <TextBlock Text="{Binding Key, Mode=OneWay}" VerticalAlignment="Center"/>
-                        </DockPanel>
-                      </DataTemplate>
-                    </ListBox.ItemTemplate>
-                  </ListBox>
-                </TabItem>
-              </TabControl>
-            </Grid>
+            <Border Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="6" Margin="4">
+              <Grid MinWidth="260">
+                <TabControl>
+                  <TabItem Header="{sd:LocalizeString Color picker, Context=Header}">
+                    <StackPanel Spacing="6" Margin="4">
+                      <Border Height="28" CornerRadius="3" BorderThickness="1" BorderBrush="#555555"
+                              Background="{Binding Value, Converter={sd:ColorConverter}, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      <Grid ColumnDefinitions="16,*,60">
+                        <TextBlock Grid.Column="0" Text="R" FontWeight="Bold" Foreground="#E57373" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Red, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Red, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                      <Grid ColumnDefinitions="16,*,60">
+                        <TextBlock Grid.Column="0" Text="G" FontWeight="Bold" Foreground="#81C784" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Green, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Green, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                      <Grid ColumnDefinitions="16,*,60">
+                        <TextBlock Grid.Column="0" Text="B" FontWeight="Bold" Foreground="#64B5F6" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Blue, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Blue, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                    </StackPanel>
+                  </TabItem>
+                  <TabItem Header="{sd:LocalizeString Palette, Context=Header}">
+                    <ListBox ItemsSource="{TemplateBinding Palette}"
+                             SelectedItem="{TemplateBinding SelectedPaletteColor, Mode=TwoWay}"
+                             SelectedValue="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
+                             SelectedValueBinding="{ReflectionBinding Value}">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <DataTemplate.DataType>
+                            <x:Type TypeName="scg:KeyValuePair" x:TypeArguments="s:String,math:Color4"/>
+                          </DataTemplate.DataType>
+                          <DockPanel>
+                            <Rectangle DockPanel.Dock="Left"
+                                       Stroke="Black" StrokeThickness="1"
+                                       Margin="6,2" Width="28" Height="20"
+                                       Fill="{Binding Value, Converter={sd:ColorConverter}, Mode=OneWay}"/>
+                            <TextBlock Text="{Binding Key, Mode=OneWay}" VerticalAlignment="Center"/>
+                          </DockPanel>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                  </TabItem>
+                </TabControl>
+              </Grid>
+            </Border>
           </Popup>
         </Grid>
       </ControlTemplate>
@@ -218,9 +307,9 @@
                         Margin="2" Width="22" Height="22" VerticalAlignment="Center">
             <ToggleButton.Template>
               <ControlTemplate TargetType="ToggleButton">
-                <Rectangle Stroke="Black" StrokeThickness="1"
-                           Width="20" Height="20" VerticalAlignment="Center"
-                           Fill="{Binding $parent[sd:Color4Editor].Value, Converter={sd:ColorConverter}, Mode=OneWay, FallbackValue={x:Static Brushes.Black}}"/>
+                <Border CornerRadius="3" BorderBrush="#555555" BorderThickness="1"
+                        Width="20" Height="20" VerticalAlignment="Center"
+                        Background="{Binding $parent[sd:Color4Editor].Value, Converter={sd:ColorConverter}, Mode=OneWay, FallbackValue={x:Static Brushes.Black}}"/>
               </ControlTemplate>
             </ToggleButton.Template>
           </ToggleButton>
@@ -230,37 +319,85 @@
                    PlaceholderText="{TemplateBinding PlaceholderText}"/>
           <Popup Grid.Column="0"
                  IsOpen="{Binding #PickerToggleButton.IsChecked, Mode=TwoWay}" IsLightDismissEnabled="True">
-            <Grid MinWidth="200" MinHeight="200"
-                  MaxWidth="400" MaxHeight="400">
-              <TabControl>
-                <TabItem Header="{sd:LocalizeString Color picker, Context=Header}">
-                  <Grid>
-                    <TextBlock Text="Color picker placeholder"/>
-                  </Grid>
-                </TabItem>
-                <TabItem Header="{sd:LocalizeString Palette, Context=Header}">
-                  <ListBox ItemsSource="{TemplateBinding Palette}"
-                           SelectedItem="{TemplateBinding SelectedPaletteColor, Mode=TwoWay}"
-                           SelectedValue="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
-                           SelectedValueBinding="{ReflectionBinding Value}">
-                    <ListBox.ItemTemplate>
-                      <DataTemplate>
-                        <DataTemplate.DataType>
-                          <x:Type TypeName="scg:KeyValuePair" x:TypeArguments="s:String,math:Color4"/>
-                        </DataTemplate.DataType>
-                        <DockPanel>
-                          <Rectangle DockPanel.Dock="Left"
-                                     Stroke="Black" StrokeThickness="1"
-                                     Margin="6,2" Width="28" Height="20"
-                                     Fill="{Binding Value, Converter={sd:ColorConverter}, Mode=OneWay}"/>
-                          <TextBlock Text="{Binding Key, Mode=OneWay}" VerticalAlignment="Center"/>
-                        </DockPanel>
-                      </DataTemplate>
-                    </ListBox.ItemTemplate>
-                  </ListBox>
-                </TabItem>
-              </TabControl>
-            </Grid>
+            <Border Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="6" Margin="4">
+              <Grid MinWidth="260">
+                <TabControl>
+                  <TabItem Header="{sd:LocalizeString Color picker, Context=Header}">
+                    <StackPanel Spacing="6" Margin="4">
+                      <Border Height="28" CornerRadius="3" BorderThickness="1" BorderBrush="#555555"
+                              Background="{Binding Value, Converter={sd:ColorConverter}, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      <Grid ColumnDefinitions="16,*,60">
+                        <TextBlock Grid.Column="0" Text="R" FontWeight="Bold" Foreground="#E57373" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Red, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Red, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                      <Grid ColumnDefinitions="16,*,60">
+                        <TextBlock Grid.Column="0" Text="G" FontWeight="Bold" Foreground="#81C784" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Green, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Green, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                      <Grid ColumnDefinitions="16,*,60">
+                        <TextBlock Grid.Column="0" Text="B" FontWeight="Bold" Foreground="#64B5F6" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Blue, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Blue, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                      <Grid ColumnDefinitions="16,*,60"
+                            IsVisible="{Binding HasAlpha, RelativeSource={RelativeSource TemplatedParent}}">
+                        <TextBlock Grid.Column="0" Text="A" FontWeight="Bold" Foreground="#E0E0E0" VerticalAlignment="Center"/>
+                        <Slider Grid.Column="1" Margin="6,0" Minimum="0"
+                                Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                Value="{Binding Alpha, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                        <sd:NumericTextBox Grid.Column="2" Minimum="0"
+                                           Maximum="{Binding MaxComponentValue, RelativeSource={RelativeSource TemplatedParent}}"
+                                           DecimalPlaces="{Binding ComponentDecimalPlaces, RelativeSource={RelativeSource TemplatedParent}}"
+                                           SmallChange="{Binding ComponentSmallChange, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Value="{Binding Alpha, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"/>
+                      </Grid>
+                    </StackPanel>
+                  </TabItem>
+                  <TabItem Header="{sd:LocalizeString Palette, Context=Header}">
+                    <ListBox ItemsSource="{TemplateBinding Palette}"
+                             SelectedItem="{TemplateBinding SelectedPaletteColor, Mode=TwoWay}"
+                             SelectedValue="{Binding Value, RelativeSource={RelativeSource TemplatedParent}}"
+                             SelectedValueBinding="{ReflectionBinding Value}">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <DataTemplate.DataType>
+                            <x:Type TypeName="scg:KeyValuePair" x:TypeArguments="s:String,math:Color4"/>
+                          </DataTemplate.DataType>
+                          <DockPanel>
+                            <Rectangle DockPanel.Dock="Left"
+                                       Stroke="Black" StrokeThickness="1"
+                                       Margin="6,2" Width="28" Height="20"
+                                       Fill="{Binding Value, Converter={sd:ColorConverter}, Mode=OneWay}"/>
+                            <TextBlock Text="{Binding Key, Mode=OneWay}" VerticalAlignment="Center"/>
+                          </DockPanel>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                  </TabItem>
+                </TabControl>
+              </Grid>
+            </Border>
           </Popup>
         </Grid>
       </ControlTemplate>
@@ -392,7 +529,7 @@
             </DockPanel>
           </Border>
           <!-- W component -->
-          <Border Grid.Column="5"
+          <Border Grid.Column="7"
                   CornerRadius="4" Margin="2,0,0,0"
                   Background="{DynamicResource AlphaBrush}"
                   BorderThickness="1" BorderBrush="{StaticResource TransparentBrush}">
@@ -533,7 +670,7 @@
             </DockPanel>
           </Border>
           <!-- W component -->
-          <Border Grid.Column="5"
+          <Border Grid.Column="7"
                   CornerRadius="4" Margin="2,0,0,0"
                   Background="{DynamicResource AlphaBrush}"
                   BorderThickness="1" BorderBrush="{StaticResource TransparentBrush}">
@@ -566,7 +703,7 @@
                                  PlaceholderText="{TemplateBinding PlaceholderText}"/>
             </DockPanel>
           </Border>
-          <Border Grid.Column="1"
+          <Border Grid.Column="3"
                   CornerRadius="4" Margin="2,0,0,0"
                   Background="{DynamicResource AlphaBrush}"
                   BorderThickness="1" BorderBrush="{StaticResource TransparentBrush}">
@@ -577,7 +714,7 @@
                                  PlaceholderText="{TemplateBinding PlaceholderText}"/>
             </DockPanel>
           </Border>
-          <Border Grid.Column="1"
+          <Border Grid.Column="5"
                   CornerRadius="4" Margin="2,0,0,0"
                   Background="{DynamicResource AlphaBrush}"
                   BorderThickness="1" BorderBrush="{StaticResource TransparentBrush}">
@@ -621,7 +758,7 @@
                                  PlaceholderText="{TemplateBinding PlaceholderText}"/>
             </DockPanel>
           </Border>
-          <Border Grid.Column="1"
+          <Border Grid.Column="3"
                   CornerRadius="4" Margin="2,0,0,0"
                   Background="{DynamicResource AlphaBrush}"
                   BorderThickness="1" BorderBrush="{StaticResource TransparentBrush}">
@@ -632,7 +769,7 @@
                                  PlaceholderText="{TemplateBinding PlaceholderText}"/>
             </DockPanel>
           </Border>
-          <Border Grid.Column="1"
+          <Border Grid.Column="5"
                   CornerRadius="4" Margin="2,0,0,0"
                   Background="{DynamicResource AlphaBrush}"
                   BorderThickness="1" BorderBrush="{StaticResource TransparentBrush}">

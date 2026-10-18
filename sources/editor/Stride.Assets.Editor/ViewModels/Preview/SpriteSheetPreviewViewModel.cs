@@ -11,7 +11,7 @@ namespace Stride.Assets.Editor.ViewModels.Preview;
 [AssetPreviewViewModel<SpriteSheetPreview>]
 public class SpriteSheetPreviewViewModel : TextureBasePreviewViewModel<SpriteSheetPreview>
 {
-    private SpriteSheetPreview spriteSheetPreview;
+    private SpriteSheetPreview? spriteSheetPreview;
     private readonly int previewCurrentFrame = 1;
     private SpriteSheetDisplayMode displayMode;
 
@@ -23,11 +23,34 @@ public class SpriteSheetPreviewViewModel : TextureBasePreviewViewModel<SpriteShe
         DependentProperties.Add(nameof(DisplayMode), new[] { nameof(PreviewCurrentFrame), nameof(PreviewFrameCount) });
     }
 
-    public int PreviewCurrentFrame { get { return Math.Min(PreviewFrameCount, spriteSheetPreview.CurrentFrame + 1); } set { SetValue(value - 1 != spriteSheetPreview.CurrentFrame, () => spriteSheetPreview.CurrentFrame = value - 1); } }
+    public int PreviewCurrentFrame
+    {
+        get => spriteSheetPreview != null ? Math.Min(PreviewFrameCount, spriteSheetPreview.CurrentFrame + 1) : 1;
+        set
+        {
+            if (spriteSheetPreview != null)
+            {
+                SetValue(value - 1 != spriteSheetPreview.CurrentFrame, () => spriteSheetPreview.CurrentFrame = value - 1);
+            }
+        }
+    }
 
-    public int PreviewFrameCount => spriteSheetPreview.FrameCount;
+    public int PreviewFrameCount => spriteSheetPreview?.FrameCount ?? 0;
 
-    public SpriteSheetDisplayMode DisplayMode { get { return displayMode; } set { SetValue(ref displayMode, value, () => { spriteSheetPreview.Mode = value; }); } }
+    public SpriteSheetDisplayMode DisplayMode
+    {
+        get => displayMode;
+        set
+        {
+            SetValue(ref displayMode, value, () =>
+            {
+                if (spriteSheetPreview != null)
+                {
+                    spriteSheetPreview.Mode = value;
+                }
+            });
+        }
+    }
 
     public CommandBase PreviewPreviousFrameCommand { get; }
 

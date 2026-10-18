@@ -34,9 +34,14 @@ public class PackageLoadedAssembly
     /// </value>
     public Assembly Assembly { get; set; }
 
-    public PackageLoadedAssembly(ProjectReference projectReference, string path)
+    public PackageLoadedAssembly(string path)
+        : this(null!, path)
     {
-        ProjectReference = projectReference;
+    }
+
+    public PackageLoadedAssembly(ProjectReference? projectReference, string path)
+    {
+        ProjectReference = projectReference!;
         Path = path;
     }
 }

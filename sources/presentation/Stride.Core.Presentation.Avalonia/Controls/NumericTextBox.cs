@@ -22,6 +22,20 @@ public sealed class NumericTextBox : TemplatedControl
     private bool isTextChangedFromUI;
     private IDisposable? textBoxTextChangedSubscription;
 
+    private global::Avalonia.Point dragStartPoint;
+    private double dragStartValue;
+    private bool isPointerPressedForDrag;
+    private bool isDragging;
+    private IPointer? capturedPointer;
+
+    public NumericTextBox()
+    {
+        AddHandler(PointerPressedEvent, OnPreviewPointerPressed, RoutingStrategies.Tunnel);
+        AddHandler(PointerMovedEvent, OnPreviewPointerMoved, RoutingStrategies.Tunnel);
+        AddHandler(PointerReleasedEvent, OnPreviewPointerReleased, RoutingStrategies.Tunnel);
+        AddHandler(PointerCaptureLostEvent, OnPreviewPointerCaptureLost, RoutingStrategies.Tunnel);
+    }
+
     static NumericTextBox()
     {
         MaximumProperty.Changed.AddClassHandler<NumericTextBox>(OnMaximumPropertyChanged);
@@ -38,6 +52,12 @@ public sealed class NumericTextBox : TemplatedControl
 
     public static readonly StyledProperty<double> MinimumProperty =
         AvaloniaProperty.Register<NumericTextBox, double>(nameof(Minimum), double.MinValue, defaultBindingMode: BindingMode.TwoWay);
+
+    public static readonly StyledProperty<double> SmallChangeProperty =
+        AvaloniaProperty.Register<NumericTextBox, double>(nameof(SmallChange), 1.0);
+
+    public static readonly StyledProperty<bool> AllowMouseDragProperty =
+        AvaloniaProperty.Register<NumericTextBox, bool>(nameof(AllowMouseDrag), true);
 
     public static readonly StyledProperty<string?> TextProperty =
         AvaloniaProperty.Register<NumericTextBox, string?>(nameof(Text), string.Empty, defaultBindingMode: BindingMode.TwoWay);
@@ -70,6 +90,18 @@ public sealed class NumericTextBox : TemplatedControl
     {
         get => GetValue(MinimumProperty);
         set => SetValue(MinimumProperty, value);
+    }
+
+    public double SmallChange
+    {
+        get => GetValue(SmallChangeProperty);
+        set => SetValue(SmallChangeProperty, value);
+    }
+
+    public bool AllowMouseDrag
+    {
+        get => GetValue(AllowMouseDragProperty);
+        set => SetValue(AllowMouseDragProperty, value);
     }
 
     public string? Text
@@ -322,5 +354,112 @@ public sealed class NumericTextBox : TemplatedControl
     private static void OnValuePropertyChanged(NumericTextBox sender, AvaloniaPropertyChangedEventArgs<double?> e)
     {
         sender.OnValuePropertyChanged(e.OldValue.GetValueOrDefault(), e.NewValue.GetValueOrDefault());
+    }
+
+    private void OnPreviewPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!AllowMouseDrag || !IsEnabled)
+            return;
+
+        var properties = e.GetCurrentPoint(this).Properties;
+        if (!properties.IsLeftButtonPressed)
+            return;
+
+        isPointerPressedForDrag = true;
+        isDragging = false;
+        dragStartPoint = e.GetPosition(this);
+        dragStartValue = Value ?? 0.0;
+        capturedPointer = e.Pointer;
+    }
+
+    private void OnPreviewPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (!isPointerPressedForDrag)
+            return;
+
+        var currentPoint = e.GetPosition(this);
+        var deltaX = currentPoint.X - dragStartPoint.X;
+
+        if (!isDragging && Math.Abs(deltaX) >= 3)
+        {
+            isDragging = true;
+            capturedPointer?.Capture(this);
+            Cursor = new Cursor(StandardCursorType.SizeWestEast);
+        }
+
+        if (isDragging)
+        {
+            double sensitivity = IsSet(SmallChangeProperty)
+                ? SmallChange
+                : (DecimalPlaces >= 0 ? 0.01 : 1.0);
+
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
+                sensitivity *= 0.1;
+            if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+                sensitivity *= 10.0;
+
+            double deltaValue;
+            if (DecimalPlaces < 0 && (!IsSet(SmallChangeProperty) || SmallChange == 1.0))
+            {
+                deltaValue = (deltaX / 4.0) * sensitivity;
+            }
+            else
+            {
+                deltaValue = deltaX * sensitivity;
+            }
+
+            var rawValue = dragStartValue + deltaValue;
+            var clampedValue = MathUtil.Clamp(rawValue, Minimum, Maximum);
+            if (DecimalPlaces >= 0)
+            {
+                clampedValue = Math.Round(clampedValue, DecimalPlaces);
+            }
+            else
+            {
+                clampedValue = Math.Round(clampedValue);
+            }
+
+            if (!Equals(Value, clampedValue))
+            {
+                SetCurrentValue(ValueProperty, clampedValue);
+                SyncTextAndValueProperties(false, null, true);
+            }
+
+            e.Handled = true;
+        }
+    }
+
+    private void OnPreviewPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (!isPointerPressedForDrag)
+            return;
+
+        isPointerPressedForDrag = false;
+
+        if (isDragging)
+        {
+            isDragging = false;
+            capturedPointer?.Capture(null);
+            capturedPointer = null;
+            Cursor = null;
+            CommitInput(true);
+            e.Handled = true;
+        }
+        else
+        {
+            capturedPointer = null;
+        }
+    }
+
+    private void OnPreviewPointerCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+    {
+        isPointerPressedForDrag = false;
+        if (isDragging)
+        {
+            isDragging = false;
+            capturedPointer = null;
+            Cursor = null;
+            CommitInput(true);
+        }
     }
 }

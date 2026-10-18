@@ -1,7 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="Stride.GameStudio.Avalonia.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
   <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
   <Application.Resources>
     <ResourceDictionary>
@@ -13,20 +13,36 @@
       </DrawingImage>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Default">
-          <SolidColorBrush x:Key="PropertyFocusedBackground"
-                           Color="#FF3E3E40"/>
+          <SolidColorBrush x:Key="MainBackgroundBrush"
+                           Color="#1E1E1E"/>
+          <SolidColorBrush x:Key="ControlBackgroundBrush"
+                           Color="#252526"/>
+          <SolidColorBrush x:Key="BorderBrush"
+                           Color="#3E3E42"/>
+          <SolidColorBrush x:Key="SubtleBorderBrush"
+                           Color="#3E3E42"/>
           <SolidColorBrush x:Key="PropertyHeaderBackground"
-                           Color="#FF316B8F"/>
+                           Color="#252526"/>
           <SolidColorBrush x:Key="PropertyHoveredBackground"
-                           Color="#FF525252"/>
+                           Color="#2D2D30"/>
+          <SolidColorBrush x:Key="PropertyFocusedBackground"
+                           Color="#3E3E42"/>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="PropertyFocusedBackground"
-                           Color="{DynamicResource SystemAccentColor}"/>
+          <SolidColorBrush x:Key="MainBackgroundBrush"
+                           Color="#1E1E1E"/>
+          <SolidColorBrush x:Key="ControlBackgroundBrush"
+                           Color="#252526"/>
+          <SolidColorBrush x:Key="BorderBrush"
+                           Color="#3E3E42"/>
+          <SolidColorBrush x:Key="SubtleBorderBrush"
+                           Color="#3E3E42"/>
           <SolidColorBrush x:Key="PropertyHeaderBackground"
-                           Color="{DynamicResource SystemAccentColorDark1}"/>
+                           Color="#252526"/>
           <SolidColorBrush x:Key="PropertyHoveredBackground"
-                           Color="{StaticResource SystemListMediumColor}"/>
+                           Color="#2D2D30"/>
+          <SolidColorBrush x:Key="PropertyFocusedBackground"
+                           Color="#3E3E42"/>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Light">
           <SolidColorBrush x:Key="PropertyFocusedBackground"
@@ -42,7 +58,7 @@
   <Application.Styles>
     <FluentTheme>
       <FluentTheme.Palettes>
-        <ColorPaletteResources x:Key="Dark"/>
+        <ColorPaletteResources x:Key="Dark" RegionColor="#1E1E1E"/>
         <ColorPaletteResources x:Key="Light"/>
       </FluentTheme.Palettes>
     </FluentTheme>

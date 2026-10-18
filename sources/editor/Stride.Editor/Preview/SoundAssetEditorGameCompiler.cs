@@ -6,13 +6,14 @@ using Stride.Core.Assets.Compiler;
 using Stride.Assets.Media;
 using Stride.Audio;
 
-namespace Stride.Editor.Preview;
-
-[AssetCompiler(typeof(SoundAsset), typeof(EditorGameCompilationContext))]
-public class SoundAssetEditorGameCompiler : AssetCompilerBase
+namespace Stride.Editor.Preview
 {
-    protected override void Prepare(AssetCompilerContext context, AssetItem assetItem, string targetUrlInStorage, AssetCompilerResult result)
+    [AssetCompiler(typeof(SoundAsset), typeof(EditorGameCompilationContext))]
+    public class SoundAssetEditorGameCompiler : AssetCompilerBase
     {
-        result.BuildSteps.Add(new DummyAssetCommand<SoundAsset, Sound>(assetItem));
+        protected override void Prepare(AssetCompilerContext context, AssetItem assetItem, string targetUrlInStorage, AssetCompilerResult result)
+        {
+            result.BuildSteps.Add(new DummyAssetCommand<SoundAsset, Sound>(assetItem));
+        }
     }
 }

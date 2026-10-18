@@ -132,10 +132,10 @@ public abstract class ThumbnailCompilerBase<T> : IThumbnailCompiler where T : As
         {
             CompileThumbnail(thumbnailCompilerContext, thumbnailStorageUrl, assetItem, assetItem.Package, compilerResult);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // If an exception occurs, ensure that the build of thumbnail will fail.
-            compilerResult.Error($"An exception occurred while compiling the asset [{assetItem.Location}]");
+            compilerResult.Error($"An exception occurred while compiling the asset [{assetItem.Location}]: {ex.Message} {ex.StackTrace}");
         }
 
         foreach (var logMessage in compilerResult.Messages)

@@ -4,18 +4,69 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ae="using:Stride.Assets.Editor.Avalonia"
              xmlns:caevm="using:Stride.Core.Assets.Editor.ViewModels"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="Stride.GameStudio.Avalonia.Views.EditorCollectionView"
              x:DataType="caevm:EditorCollectionViewModel">
-  <TabControl ItemsSource="{Binding Editors}"
-              SelectedItem="{Binding ActiveEditor}">
-    <ItemsControl.ItemTemplate>
-      <DataTemplate>
-        <TextBlock Text="{Binding Asset.Name}" />
-      </DataTemplate>
-    </ItemsControl.ItemTemplate>
-    <TabControl.ContentTemplate>
-      <ae:EditorViewSelector x:DataType="caevm:EditorCollectionViewModel" Session="{Binding Session}" />
-    </TabControl.ContentTemplate>
-  </TabControl>
+  <Grid Background="#1E1E22">
+    <!-- Editores de Assets em Abas -->
+    <TabControl ItemsSource="{Binding Editors}"
+                SelectedItem="{Binding ActiveEditor}"
+                IsVisible="{Binding ActiveEditor, Converter={sd:ObjectToBool}}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate DataType="{x:Type caevm:AssetEditorViewModel}">
+          <DockPanel LastChildFill="True">
+            <Button DockPanel.Dock="Right"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="3,0"
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Command="{Binding Session.EditorCollection.CloseAssetEditorCommand}"
+                    CommandParameter="{Binding}"
+                    ToolTip.Tip="Fechar editor">
+              <TextBlock Text="✕" FontSize="11" Foreground="#A0A0A0" />
+            </Button>
+            <TextBlock Text="{Binding Asset.Name}" VerticalAlignment="Center" />
+          </DockPanel>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+      <TabControl.ContentTemplate>
+        <ae:EditorViewSelector x:DataType="caevm:EditorCollectionViewModel" Session="{Binding Session}" />
+      </TabControl.ContentTemplate>
+    </TabControl>
+
+    <!-- Indicador de boas-vindas quando não houver cena aberta -->
+    <Border HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Padding="32,24"
+            CornerRadius="8"
+            Background="#E0141418"
+            BorderBrush="#3A3A3E"
+            BorderThickness="1"
+            IsHitTestVisible="False"
+            IsVisible="{Binding ActiveEditor, Converter={sd:Chained {sd:ObjectToBool}, {sd:InvertBool}}}">
+      <StackPanel HorizontalAlignment="Center" Spacing="10">
+        <Border Background="#2A2A30"
+                CornerRadius="6"
+                Padding="12,6"
+                HorizontalAlignment="Center">
+          <TextBlock Text="Stride Game Studio • Linux Native (Vulkan)"
+                     FontSize="12"
+                     FontWeight="SemiBold"
+                     Foreground="#4EC9B0"
+                     HorizontalAlignment="Center" />
+        </Border>
+        <TextBlock Text="Nenhum asset em edição"
+                   FontSize="18"
+                   FontWeight="Bold"
+                   Foreground="#E0E0E0"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="Selecione ou clique duas vezes em uma Cena ou Asset no Asset View para abrir o editor 3D."
+                   FontSize="12"
+                   Foreground="#9A9AA2"
+                   HorizontalAlignment="Center" />
+      </StackPanel>
+    </Border>
+  </Grid>
 </UserControl>

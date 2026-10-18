@@ -29,7 +29,12 @@ public abstract class DirectoryBaseViewModel : SessionObjectViewModel
     /// <summary>
     /// Gets or sets the parent directory of this directory.
     /// </summary>
-    public abstract DirectoryBaseViewModel Parent { get; set; }
+    public abstract DirectoryBaseViewModel? Parent { get; set; }
+
+    /// <summary>
+    /// Gets the level of this directory, root directory being <c>0</c>.
+    /// </summary>
+    public int Level => Parent?.Level + 1 ?? 0;
 
     /// <summary>
     /// Gets the path of this directory in its current package.
@@ -51,6 +56,21 @@ public abstract class DirectoryBaseViewModel : SessionObjectViewModel
         var hierarchy = new List<DirectoryBaseViewModel> { this };
         hierarchy.AddRange(SubDirectories.DepthFirst(x => x.SubDirectories));
         return hierarchy;
+    }
+
+
+    public DirectoryBaseViewModel? GetDirectory(string path)
+    {
+        if (path == null) throw new ArgumentNullException(nameof(path));
+        var directoryNames = path.Split(Separator.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+        DirectoryBaseViewModel? current = this;
+        foreach (var dir in directoryNames)
+        {
+            current = current.SubDirectories.FirstOrDefault(x => string.Equals(dir, x.Name, StringComparison.InvariantCultureIgnoreCase));
+            if (current == null)
+                return null;
+        }
+        return current;
     }
 
     public DirectoryBaseViewModel GetOrCreateDirectory(string path)

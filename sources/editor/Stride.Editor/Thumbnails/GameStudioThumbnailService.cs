@@ -108,8 +108,8 @@ public class GameStudioThumbnailService : IThumbnailService
 
     public static byte[] HandleBrokenThumbnail()
     {
-        // Load broken asset thumbnail
-        var assetBrokenThumbnail = DefaultThumbnails.AssetBroken;
+        // Load clean copy of broken asset thumbnail to avoid mutating singleton instance
+        using var assetBrokenThumbnail = Image.Load(DefaultThumbnails.AssetBrokenThumbnail);
 
         // Apply thumbnail status in corner
         ThumbnailBuildHelper.ApplyThumbnailStatus(assetBrokenThumbnail, LogMessageType.Error);
@@ -226,7 +226,7 @@ public class GameStudioThumbnailService : IThumbnailService
 
     private void ThumbnailBuilt(object? sender, ThumbnailBuiltEventArgs e)
     {
-        ThumbnailData? thumbnailData = null;
+        Stride.Core.Assets.Presentation.ViewModels.ThumbnailData? thumbnailData = null;
         if (e.ThumbnailStream != null)
         {
             var stream = new MemoryStream();

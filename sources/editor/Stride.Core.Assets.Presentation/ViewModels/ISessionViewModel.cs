@@ -3,6 +3,7 @@
 
 using Stride.Core.Assets.Analysis;
 using Stride.Core.Assets.Quantum;
+using Stride.Core.IO;
 using Stride.Core.Presentation.Collections;
 using Stride.Core.Presentation.Services;
 using Stride.Core.Presentation.ViewModels;
@@ -18,6 +19,8 @@ public interface ISessionViewModel
     AssetNodeContainer AssetNodeContainer { get; }
 
     ProjectViewModel? CurrentProject { get; }
+
+    UFile? SolutionPath => null;
 
     IAssetDependencyManager DependencyManager { get; }
 
@@ -59,4 +62,14 @@ public interface ISessionViewModel
     /// </summary>
     /// <param name="asset">The asset to register.</param>
     void UnregisterAsset(AssetViewModel asset);
+
+    /// <summary>
+    /// Checks consistency across all loaded packages.
+    /// </summary>
+    void CheckConsistency() { }
+
+    /// <summary>
+    /// Gets whether the session is currently in a fixup context.
+    /// </summary>
+    bool IsInFixupAssetContext => false;
 }

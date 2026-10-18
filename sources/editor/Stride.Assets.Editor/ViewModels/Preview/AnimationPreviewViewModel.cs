@@ -13,7 +13,7 @@ namespace Stride.Assets.Editor.ViewModels.Preview;
 [AssetPreviewViewModel<AnimationPreview>]
 public sealed class AnimationPreviewViewModel : AssetPreviewViewModel<AnimationPreview>, IAnimatedPreviewViewModel
 {
-    private AnimationPreview animationPreview;
+    private AnimationPreview? animationPreview;
     private float timeScale = 1.0f;
     private float currentTime;
     private float duration;
@@ -27,9 +27,9 @@ public sealed class AnimationPreviewViewModel : AssetPreviewViewModel<AnimationP
         PauseCommand = new AnonymousCommand(ServiceProvider, Pause);
     }
 
-    public float TimeScale { get { return timeScale; } set { SetValue(ref timeScale, value, () => animationPreview.SetTimeScale(value)); } }
+    public float TimeScale { get { return timeScale; } set { SetValue(ref timeScale, value, () => animationPreview?.SetTimeScale(value)); } }
 
-    public float CurrentTime { get { return currentTime; } set { SetValue(ref currentTime, value); if (!updatingFromGame) animationPreview.SetCurrentTime(value); } }
+    public float CurrentTime { get { return currentTime; } set { SetValue(ref currentTime, value); if (!updatingFromGame) animationPreview?.SetCurrentTime(value); } }
 
     public float Duration { get { return duration; } private set { SetValue(ref duration, value); } }
 
@@ -76,14 +76,14 @@ public sealed class AnimationPreviewViewModel : AssetPreviewViewModel<AnimationP
 
     private void Play()
     {
-        animationPreview.Play();
+        animationPreview?.Play();
         PlayCommand.IsEnabled = false;
         PauseCommand.IsEnabled = true;
     }
 
     private void Pause()
     {
-        animationPreview.Pause();
+        animationPreview?.Pause();
         PlayCommand.IsEnabled = true;
         PauseCommand.IsEnabled = false;
     }

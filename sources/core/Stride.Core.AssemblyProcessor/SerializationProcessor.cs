@@ -162,7 +162,7 @@ internal class SerializationProcessor : IAssemblyDefinitionProcessor
 
             if (descriptor.SerializedParentType != null)
             {
-                ctx.ParentType = descriptor.SerializedParentType;
+                ctx.ParentType = module.ImportReference(descriptor.SerializedParentType);
                 ctx.ParentSerializerField = new FieldDefinition("parentSerializer", Mono.Cecil.FieldAttributes.Private, dataSerializerTypeRef.MakeGenericType(ctx.ParentType));
                 serializerType.Fields.Add(ctx.ParentSerializerField);
 

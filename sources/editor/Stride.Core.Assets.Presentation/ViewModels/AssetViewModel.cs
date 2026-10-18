@@ -5,6 +5,7 @@ using System.Reflection;
 using Stride.Core.Assets.Presentation.Components.Properties;
 using Stride.Core.Assets.Presentation.Quantum;
 using Stride.Core.Assets.Quantum;
+using Stride.Core.Diagnostics;
 using Stride.Core.Presentation.Collections;
 using Stride.Core.Presentation.Dirtiables;
 using Stride.Core.Presentation.Quantum;
@@ -36,6 +37,9 @@ public abstract class AssetViewModel : SessionObjectViewModel, IAssetPropertyPro
     private DirectoryBaseViewModel directory;
     private string name;
     private ThumbnailData? thumbnailData;
+    protected readonly ObservableList<MenuCommandInfo> assetCommands = new();
+
+    public IReadOnlyObservableCollection<MenuCommandInfo> AssetCommands => assetCommands;
 
     protected AssetViewModel(ConstructorParameters parameters)
         : base(parameters.Directory.Session)
@@ -103,7 +107,7 @@ public abstract class AssetViewModel : SessionObjectViewModel, IAssetPropertyPro
     /// </summary>
     public ObservableList<string> Tags { get; } = [];
 
-    public AssetPropertyGraph? PropertyGraph { get; }
+    public AssetPropertyGraph? PropertyGraph { get; private set; }
 
     /// <summary>
     /// Gets the view model of the sources of this asset.
@@ -249,6 +253,68 @@ public abstract class AssetViewModel : SessionObjectViewModel, IAssetPropertyPro
     bool IPropertyProviderViewModel.ShouldConstructItem(IObjectNode collection, NodeIndex index) => ShouldConstructPropertyItem(collection, index);
 
     bool IPropertyProviderViewModel.ShouldConstructMember(IMemberNode member) => ShouldConstructPropertyMember(member);
+
+    protected internal virtual Task UpdateAssetFromSource(Stride.Core.Diagnostics.Logger logger)
+    {
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Called when the session has been successfully saved.
+    /// </summary>
+    protected internal virtual void OnSessionSaved()
+    {
+    }
+
+    /// <summary>
+    /// Updates the underlying <see cref="Asset"/> and recreates the associated <see cref="PropertyGraph"/>.
+    /// </summary>
+    /// <param name="newAsset">The new asset to replace the current one.</param>
+    /// <param name="loggerResult">The logger to receive messages during initialization.</param>
+    public void UpdateAsset(Asset newAsset, ILogger loggerResult)
+    {
+        if (newAsset.Id != AssetItem.Asset.Id)
+            throw new ArgumentException("Assets must have the same Id.");
+
+        if (newAsset.MainSource != AssetItem.Asset.MainSource)
+            throw new ArgumentException("Assets must have the same source.");
+
+        var newAssetItem = AssetItem.Clone(newAsset: newAsset);
+
+        var package = Directory.Package.Package;
+        package.Assets.Remove(AssetItem);
+        package.Assets.Add(newAssetItem);
+
+        AssetItem = newAssetItem;
+
+        PropertyGraph?.Dispose();
+        Session.GraphContainer.UnregisterGraph(assetItem.Id);
+
+        PropertyGraph = Session.GraphContainer.InitializeAsset(assetItem, loggerResult);
+        if (PropertyGraph != null)
+        {
+            PropertyGraph.BaseContentChanged += BaseContentChanged;
+            PropertyGraph.Changed += AssetPropertyChanged;
+            PropertyGraph.ItemChanged += AssetPropertyChanged;
+            PropertyGraph.Initialize();
+        }
+    }
+
+    /// <summary>
+    /// Finds a valid location to create an asset of the given type, starting from the given initial location.
+    /// </summary>
+    public static DirectoryBaseViewModel? FindValidCreationLocation(Type assetType, DirectoryBaseViewModel initialLocation, PackageViewModel? currentPackage = null)
+    {
+        if (!AssetRegistry.IsAssetType(assetType)) throw new ArgumentException("The given type is not an asset type", nameof(assetType));
+
+        if (initialLocation.Package.AssetMountPoint.AcceptAssetType(assetType) && initialLocation.Package.IsEditable)
+            return initialLocation;
+
+        if (currentPackage != null && currentPackage.AssetMountPoint.AcceptAssetType(assetType) && currentPackage.AssetMountPoint.Package.IsEditable)
+            return currentPackage.AssetMountPoint;
+
+        return initialLocation.Package.MountPoints.FirstOrDefault(x => x.AcceptAssetType(assetType) && x.Package.IsEditable);
+    }
 
     public readonly struct ConstructorParameters
     {

@@ -4,61 +4,116 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
         xmlns:caeb="using:Stride.Core.Assets.Editor.Avalonia.Behaviors"
-        xmlns:caevm="using:Stride.Core.Assets.Editor.ViewModels"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:caevm="using:Stride.Core.Assets.Editor.Settings.ViewModels"
+        xmlns:converters="using:Stride.GameStudio.Avalonia.Converters"
+        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
         x:Class="Stride.GameStudio.Avalonia.Views.SettingsWindow"
         x:DataType="caevm:SettingsViewModel"
-        Title="SettingsWindow"
-        Width="800" Height="600" WindowStartupLocation="CenterOwner">
+        Title="Settings"
+        Width="1024" Height="768"
+        MinWidth="720" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
   <Window.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="avares://Stride.Core.Assets.Editor.Avalonia/Themes/PropertyViewTheme.axaml"/>
       </ResourceDictionary.MergedDictionaries>
+      <converters:SettingsCategoryToExpandedAtInitialization x:Key="SettingsCategoryToExpandedAtInitialization"/>
     </ResourceDictionary>
   </Window.Resources>
-  <DockPanel>
-    <UniformGrid DockPanel.Dock="Bottom"
-                 Rows="1"
-                 HorizontalAlignment="Right"
-                 Margin="16">
-      <Button Content="{sd:LocalizeString Save and close, Context=Button}"
-              Margin="8,0,0,0" Padding="16,4">
-        <Interaction.Behaviors>
-          <sd:ButtonCloseWindowBehavior Command="{Binding ValidateChangesCommand}"/>
-        </Interaction.Behaviors>
-      </Button>
-      <Button Content="{sd:LocalizeString Cancel, Context=Button}"
-              Margin="8,0,0,0" Padding="16,4"
-              IsCancel="True">
-        <Interaction.Behaviors>
-          <sd:ButtonCloseWindowBehavior Command="{Binding DiscardChangesCommand}"/>
-        </Interaction.Behaviors>
-      </Button>
-    </UniformGrid>
 
-    <Grid ColumnDefinitions="*,Auto,2*">
-      <TreeView Grid.Column="0"
-                ItemsSource="{Binding Categories}"
-                SelectedItem="{Binding SelectedCategory}">
-        <Control.DataTemplates>
-          <TreeDataTemplate DataType="{x:Type caevm:SettingsCategoryViewModel}"
-                            ItemsSource="{Binding SubCategories}">
-            <StackPanel Orientation="Horizontal">
-              <TextBlock Text="{Binding Name}" />
-            </StackPanel>
-          </TreeDataTemplate>
-        </Control.DataTemplates>
-      </TreeView>
+  <Window.Styles>
+    <Style Selector="TreeViewItem">
+      <Setter Property="IsExpanded" Value="{Binding Converter={StaticResource SettingsCategoryToExpandedAtInitialization}}"/>
+      <Setter Property="MinHeight" Value="28"/>
+      <Setter Property="Padding" Value="4,2"/>
+    </Style>
+    <Style Selector="Button.action-btn">
+      <Setter Property="Padding" Value="20,6"/>
+      <Setter Property="Margin" Value="8,0,0,0"/>
+      <Setter Property="MinHeight" Value="32"/>
+      <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+  </Window.Styles>
 
-      <GridSplitter Grid.Column="1" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" />
+  <DockPanel Margin="16">
+    <!-- Bottom Action Bar (Save & Close, Cancel) -->
+    <Border DockPanel.Dock="Bottom" Margin="0,16,0,0" Padding="0,12,0,0"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="0,1,0,0">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <Button Classes="action-btn"
+                Content="{sd:LocalizeString Save and close, Context=Button}">
+          <Interaction.Behaviors>
+            <sd:ButtonCloseWindowBehavior Command="{Binding ValidateChangesCommand}"/>
+          </Interaction.Behaviors>
+        </Button>
+        <Button Classes="action-btn"
+                Content="{sd:LocalizeString Cancel, Context=Button}"
+                IsCancel="True">
+          <Interaction.Behaviors>
+            <sd:ButtonCloseWindowBehavior Command="{Binding DiscardChangesCommand}"/>
+          </Interaction.Behaviors>
+        </Button>
+      </StackPanel>
+    </Border>
 
-      <sd:PropertyView Grid.Column="2"
-                       ItemsSource="{Binding ViewModel?.RootNode.Children}">
-        <Interaction.Behaviors>
-          <caeb:PropertyViewAutoExpandNodesBehavior ViewModel="{Binding ViewModel, Mode=OneWay}" />
-        </Interaction.Behaviors>
-      </sd:PropertyView>
+    <!-- Main Content: Category TreeView & PropertyView -->
+    <Grid ColumnDefinitions="300,6,*">
+      <!-- Left: Settings Categories Tree -->
+      <Border Grid.Column="0"
+              BorderThickness="1"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+              CornerRadius="4"
+              Background="{DynamicResource SystemRegionBrush}"
+              Padding="4">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top"
+                     Text="{sd:LocalizeString Categories, Context=Settings}"
+                     FontWeight="SemiBold"
+                     Margin="8,6,8,8"/>
+          <TreeView ItemsSource="{Binding Categories}"
+                    SelectedItem="{Binding SelectedCategory}">
+            <Control.DataTemplates>
+              <TreeDataTemplate DataType="{x:Type caevm:SettingsCategoryViewModel}"
+                                ItemsSource="{Binding SubCategories}">
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                </StackPanel>
+              </TreeDataTemplate>
+            </Control.DataTemplates>
+          </TreeView>
+        </DockPanel>
+      </Border>
+
+      <!-- Grid Splitter -->
+      <GridSplitter Grid.Column="1"
+                    Width="6"
+                    ResizeBehavior="PreviousAndNext"
+                    VerticalAlignment="Stretch"
+                    Background="Transparent"/>
+
+      <!-- Right: Settings Property View -->
+      <Border Grid.Column="2"
+              BorderThickness="1"
+              BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+              CornerRadius="4"
+              Background="{DynamicResource SystemRegionBrush}"
+              Padding="6">
+        <DockPanel>
+          <TextBlock DockPanel.Dock="Top"
+                     Text="{Binding SelectedCategory.Name, FallbackValue=Properties}"
+                     FontWeight="SemiBold"
+                     Margin="8,6,8,8"/>
+          <sd:PropertyView ItemsSource="{Binding ViewModel?.RootNode.Children}">
+            <Interaction.Behaviors>
+              <caeb:PropertyViewAutoExpandNodesBehavior ViewModel="{Binding ViewModel, Mode=OneWay}" />
+            </Interaction.Behaviors>
+          </sd:PropertyView>
+        </DockPanel>
+      </Border>
     </Grid>
   </DockPanel>
 </Window>

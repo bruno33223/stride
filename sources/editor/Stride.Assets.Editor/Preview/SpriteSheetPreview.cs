@@ -29,7 +29,7 @@ public class SpriteSheetPreview : PreviewFromSpriteBatch<SpriteSheetAsset>
     protected SpriteSheet? SpriteSheet;
     private BlendStateDescription adequateBlendState;
     private SpriteSheetDisplayMode mode;
-    private List<Texture> spriteTextures;
+    private List<Texture> spriteTextures = new();
 
     /// <summary>
     /// Gets or sets the mode of the display of the preview
@@ -60,7 +60,7 @@ public class SpriteSheetPreview : PreviewFromSpriteBatch<SpriteSheetAsset>
                 case SpriteSheetDisplayMode.Sprites:
                     return SpriteSheet.Sprites.Count;
                 case SpriteSheetDisplayMode.SpriteTextures:
-                    return spriteTextures.Count;
+                    return spriteTextures?.Count ?? 0;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

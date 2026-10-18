@@ -4,6 +4,8 @@
 using Stride.Core;
 using Stride.Core.Reflection;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Stride.Core.Assets.Editor.Tests")]
+
 namespace Stride.Editor;
 
 internal class Module

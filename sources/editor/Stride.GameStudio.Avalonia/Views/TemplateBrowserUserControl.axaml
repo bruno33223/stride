@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+             xmlns:converters="using:Stride.GameStudio.Avalonia.Converters"
+             xmlns:views="using:Stride.GameStudio.Avalonia.Views"
+             xmlns:vm="using:Stride.Core.Assets.Editor.Components.TemplateDescriptions.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             x:Class="Stride.GameStudio.Avalonia.Views.TemplateBrowserUserControl"
+             x:Name="RootTemplateBrowser"
+             x:DataType="vm:TemplateDescriptionCollectionViewModel">
+
+  <UserControl.Resources>
+    <converters:TemplateImageConverter x:Key="TemplateImageConverter"/>
+  </UserControl.Resources>
+
+  <Grid ColumnDefinitions="220,Auto,*,Auto,280">
+    <!-- Seção Esquerda: TreeView de Grupos -->
+    <Border Grid.Column="0" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="0,0,1,0">
+      <TreeView x:Name="GroupsTreeView"
+                ItemsSource="{Binding HierarchyItemsSource, ElementName=RootTemplateBrowser}"
+                SelectedItem="{Binding SelectedHierarchyItem, ElementName=RootTemplateBrowser, Mode=TwoWay}">
+        <TreeView.Styles>
+          <Style Selector="TreeViewItem">
+            <Setter Property="IsExpanded" Value="True"/>
+          </Style>
+        </TreeView.Styles>
+        <TreeView.ItemTemplate>
+          <TreeDataTemplate x:DataType="vm:TemplateDescriptionGroupViewModel" ItemsSource="{Binding SubGroups}">
+            <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="2,4"/>
+          </TreeDataTemplate>
+        </TreeView.ItemTemplate>
+      </TreeView>
+    </Border>
+
+    <GridSplitter Grid.Column="1" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Width="4"/>
+
+    <!-- Seção Centro: ListBox de Templates -->
+    <Border Grid.Column="2" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="0,0,1,0">
+      <ListBox x:Name="TemplatesListBox"
+               ItemsSource="{Binding Templates}"
+               SelectedItem="{Binding SelectedTemplate, Mode=TwoWay}"
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+               DoubleTapped="TemplatesListBox_OnDoubleTapped"
+               KeyDown="TemplatesListBox_OnKeyDown">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="vm:ITemplateDescriptionViewModel">
+            <DockPanel Margin="4" Height="56">
+              <Image Source="{Binding Icon, Converter={StaticResource TemplateImageConverter}}"
+                     DockPanel.Dock="Left"
+                     Width="48" Height="48"
+                     Margin="0,0,12,0"
+                     VerticalAlignment="Center"/>
+              <DockPanel VerticalAlignment="Center">
+                <TextBlock DockPanel.Dock="Top"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           Text="{Binding Name}"/>
+                <TextBlock Text="{Binding Description}"
+                           TextWrapping="Wrap"
+                           TextTrimming="CharacterEllipsis"
+                           Opacity="0.75"
+                           FontSize="12"/>
+              </DockPanel>
+            </DockPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+
+    <GridSplitter Grid.Column="3" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Width="4"/>
+
+    <!-- Seção Direita: Painel de Detalhes -->
+    <ScrollViewer Grid.Column="4" VerticalScrollBarVisibility="Auto">
+      <StackPanel Margin="16" IsVisible="{Binding SelectedTemplate, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <TextBlock Text="{Binding SelectedTemplate.Name}"
+                   FontWeight="Bold"
+                   FontSize="16"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,12"/>
+        <TextBlock Text="{Binding SelectedTemplate.FullDescription}"
+                   TextWrapping="Wrap"
+                   Opacity="0.85"
+                   Margin="0,0,0,16"/>
+
+        <ItemsControl ItemsSource="{Binding SelectedTemplate.Screenshots}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border CornerRadius="4" ClipToBounds="True" Margin="0,4,0,12">
+                <Image Source="{Binding Converter={StaticResource TemplateImageConverter}}"
+                       MaxWidth="248"
+                       StretchDirection="DownOnly"
+                       Stretch="Uniform"/>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

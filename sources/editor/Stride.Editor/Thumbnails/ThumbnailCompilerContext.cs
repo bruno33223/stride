@@ -98,8 +98,8 @@ public class ThumbnailCompilerContext : AssetCompilerContext
 
     private static byte[] HandleBrokenThumbnail()
     {
-        // Load broken asset thumbnail
-        var assetBrokenThumbnail = DefaultThumbnails.AssetBroken;
+        // Load clean copy of broken asset thumbnail to avoid mutating singleton instance
+        using var assetBrokenThumbnail = Image.Load(DefaultThumbnails.AssetBrokenThumbnail);
 
         // Apply thumbnail status in corner
         ThumbnailBuildHelper.ApplyThumbnailStatus(assetBrokenThumbnail, LogMessageType.Error);

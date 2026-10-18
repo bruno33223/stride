@@ -24,7 +24,10 @@ public sealed class AssetDependenciesViewModel : DispatcherViewModel
         Asset = asset;
         ToggleIsRootOnSelectedAssetCommand = new AnonymousCommand(ServiceProvider, () => IsRoot = !IsRoot);
         ForcedRoot = forcedRoot;
-        DirtyDependencies.Add(asset);
+        lock (DirtyDependencies)
+        {
+            DirtyDependencies.Add(asset);
+        }
     }
 
     /// <summary>

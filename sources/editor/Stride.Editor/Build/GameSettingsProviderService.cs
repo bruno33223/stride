@@ -6,6 +6,7 @@ using Stride.Assets;
 using Stride.Data;
 using Stride.Core.Assets.Presentation.ViewModels;
 using Stride.Core.Assets.Editor.ViewModels;
+using SessionStateChangedEventArgs = Stride.Core.Assets.Presentation.ViewModels.SessionStateChangedEventArgs;
 
 namespace Stride.Editor.Build;
 

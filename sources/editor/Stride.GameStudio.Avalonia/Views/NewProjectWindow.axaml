@@ -1,0 +1,74 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sd="http://schemas.stride3d.net/xaml/presentation"
+        xmlns:views="using:Stride.GameStudio.Avalonia.Views"
+        xmlns:vm="using:Stride.Core.Assets.Editor.Components.TemplateDescriptions.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
+        x:Class="Stride.GameStudio.Avalonia.Views.NewProjectWindow"
+        x:DataType="vm:NewProjectTemplateCollectionViewModel"
+        Title="New package"
+        Width="1024" Height="768"
+        WindowStartupLocation="CenterOwner">
+
+  <DockPanel Margin="16">
+    <!-- Painel Inferior -->
+    <Grid DockPanel.Dock="Bottom" Margin="0,16,0,0">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+
+      <!-- Campo Name -->
+      <TextBlock Grid.Row="0" Grid.Column="0"
+                 Text="{sd:LocalizeString Name:}"
+                 VerticalAlignment="Center"
+                 Margin="0,0,16,10"/>
+      <TextBox Grid.Row="0" Grid.Column="1"
+               Text="{Binding Name, Mode=TwoWay}"
+               Margin="0,0,16,10"/>
+
+      <!-- Campo Location -->
+      <TextBlock Grid.Row="1" Grid.Column="0"
+                 Text="{sd:LocalizeString Location:}"
+                 VerticalAlignment="Center"
+                 Margin="0,0,16,0"/>
+      <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" Margin="0,0,16,0">
+        <TextBox Grid.Column="0"
+                 Text="{Binding Location, Converter={sd:UDirectoryToString}, Mode=TwoWay}"/>
+        <Button Grid.Column="1"
+                Content="..."
+                Command="{Binding BrowseDirectoryCommand}"
+                CommandParameter="Location"
+                ToolTip.Tip="{sd:LocalizeString Browse directory, Context=ToolTip}"
+                Padding="12,4" Margin="8,0,0,0"/>
+      </Grid>
+
+      <!-- Botões Select e Cancel -->
+      <StackPanel Grid.Row="0" Grid.RowSpan="2" Grid.Column="2"
+                  Orientation="Horizontal"
+                  VerticalAlignment="Center">
+        <Button Content="{sd:LocalizeString Select, Context=Button}"
+                Click="SelectButton_OnClick"
+                IsEnabled="{Binding SelectedTemplate, Converter={x:Static ObjectConverters.IsNotNull}}"
+                Padding="24,6" Margin="0,0,8,0"/>
+        <Button Content="{sd:LocalizeString Cancel, Context=Button}"
+                Click="CancelButton_OnClick"
+                IsCancel="True"
+                Padding="24,6"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- Conteúdo Superior: TemplateBrowserUserControl ocupando o espaço central -->
+    <views:TemplateBrowserUserControl x:Name="TemplateBrowser"
+                                      HierarchyItemsSource="{Binding RootGroups}"
+                                      SelectedHierarchyItem="{Binding SelectedGroup, Mode=TwoWay}"
+                                      TemplateConfirmed="TemplateBrowser_OnTemplateConfirmed"/>
+  </DockPanel>
+</Window>

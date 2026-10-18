@@ -1,0 +1,76 @@
+// Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
+// Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
+
+using System;
+using System.Threading.Tasks;
+using Stride.Core.Annotations;
+using Stride.Core.Assets.Editor.ViewModels;
+using Stride.Core.Extensions;
+using Stride.Assets.Presentation.AssetEditors.GameEditor.ViewModels;
+using Stride.Editor.EditorGame.Game;
+
+namespace Stride.Assets.Presentation.AssetEditors.GameEditor.Services
+{
+    /// <summary>
+    /// React to <see cref="EditorServiceGame"/> exceptions.
+    /// </summary>
+    public class EditorGameRecoveryService : EditorGameServiceBase, IEditorGameRecoveryViewModelService
+    {
+        private readonly AssetEditorViewModel editor;
+
+        public EditorGameRecoveryService([NotNull] AssetEditorViewModel editor)
+        {
+            if (editor == null) throw new ArgumentNullException(nameof(editor));
+
+            this.editor = editor;
+        }
+
+        /// <inheritdoc />
+        public override bool IsActive { get; set; } = true;
+
+        protected EditorServiceGame Game { get; private set; }
+
+        void IEditorGameRecoveryViewModelService.Resume()
+        {
+            editor.Dispatcher.EnsureAccess();
+
+            if (!IsActive)
+                return;
+
+            // Remove faulted flag
+            if (Game != null)
+            {
+                Game.Faulted = false;
+            }
+            if (editor is GameEditorViewModel gev)
+            {
+                gev.LastException = null;
+            }
+        }
+
+        protected override Task<bool> Initialize(EditorServiceGame editorGame)
+        {
+            Game = editorGame;
+            if (Game != null)
+            {
+                Game.ExceptionThrown += GameOnExceptionThrown;
+            }
+            return Task.FromResult(true);
+        }
+
+        private void GameOnExceptionThrown(object sender, ExceptionThrownEventArgs e)
+        {
+            if (!IsActive)
+                return;
+
+            e.Handled = true;
+            editor.Dispatcher.InvokeAsync(() =>
+            {
+                if (editor is GameEditorViewModel gev)
+                {
+                    gev.LastException = e.Exception;
+                }
+            }).Forget();
+        }
+    }
+}

@@ -49,6 +49,14 @@ public class NodeViewModel : DispatcherViewModel, IDynamicMetaObjectProvider
         typeof(NodeViewModel).GetProperties().Select(x => x.Name).ForEach(x => ReservedNames.Add(x));
     }
 
+    protected NodeViewModel(IViewModelServiceProvider? serviceProvider)
+        : base(serviceProvider ?? new ViewModelServiceProvider())
+    {
+        Name = "";
+        Type = typeof(object);
+        nodePresenters = [];
+    }
+
     protected internal NodeViewModel(GraphViewModel ownerViewModel, NodeViewModel? parent, string baseName, Type nodeType, List<INodePresenter> nodePresenters)
         : base(ownerViewModel.ServiceProvider)
     {
@@ -109,17 +117,17 @@ public class NodeViewModel : DispatcherViewModel, IDynamicMetaObjectProvider
     /// <summary>
     /// Gets or sets the value of the nodes represented by this view model.
     /// </summary>
-    public object? NodeValue { get => GetNodeValue(); set => SetNodeValue(ConvertValue(value)); }
+    public virtual object? NodeValue { get => GetNodeValue(); set => SetNodeValue(ConvertValue(value)); }
 
     /// <summary>
     /// Gets the expected type of <see cref="NodeValue"/>.
     /// </summary>
-    public Type Type { get; }
+    public virtual Type Type { get; }
 
     /// <summary>
     /// Gets the parent of this node.
     /// </summary>
-    public NodeViewModel? Parent { get; private set; }
+    public virtual NodeViewModel? Parent { get; private set; }
 
     /// <summary>
     /// Gets the root of this node.
@@ -158,7 +166,7 @@ public class NodeViewModel : DispatcherViewModel, IDynamicMetaObjectProvider
     /// <summary>
     /// Gets additional data associated to this content. This can be used when the content itself does not contain enough information to be used as a view model.
     /// </summary>
-    public IReadOnlyDictionary<string, object> AssociatedData => associatedData;
+    public virtual IDictionary<string, object> AssociatedData => associatedData;
 
     /// <summary>
     /// Gets the level of depth of this node, starting from 0 for the root node.

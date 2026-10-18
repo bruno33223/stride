@@ -29,10 +29,10 @@ public sealed class Vector4Editor : VectorEditor<Vector4?>
         AvaloniaProperty.Register<Vector4Editor, float?>(nameof(Y), defaultBindingMode: BindingMode.TwoWay, coerce: CoerceComponentValue);
 
     public static readonly StyledProperty<float?> ZProperty =
-        AvaloniaProperty.Register<Vector3Editor, float?>(nameof(Z), defaultBindingMode: BindingMode.TwoWay, coerce: CoerceComponentValue);
+        AvaloniaProperty.Register<Vector4Editor, float?>(nameof(Z), defaultBindingMode: BindingMode.TwoWay, coerce: CoerceComponentValue);
 
     public static readonly StyledProperty<float?> WProperty =
-        AvaloniaProperty.Register<Vector3Editor, float?>(nameof(W), defaultBindingMode: BindingMode.TwoWay, coerce: CoerceComponentValue);
+        AvaloniaProperty.Register<Vector4Editor, float?>(nameof(W), defaultBindingMode: BindingMode.TwoWay, coerce: CoerceComponentValue);
 
     public float? Length
     {

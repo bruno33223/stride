@@ -32,68 +32,79 @@ internal sealed class PluginService : IAssetsPluginService
     private readonly Dictionary<Type, Type> previewViewViewTypes = new();
     private readonly List<Type> primitiveTypes = [];
 
+    private readonly object syncRoot = new();
+    private bool isInitialized;
+
     public PluginService(IDispatcherService dispatcherService)
     {
         this.dispatcherService = dispatcherService;
     }
 
-    public IReadOnlyCollection<AssetsPlugin> Plugins => AssetsPlugin.RegisteredPlugins;
+    public IReadOnlyCollection<Stride.Core.Assets.Editor.Services.AssetsPlugin> Plugins => Stride.Core.Assets.Editor.Services.AssetsPlugin.RegisteredPlugins;
 
     public void EnsureInitialized(ILogger logger)
     {
-        foreach (var plugin in AssetsPlugin.RegisteredPlugins)
+        lock (syncRoot)
         {
-            plugin.InitializePlugin(logger);
+            if (isInitialized)
+                return;
 
-            // Asset view models types
-            var registeredAssetViewModelsTypes = new Dictionary<Type, Type>();
-            plugin.RegisterAssetViewModelTypes(registeredAssetViewModelsTypes);
-            AssertType(typeof(Asset), registeredAssetViewModelsTypes.Select(x => x.Key));
-            AssertType(typeof(AssetViewModel), registeredAssetViewModelsTypes.Select(x => x.Value));
-            assetViewModelTypes.AddRange(registeredAssetViewModelsTypes);
+            isInitialized = true;
 
-            if (plugin is AssetsEditorPlugin editorPlugin)
+            foreach (var plugin in AssetsPlugin.RegisteredPlugins)
             {
-                // Asset editor view model types
-                var registeredAssetEditorViewModelsTypes = new Dictionary<Type, Type>();
-                editorPlugin.RegisterAssetEditorViewModelTypes(registeredAssetEditorViewModelsTypes);
-                AssertType(typeof(AssetViewModel), registeredAssetEditorViewModelsTypes.Select(x => x.Key));
-                AssertType(typeof(AssetEditorViewModel), registeredAssetEditorViewModelsTypes.Select(x => x.Value));
-                editorViewModelTypes.AddRange(registeredAssetEditorViewModelsTypes);
+                plugin.InitializePlugin(logger);
 
-                // Asset editor view types
-                var registeredAssetEditorViewTypes = new Dictionary<Type, Type>();
-                editorPlugin.RegisterAssetEditorViewTypes(registeredAssetEditorViewTypes);
-                AssertType(typeof(AssetEditorViewModel), registeredAssetEditorViewTypes.Select(x => x.Key));
-                AssertType(typeof(IAssetEditorView), registeredAssetEditorViewTypes.Select(x => x.Value));
-                editorViewTypes.AddRange(registeredAssetEditorViewTypes);
+                // Asset view models types
+                var registeredAssetViewModelsTypes = new Dictionary<Type, Type>();
+                plugin.RegisterAssetViewModelTypes(registeredAssetViewModelsTypes);
+                AssertType(typeof(Asset), registeredAssetViewModelsTypes.Select(x => x.Key));
+                AssertType(typeof(AssetViewModel), registeredAssetViewModelsTypes.Select(x => x.Value));
+                assetViewModelTypes.AddRange(registeredAssetViewModelsTypes);
 
-                // Asset preview view model types
-                var registeredAssetPreviewViewModelTypes = new Dictionary<Type, Type>();
-                editorPlugin.RegisterAssetPreviewViewModelTypes(registeredAssetPreviewViewModelTypes);
-                AssertType(typeof(IAssetPreview), registeredAssetPreviewViewModelTypes.Select(x => x.Key));
-                AssertType(typeof(IAssetPreviewViewModel), registeredAssetPreviewViewModelTypes.Select(x => x.Value));
-                previewViewModelTypes.AddRange(registeredAssetPreviewViewModelTypes);
-
-                // Asset preview view types
-                var registeredAssetPreviewViewTypes = new Dictionary<Type, Type>();
-                editorPlugin.RegisterAssetPreviewViewTypes(registeredAssetPreviewViewTypes);
-                AssertType(typeof(IAssetPreview), registeredAssetPreviewViewTypes.Select(x => x.Key));
-                AssertType(typeof(IPreviewView), registeredAssetPreviewViewTypes.Select(x => x.Value));
-                previewViewViewTypes.AddRange(registeredAssetPreviewViewTypes);
-
-                // Primitive types
-                var registeredPrimitiveTypes = new List<Type>();
-                editorPlugin.RegisterPrimitiveTypes(registeredPrimitiveTypes);
-                primitiveTypes.AddRange(registeredPrimitiveTypes);
-
-                // Template providers
-                dispatcherService.Invoke(() =>
+                if (plugin is AssetsEditorPlugin editorPlugin)
                 {
-                    var templateProviders = new List<ITemplateProvider>();
-                    editorPlugin.RegisterTemplateProviders(templateProviders);
-                    templateProviders.ForEach(RegisterTemplateProvider);
-                });
+                    // Asset editor view model types
+                    var registeredAssetEditorViewModelsTypes = new Dictionary<Type, Type>();
+                    editorPlugin.RegisterAssetEditorViewModelTypes(registeredAssetEditorViewModelsTypes);
+                    AssertType(typeof(AssetViewModel), registeredAssetEditorViewModelsTypes.Select(x => x.Key));
+                    AssertType(typeof(AssetEditorViewModel), registeredAssetEditorViewModelsTypes.Select(x => x.Value));
+                    editorViewModelTypes.AddRange(registeredAssetEditorViewModelsTypes);
+
+                    // Asset editor view types
+                    var registeredAssetEditorViewTypes = new Dictionary<Type, Type>();
+                    editorPlugin.RegisterAssetEditorViewTypes(registeredAssetEditorViewTypes);
+                    AssertType(typeof(AssetEditorViewModel), registeredAssetEditorViewTypes.Select(x => x.Key));
+                    AssertType(typeof(IAssetEditorView), registeredAssetEditorViewTypes.Select(x => x.Value));
+                    editorViewTypes.AddRange(registeredAssetEditorViewTypes);
+
+                    // Asset preview view model types
+                    var registeredAssetPreviewViewModelTypes = new Dictionary<Type, Type>();
+                    editorPlugin.RegisterAssetPreviewViewModelTypes(registeredAssetPreviewViewModelTypes);
+                    AssertType(typeof(IAssetPreview), registeredAssetPreviewViewModelTypes.Select(x => x.Key));
+                    AssertType(typeof(IAssetPreviewViewModel), registeredAssetPreviewViewModelTypes.Select(x => x.Value));
+                    previewViewModelTypes.AddRange(registeredAssetPreviewViewModelTypes);
+
+                    // Asset preview view types
+                    var registeredAssetPreviewViewTypes = new Dictionary<Type, Type>();
+                    editorPlugin.RegisterAssetPreviewViewTypes(registeredAssetPreviewViewTypes);
+                    AssertType(typeof(IAssetPreview), registeredAssetPreviewViewTypes.Select(x => x.Key));
+                    AssertType(typeof(IPreviewView), registeredAssetPreviewViewTypes.Select(x => x.Value));
+                    previewViewViewTypes.AddRange(registeredAssetPreviewViewTypes);
+
+                    // Primitive types
+                    var registeredPrimitiveTypes = new List<Type>();
+                    editorPlugin.RegisterPrimitiveTypes(registeredPrimitiveTypes);
+                    primitiveTypes.AddRange(registeredPrimitiveTypes);
+
+                    // Template providers
+                    dispatcherService.Invoke(() =>
+                    {
+                        var templateProviders = new List<ITemplateProvider>();
+                        editorPlugin.RegisterTemplateProviders(templateProviders);
+                        templateProviders.ForEach(RegisterTemplateProvider);
+                    });
+                }
             }
         }
 

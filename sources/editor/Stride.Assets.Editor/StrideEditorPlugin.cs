@@ -6,6 +6,7 @@ using Stride.Assets.Editor.Quantum.NodePresenters.Commands;
 using Stride.Assets.Editor.Quantum.NodePresenters.Updaters;
 using Stride.Core.Assets;
 using Stride.Core.Assets.Editor;
+using Stride.Core.Assets.Editor.Services;
 using Stride.Core.Assets.Editor.ViewModels;
 using Stride.Core.Assets.Presentation.ViewModels;
 using Stride.Core.Diagnostics;
@@ -14,6 +15,7 @@ using Stride.Core.Presentation.Views;
 using Stride.Core.Reflection;
 using Stride.Core.Serialization;
 using Stride.Core.Serialization.Contents;
+using Stride.Assets.Editor.Templates;
 using Stride.Editor.Annotations;
 using Stride.Editor.Build;
 using Stride.Editor.Preview.ViewModels;
@@ -22,9 +24,10 @@ namespace Stride.Assets.Editor;
 
 public sealed class StrideEditorPlugin : AssetsEditorPlugin
 {
+    private EffectCompilerServerSession? effectCompilerServerSession;
     public override void InitializePlugin(ILogger logger)
     {
-        // nothing for now
+        StrideTemplates.Register();
     }
 
     public override void InitializeSession(ISessionViewModel session)
@@ -57,8 +60,8 @@ public sealed class StrideEditorPlugin : AssetsEditorPlugin
         var builderService = new GameStudioBuilderService((SessionViewModel)session, settingsProvider, buildDirectory);
         session.ServiceProvider.RegisterService(builderService);
 
-        //var thumbnailService = new GameStudioThumbnailService((SessionViewModel)session, settingsProvider, builderService);
-        //session.ServiceProvider.RegisterService(thumbnailService);
+        var thumbnailService = new Stride.Assets.Editor.Thumbnails.GameStudioThumbnailService((SessionViewModel)session, settingsProvider, builderService);
+        session.ServiceProvider.RegisterService(thumbnailService);
 
         if (session is SessionViewModel sessionVm)
         {
@@ -81,6 +84,12 @@ public sealed class StrideEditorPlugin : AssetsEditorPlugin
             sessionVm.ActiveProperties.RegisterNodePresenterUpdater(new UIAssetNodeUpdater());
             sessionVm.ActiveProperties.RegisterNodePresenterUpdater(new UnloadableObjectPropertyNodeUpdater());
             sessionVm.ActiveProperties.RegisterNodePresenterUpdater(new VideoAssetNodeUpdater());
+
+            // Connects to effect compiler (to import new effect permutations discovered by running the game)
+            if (Stride.Core.Assets.Editor.Settings.EditorSettings.UseEffectCompilerServer.GetValue())
+            {
+                effectCompilerServerSession = new EffectCompilerServerSession(sessionVm);
+            }
         }
     }
 

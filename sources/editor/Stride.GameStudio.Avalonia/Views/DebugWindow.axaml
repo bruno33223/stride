@@ -4,29 +4,66 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:caevm="using:Stride.Core.Assets.Editor.ViewModels"
         xmlns:gsc="using:Stride.GameStudio.Avalonia.Controls"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
         x:Class="Stride.GameStudio.Avalonia.Views.DebugWindow"
         x:DataType="caevm:DebugWindowViewModel"
-        Title="Debug Window" Width="1024" Height="768"
+        Title="Debug Tools - Stride Game Studio"
+        Width="1024" Height="768"
+        MinWidth="800" MinHeight="500"
         WindowStartupLocation="CenterOwner">
-  <Grid>
+
+  <Window.Styles>
+    <Style Selector="TabControl">
+      <Setter Property="Margin" Value="8"/>
+      <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector="TabItem">
+      <Setter Property="FontSize" Value="14"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+      <Setter Property="MinHeight" Value="36"/>
+      <Setter Property="Padding" Value="16,6"/>
+    </Style>
+  </Window.Styles>
+
+  <Grid Margin="12">
     <TabControl ItemsSource="{Binding Pages}">
-      <ItemsControl.ItemTemplate>
+      <TabControl.ItemTemplate>
         <DataTemplate>
-          <TextBlock Text="{Binding Title}" />
+          <TextBlock Text="{Binding Title}" VerticalAlignment="Center" Margin="4,0"/>
         </DataTemplate>
-      </ItemsControl.ItemTemplate>
+      </TabControl.ItemTemplate>
       <Control.DataTemplates>
         <DataTemplate DataType="{x:Type caevm:DebugAssetNodeCollectionViewModel}">
-          <gsc:DebugAssetNodesUserControl />
+          <Border BorderThickness="1"
+                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                  CornerRadius="4"
+                  Background="{DynamicResource SystemRegionBrush}"
+                  Margin="0,8,0,0"
+                  Padding="8">
+            <gsc:DebugAssetNodesUserControl />
+          </Border>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type caevm:LoggerViewModel}">
-          <gsc:DebugLogUserControl />
+          <Border BorderThickness="1"
+                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                  CornerRadius="4"
+                  Background="{DynamicResource SystemRegionBrush}"
+                  Margin="0,8,0,0"
+                  Padding="8">
+            <gsc:DebugLogUserControl />
+          </Border>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type caevm:UndoRedoViewModel}">
-          <gsc:DebugUndoRedoUserControl />
+          <Border BorderThickness="1"
+                  BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                  CornerRadius="4"
+                  Background="{DynamicResource SystemRegionBrush}"
+                  Margin="0,8,0,0"
+                  Padding="8">
+            <gsc:DebugUndoRedoUserControl />
+          </Border>
         </DataTemplate>
       </Control.DataTemplates>
     </TabControl>

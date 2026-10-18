@@ -17,6 +17,23 @@ namespace Stride.Core.Tasks
     {
         public static int Main(string[] args)
         {
+            AppDomain.CurrentDomain.AssemblyResolve += (sender, resolveArgs) =>
+            {
+                var assemblyName = new AssemblyName(resolveArgs.Name).Name;
+                var sdkPath = Environment.GetEnvironmentVariable("DOTNET_ROOT");
+                if (!string.IsNullOrEmpty(sdkPath))
+                {
+                    var sdkDir = Directory.GetDirectories(Path.Combine(sdkPath, "sdk"));
+                    if (sdkDir.Length > 0)
+                    {
+                        var candidate = Path.Combine(sdkDir[0], assemblyName + ".dll");
+                        if (File.Exists(candidate))
+                            return Assembly.LoadFrom(candidate);
+                    }
+                }
+                return null;
+            };
+
             try
             {
                 MSBuildLocator.RegisterDefaults();

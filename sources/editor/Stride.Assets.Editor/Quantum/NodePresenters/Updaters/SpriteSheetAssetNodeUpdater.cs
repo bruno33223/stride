@@ -21,18 +21,18 @@ internal sealed class SpriteSheetAssetNodeUpdater : AssetNodePresenterUpdaterBas
             }
             if (typeof(SpriteInfo).IsAssignableFrom(node.Type))
             {
-                switch (asset.Asset.Type)
-                {
-                    case SpriteSheetType.Sprite2D:
-                        node[nameof(SpriteInfo.Borders)].IsVisible = false;
-                        break;
-                    case SpriteSheetType.UI:
-                        node[nameof(SpriteInfo.Center)].IsVisible = false;
-                        node[nameof(SpriteInfo.CenterFromMiddle)].IsVisible = false;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                var isUI = asset.Asset.Type == SpriteSheetType.UI;
+                var bordersNode = node.TryGetChild(nameof(SpriteInfo.Borders));
+                if (bordersNode != null)
+                    bordersNode.IsVisible = isUI;
+
+                var centerNode = node.TryGetChild(nameof(SpriteInfo.Center));
+                if (centerNode != null)
+                    centerNode.IsVisible = !isUI;
+
+                var centerFromMiddleNode = node.TryGetChild(nameof(SpriteInfo.CenterFromMiddle));
+                if (centerFromMiddleNode != null)
+                    centerFromMiddleNode.IsVisible = !isUI;
             }
         }
     }

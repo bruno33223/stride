@@ -2,8 +2,10 @@
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
 
 using Stride.Core.Assets.Tracking;
+using Stride.Core.Diagnostics;
 using Stride.Core.Extensions;
 using Stride.Core.IO;
+using Stride.Core.Presentation.Dirtiables;
 using Stride.Core.Presentation.ViewModels;
 using Stride.Core.Storage;
 
@@ -14,7 +16,7 @@ public sealed class AssetSourcesViewModel : DispatcherViewModel
     private readonly AssetViewModel asset;
     private readonly HashSet<UFile> currentSourceFiles = [];
     private bool needUpdateFromSource;
-    private readonly IReadOnlyDictionary<UFile, ObjectId> updatedHashes;
+    private IReadOnlyDictionary<UFile, ObjectId> updatedHashes;
 
     public AssetSourcesViewModel(AssetViewModel asset)
         : base(asset.ServiceProvider)
@@ -67,4 +69,37 @@ public sealed class AssetSourcesViewModel : DispatcherViewModel
         ComputeNeedUpdateFromSource();
     }
 
+    public async Task UpdateAssetFromSource(LoggerResult logger)
+    {
+        await asset.UpdateAssetFromSource(logger);
+
+        var oldHashes = new Dictionary<UFile, ObjectId>(updatedHashes);
+        var newHashes = new Dictionary<UFile, ObjectId>();
+        foreach (var file in currentSourceFiles)
+        {
+            var hash = asset.Session.SourceTracker.GetCurrentHash(file);
+            newHashes[file] = hash;
+        }
+        // Add an operation to update hashes in the SourceHashHelper
+        var operation = new AnonymousDirtyingOperation(asset.Dirtiables,
+            () =>
+            {
+                SourceHashesHelper.UpdateHashes(asset.Asset, oldHashes);
+                updatedHashes = oldHashes;
+                ComputeNeedUpdateFromSource();
+            },
+            () =>
+            {
+                SourceHashesHelper.UpdateHashes(asset.Asset, newHashes);
+                updatedHashes = newHashes;
+                ComputeNeedUpdateFromSource();
+            });
+        asset.UndoRedoService.PushOperation(operation);
+
+        updatedHashes = newHashes;
+        SourceHashesHelper.UpdateHashes(asset.Asset, updatedHashes);
+
+        NeedUpdateFromSource = false;
+        asset.Session.SourceTracker?.UpdateAssetStatus(asset);
+    }
 }

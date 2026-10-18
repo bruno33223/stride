@@ -54,6 +54,11 @@ public abstract class AssetCompositeItemViewModel<TAssetViewModel, TItemViewMode
     {
     }
 
+    /// <summary>
+    /// The related asset.
+    /// </summary>
+    public new TAssetViewModel Asset => (TAssetViewModel)base.Asset;
+
     public IReadOnlyObservableList<TItemViewModel> Children => children;
 
     public TItemViewModel? Parent

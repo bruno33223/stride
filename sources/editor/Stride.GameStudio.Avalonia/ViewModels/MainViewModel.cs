@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Avalonia;
+using Stride.Assets.Editor;
 using Stride.Core.Assets;
 using Stride.Core.Assets.Editor.Components.Status;
 using Stride.Core.Assets.Editor.ViewModels;
@@ -76,7 +77,11 @@ internal sealed class MainViewModel : ViewModelBase, IMainViewModel
 
     public ICommandBase OpenDebugWindowCommand { get; }
 
+    public ICommandBase OpenDebugCommand => OpenDebugWindowCommand;
+
     public ICommandBase OpenSettingsWindowCommand { get; }
+
+    public ICommandBase OpenSettingsCommand => OpenSettingsWindowCommand;
 
     public ICommandBase OpenWebPageCommand { get; }
 
@@ -117,7 +122,8 @@ internal sealed class MainViewModel : ViewModelBase, IMainViewModel
         }
 
         Session = loadedSession;
-        Title = $"{baseTitle} - {Session.SolutionPath.GetFileNameWithoutExtension()}";
+        Title = $"{baseTitle} - {Session?.SolutionPath?.GetFileNameWithoutExtension()}";
+        DefaultSceneHelper.OpenDefaultScene(loadedSession);
         return true;
     }
 

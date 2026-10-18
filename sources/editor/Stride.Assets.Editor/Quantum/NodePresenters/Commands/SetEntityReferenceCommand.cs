@@ -1,32 +1,38 @@
-// Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net)
+// Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net) and Silicon Studio Corp. (https://www.siliconstudio.co.jp)
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
-
-using Stride.Assets.Presentation.ViewModels;
+using System;
+using System.Collections.Generic;
 using Stride.Core.Assets.Editor.Quantum.NodePresenters.Commands;
+using Stride.Core.Extensions;
 using Stride.Core.Presentation.Quantum.Presenters;
+using Stride.Assets.Presentation.ViewModels;
 using Stride.Engine;
 
-namespace Stride.Assets.Editor.Quantum.NodePresenters.Commands;
-
-internal sealed class SetEntityReferenceCommand : ChangeValueCommandBase
+namespace Stride.Assets.Editor.Quantum.NodePresenters.Commands
 {
-    /// <summary>
-    /// The name of this command.
-    /// </summary>
-    public const string CommandName = "SetEntityReference";
-
-    /// <inheritdoc/>
-    public override string Name => CommandName;
-
-    /// <inheritdoc/>
-    public override bool CanAttach(INodePresenter nodePresenter)
+    public class SetEntityReferenceCommand : ChangeValueCommandBase
     {
-        return typeof(Entity).IsAssignableFrom(nodePresenter.Type);
+        /// <summary>
+        /// The name of this command.
+        /// </summary>
+        public const string CommandName = "SetEntityReference";
+
+        /// <inheritdoc/>
+        public override string Name => CommandName;
+
+        /// <inheritdoc/>
+        public override bool CanAttach(INodePresenter nodePresenter)
+        {
+            return typeof(Entity).IsAssignableFrom(nodePresenter.Type);
+        }
+
+        /// <inheritdoc/>
+        protected override object ChangeValue(object currentValue, object parameter, object preExecuteResult)
+        {
+            var subEntity = (EntityViewModel)parameter;
+            return subEntity?.AssetSideEntity;
+        }
     }
 
-    /// <inheritdoc/>
-    protected override object? ChangeValue(object currentValue, object? parameter, object? preExecuteResult)
-    {
-        return (parameter as EntityViewModel)?.AssetSideEntity;
-    }
 }
+

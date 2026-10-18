@@ -1,6 +1,7 @@
 // Copyright (c) .NET Foundation and Contributors (https://dotnetfoundation.org/ & https://stride3d.net)
 // Distributed under the MIT license. See the LICENSE.md file in the project root for more information.
 
+using Stride.Core.Assets;
 using Stride.Core.IO;
 
 namespace Stride.Core.Assets.Presentation.ViewModels;
@@ -13,9 +14,19 @@ public sealed class ProjectViewModel : PackageViewModel
         content.Add(Code = new ProjectCodeViewModel(this));
     }
 
+    private bool isCurrentProject;
+
+    public bool IsCurrentProject
+    {
+        get => isCurrentProject;
+        set => SetValue(ref isCurrentProject, value);
+    }
+
     public ProjectCodeViewModel Code { get; }
 
     public SolutionProject Project => (SolutionProject)PackageContainer;
+
+    public ProjectType Type => Project.Type;
 
     public UFile ProjectPath => Project.FullPath;
 
